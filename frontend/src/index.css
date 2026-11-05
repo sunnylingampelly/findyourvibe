@@ -1,0 +1,214 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+
+@import "tailwindcss";
+
+:root {
+  /* Primary */
+  --color-primary: #236B63;
+  --color-primary-dark: #194E49;
+
+  /* Secondary */
+  --color-secondary: #A8C5B5;
+  --color-secondary-pale: #E8F0EA;
+
+  /* Background */
+  --color-bg: #FAF9F6;
+  --color-bg-cream: #F4F1EA;
+
+  /* Accent */
+  --color-accent: #E9B7A5;
+  --color-accent-dark: #D98D7A;
+
+  /* Text */
+  --color-text: #24332F;
+  --color-text-secondary: #77817C;
+  --color-text-muted: #A1AAA5;
+
+  /* Border */
+  --color-border: #E8EAE6;
+
+  /* Status */
+  --color-success: #4D9274;
+  --color-warning: #D9A45B;
+  --color-error: #D76D6D;
+
+  /* App shell */
+  --app-max-width: 430px;
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@theme {
+  --color-primary: #236B63;
+  --color-primary-dark: #194E49;
+  --color-secondary: #A8C5B5;
+  --color-secondary-pale: #E8F0EA;
+  --color-bg-app: #FAF9F6;
+  --color-bg-cream: #F4F1EA;
+  --color-accent: #E9B7A5;
+  --color-accent-dark: #D98D7A;
+  --color-text-main: #24332F;
+  --color-text-secondary: #77817C;
+  --color-text-muted: #A1AAA5;
+  --color-border: #E8EAE6;
+  --color-success: #4D9274;
+  --color-warning: #D9A45B;
+  --color-error: #D76D6D;
+  --font-manrope: 'Manrope', sans-serif;
+  --font-inter: 'Inter', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', sans-serif;
+  background-color: #E8EAE6;
+  overscroll-behavior: none;
+}
+
+#root {
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+/* Mobile app container — background intentionally NOT set here so pages can override it */
+.app-container {
+  width: 100%;
+  max-width: var(--app-max-width);
+  min-height: 100dvh;
+  background: var(--color-bg);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 60px rgba(0,0,0,0.12);
+}
+
+/* Scrollable screen area */
+.screen-scroll {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.screen-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* Safe-area padding */
+.pt-safe { padding-top: max(16px, var(--safe-area-top)); }
+.pb-safe { padding-bottom: max(16px, var(--safe-area-bottom)); }
+.pb-nav { padding-bottom: calc(80px + var(--safe-area-bottom)); }
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Manrope', sans-serif;
+}
+
+/* Transitions */
+.page-transition {
+  animation: fadeSlideIn 0.25s ease-out;
+}
+
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Card styles */
+.card {
+  background: white;
+  border-radius: 20px;
+  border: 1px solid var(--color-border);
+}
+
+/* Button base */
+.btn-primary {
+  background: var(--color-primary);
+  color: white;
+  border-radius: 14px;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+.btn-primary:active {
+  transform: scale(0.97);
+  opacity: 0.9;
+}
+
+/* Input base */
+.input-base {
+  border: 1.5px solid var(--color-border);
+  border-radius: 12px;
+  background: white;
+  font-family: 'Inter', sans-serif;
+  color: var(--color-text);
+  transition: border-color 0.2s;
+}
+.input-base:focus {
+  border-color: var(--color-primary);
+  outline: none;
+}
+
+/* Verification badge */
+.verified-badge {
+  background: linear-gradient(135deg, #236B63, #4D9274);
+  color: white;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+}
+
+/* Bottom nav */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: var(--app-max-width);
+  background: white;
+  border-top: 1px solid var(--color-border);
+  z-index: 100;
+  padding-bottom: var(--safe-area-bottom);
+}
+
+/* Swipe card */
+.swipe-card {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 24px;
+  overflow: hidden;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+  will-change: transform;
+}
+.swipe-card:active {
+  cursor: grabbing;
+}
+
+/* Loading skeleton */
+@keyframes shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, #E8EAE6 25%, #F4F1EA 50%, #E8EAE6 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+}
