@@ -27,7 +27,7 @@ export const useAuthStore = create<AuthState>()(
         localStorage.removeItem('token')
         set({ user: null, token: null })
       },
-      isAuthenticated: () => !!get().token,
+      isAuthenticated: () => !!get().token || !!localStorage.getItem('token'),
       isAdmin: () => get().user?.role === 'super_admin',
       needsOnboarding: () => !get().user?.onboarding_completed_at,
     }),

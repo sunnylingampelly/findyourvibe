@@ -38,6 +38,11 @@ Route::prefix('v1')->group(function () {
         Route::post('verify-email', [AuthController::class, 'verifyEmail']);
     });
 
+    // Broadcasting auth (Reverb / Echo)
+    Route::post('broadcasting/auth', function (\Illuminate\Http\Request $request) {
+        return \Illuminate\Support\Facades\Broadcast::auth($request);
+    })->middleware('auth:sanctum');
+
     // Protected user routes
     Route::middleware(['auth:sanctum', 'active.user'])->group(function () {
         Route::post('auth/logout', [AuthController::class, 'logout']);

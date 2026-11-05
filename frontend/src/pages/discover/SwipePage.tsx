@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { motion, useMotionValue, useTransform, useAnimation, type PanInfo } from 'framer-motion'
-import { X, Heart, Info, Bookmark, MapPin } from 'lucide-react'
+import { X, Heart, Info, Bookmark, MapPin, Star } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { discoverApi } from '../../api/discover'
 import { useToast } from '../../components/ui/Toast'
@@ -75,25 +75,54 @@ function CardContent({ profile, onInfo }: { profile: PublicProfile; onInfo: () =
           <span className="text-7xl font-manrope font-bold text-white">{getInitials(profile.display_name)}</span>
         </div>
       )}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-      <div className="absolute bottom-0 left-0 right-0 p-5">
-        <h2 className="font-manrope font-extrabold text-2xl text-white">
-          {profile.display_name}{profile.age ? `, ${profile.age}` : ''}
-        </h2>
+      {/* Strong gradient for legibility */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
+
+      {/* Info button top-right */}
+      <button
+        onClick={e => { e.stopPropagation(); onInfo() }}
+        className="absolute top-4 right-4 w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20"
+      >
+        <Info size={18} />
+      </button>
+
+      {/* Verified badge */}
+      {profile.companion_verification_status === 'approved' && (
+        <div className="absolute top-4 left-4 bg-[#236B63] text-white text-xs font-bold px-3 py-1 rounded-full">
+          ✓ Verified
+        </div>
+      )}
+
+      {/* Bottom info */}
+      <div className="absolute bottom-0 left-0 right-0 p-5 pb-6">
+        <div className="flex items-end justify-between mb-1">
+          <h2 className="font-manrope font-extrabold text-2xl text-white leading-tight">
+            {profile.display_name}{profile.age ? `, ${profile.age}` : ''}
+          </h2>
+          {profile.avg_rating && profile.avg_rating > 0 && (
+            <div className="flex items-center gap-1 bg-white/20 backdrop-blur-sm px-2.5 py-1 rounded-full mb-1">
+              <Star size={12} className="text-[#D9A45B] fill-[#D9A45B]" />
+              <span className="text-white text-xs font-bold">{Number(profile.avg_rating).toFixed(1)}</span>
+            </div>
+          )}
+        </div>
         {profile.city && (
-          <p className="text-white/80 text-sm flex items-center gap-1 mt-1"><MapPin size={13} />{profile.city.name}</p>
+          <p className="text-white/80 text-sm flex items-center gap-1 mb-2">
+            <MapPin size={13} />{profile.city.name}
+          </p>
         )}
-        {profile.bio && <p className="text-white/70 text-sm mt-2 line-clamp-2">{profile.bio}</p>}
+        {profile.bio && (
+          <p className="text-white/75 text-sm mb-3 line-clamp-2 leading-relaxed">{profile.bio}</p>
+        )}
         {profile.interests && profile.interests.length > 0 && (
-          <div className="flex gap-2 mt-2 flex-wrap">
+          <div className="flex gap-2 flex-wrap">
             {profile.interests.slice(0, 3).map(i => (
-              <span key={i.id} className="text-xs bg-white/20 backdrop-blur-sm text-white px-2.5 py-1 rounded-full">{i.name}</span>
+              <span key={i.id} className="text-xs bg-white/20 backdrop-blur-sm text-white px-3 py-1 rounded-full border border-white/20">
+                {i.name}
+              </span>
             ))}
           </div>
         )}
-        <button onClick={e => { e.stopPropagation(); onInfo() }} className="absolute top-[-180px] right-4 w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white">
-          <Info size={18} />
-        </button>
       </div>
     </div>
   )
@@ -168,20 +197,20 @@ export default function SwipePage() {
 
         {/* Action buttons */}
         {remaining.length > 0 && (
-          <div className="flex items-center gap-6 pb-4">
+          <div className="flex items-center justify-center gap-5 pb-4 pt-2">
             <motion.button
               whileTap={{ scale: 0.82 }}
               transition={{ type: 'spring', stiffness: 500, damping: 20 }}
               onClick={() => handleSwipe('left')}
-              className="w-14 h-14 bg-white border-2 border-[#E8EAE6] rounded-full flex items-center justify-center shadow-md"
+              className="w-16 h-16 bg-white border-2 border-[#F0EDE8] rounded-full flex items-center justify-center shadow-lg"
             >
-              <X size={24} className="text-[#D98D7A]" />
+              <X size={26} className="text-[#D98D7A]" />
             </motion.button>
             <motion.button
               whileTap={{ scale: 0.82 }}
               transition={{ type: 'spring', stiffness: 500, damping: 20 }}
-              onClick={() => { const p = remaining[0]; if (p) discoverApi.saveProfile(p.id).then(() => toast('Saved!', 'success')) }}
-              className="w-10 h-10 bg-white border border-[#E8EAE6] rounded-full flex items-center justify-center shadow"
+              onClick={() => { const p = remaining[0]; if (p) discoverApi.saveProfile(p.id).then(() => toast('Saved! 🔖', 'success')) }}
+              className="w-12 h-12 bg-white border border-[#E8EAE6] rounded-full flex items-center justify-center shadow"
             >
               <Bookmark size={18} className="text-[#A1AAA5]" />
             </motion.button>
@@ -189,9 +218,9 @@ export default function SwipePage() {
               whileTap={{ scale: 0.82 }}
               transition={{ type: 'spring', stiffness: 500, damping: 20 }}
               onClick={() => handleSwipe('right')}
-              className="w-14 h-14 bg-[#236B63] rounded-full flex items-center justify-center shadow-md"
+              className="w-16 h-16 bg-gradient-to-br from-[#4D9274] to-[#236B63] rounded-full flex items-center justify-center shadow-lg"
             >
-              <Heart size={24} className="text-white" />
+              <Heart size={26} className="text-white fill-white" />
             </motion.button>
           </div>
         )}

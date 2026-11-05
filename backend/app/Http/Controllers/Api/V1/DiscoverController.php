@@ -16,7 +16,7 @@ class DiscoverController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $filters = $request->only(['service_id', 'city_id', 'country_id', 'interest_id', 'language_id']);
+        $filters = $request->only(['service_id', 'service', 'search', 'city_id', 'country_id', 'interest_id', 'language_id']);
         $profiles = $this->discoveryService->getProfiles($request->user(), $filters, 20);
 
         return response()->json([

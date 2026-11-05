@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Events\MessageSent;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\MessageResource;
 use App\Models\Connection;
@@ -71,9 +72,12 @@ class MessageController extends Controller
             ]);
         }
 
+        $message->load(['sender.profile', 'attachments']);
+        broadcast(new MessageSent($message))->toOthers();
+
         return response()->json([
             'success' => true,
-            'data' => new MessageResource($message->load(['sender.profile', 'attachments'])),
+            'data' => new MessageResource($message),
         ], 201);
     }
 

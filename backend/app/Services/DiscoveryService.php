@@ -21,6 +21,21 @@ class DiscoveryService
             ->companion()
             ->whereNotIn('id', $excludeIds);
 
+        if (!empty($filters['search'])) {
+            $s = $filters['search'];
+            $query->where(fn($q) =>
+                $q->where('name', 'like', "%{$s}%")
+                  ->orWhereHas('profile', fn($pq) =>
+                      $pq->where('display_name', 'like', "%{$s}%")
+                         ->orWhere('bio', 'like', "%{$s}%")
+                  )
+            );
+        }
+
+        if (!empty($filters['service'])) {
+            $query->whereHas('services', fn($q) => $q->where('slug', $filters['service']));
+        }
+
         if (!empty($filters['service_id'])) {
             $query->whereHas('services', fn($q) => $q->where('services.id', $filters['service_id']));
         }

@@ -6,6 +6,7 @@ import { connectionsApi } from '../../api/connections'
 import Avatar from '../../components/ui/Avatar'
 import { useAuthStore } from '../../stores/authStore'
 import { cn, timeAgo } from '../../lib/utils'
+import echo from '../../lib/echo'
 import type { Message } from '../../types'
 
 export default function ChatPage() {
@@ -20,7 +21,6 @@ export default function ChatPage() {
     queryKey: ['messages', id],
     queryFn: () => connectionsApi.getMessages(id!),
     enabled: !!id,
-    refetchInterval: 5000,
   })
 
   const { data: convsData } = useQuery({
@@ -33,11 +33,44 @@ export default function ChatPage() {
   const conv = conversations.find((c: { id: string }) => c.id === id)
   const otherUser = conv?.other_user
 
+  // Real-time WebSocket subscription
+  useEffect(() => {
+    if (!id) return
+
+    const channel = echo.private(`conversation.${id}`)
+      .listen('.MessageSent', (data: Message) => {
+        qc.setQueryData(['messages', id], (old: { data: { data: Message[] } } | undefined) => {
+          if (!old) return old
+          const existing = old.data.data.find(m => m.id === data.id)
+          if (existing) return old
+          return {
+            ...old,
+            data: { ...old.data, data: [...old.data.data, data] },
+          }
+        })
+        qc.invalidateQueries({ queryKey: ['conversations'] })
+      })
+
+    return () => {
+      echo.leave(`conversation.${id}`)
+      void channel
+    }
+  }, [id, qc])
+
   const send = useMutation({
     mutationFn: () => connectionsApi.sendMessage(id!, text.trim()),
-    onSuccess: () => {
+    onSuccess: (res) => {
       setText('')
-      qc.invalidateQueries({ queryKey: ['messages', id] })
+      const newMsg = res?.data?.data
+      if (newMsg) {
+        qc.setQueryData(['messages', id], (old: { data: { data: Message[] } } | undefined) => {
+          if (!old) return old
+          return {
+            ...old,
+            data: { ...old.data, data: [...old.data.data, newMsg] },
+          }
+        })
+      }
       qc.invalidateQueries({ queryKey: ['conversations'] })
     },
   })

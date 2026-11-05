@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useQuery, useMutation } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, MapPin, Star, Bookmark, Heart, Flag, MessageCircle, Languages, Clock } from 'lucide-react'
 import { discoverApi } from '../../api/discover'
 import { connectionsApi } from '../../api/connections'
@@ -17,6 +17,7 @@ export default function ProfileDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { toast } = useToast()
+  const qc = useQueryClient()
   const [showConnect, setShowConnect] = useState(false)
   const [showReport, setShowReport] = useState(false)
   const [connectMessage, setConnectMessage] = useState('')
@@ -35,6 +36,7 @@ export default function ProfileDetailPage() {
     onSuccess: () => {
       toast('Connection request sent!', 'success')
       setShowConnect(false)
+      qc.invalidateQueries({ queryKey: ['connections-sent'] })
     },
     onError: () => toast('Could not send request', 'error'),
   })
