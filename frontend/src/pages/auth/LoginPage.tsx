@@ -8,6 +8,7 @@ import { Mail, Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react'
 import { authApi } from '../../api/auth'
 import { useAuthStore } from '../../stores/authStore'
 import { useToast } from '../../components/ui/Toast'
+import { LogoMark } from '../../components/ui/Logo'
 import Input from '../../components/ui/Input'
 import Button from '../../components/ui/Button'
 
@@ -43,21 +44,40 @@ export default function LoginPage() {
 
   return (
     <div className="app-container min-h-dvh bg-[#FAF9F6] flex flex-col">
-      <div className="p-4 pt-safe">
-        <button onClick={() => navigate(-1)} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-[#E8EAE6] text-[#24332F]">
+      {/* Top bar */}
+      <div className="flex items-center px-4 pt-safe pt-4 pb-2">
+        <button
+          onClick={() => navigate(-1)}
+          className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-[#E8EAE6] text-[#24332F] mr-3"
+          aria-label="Go back"
+        >
           <ArrowLeft size={20} />
         </button>
       </div>
 
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex-1 px-6 pb-10">
-        <div className="mb-8">
-          <h1 className="font-manrope font-extrabold text-3xl text-[#24332F] mb-2">Welcome back</h1>
-          <p className="text-[#77817C]">Sign in to continue your journey</p>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35 }}
+        className="flex-1 px-6 pb-10 flex flex-col"
+      >
+        {/* Logo */}
+        <div className="flex items-center gap-2 mb-10">
+          <LogoMark size={32} />
+          <span className="font-manrope font-extrabold text-[#24332F] text-lg tracking-tight">FindYourVibe</span>
+        </div>
+
+        {/* Heading */}
+        <div className="mb-7">
+          <h1 className="font-manrope font-extrabold text-[2rem] text-[#24332F] leading-tight tracking-[-0.5px]">
+            Welcome back
+          </h1>
+          <p className="text-[#77817C] mt-1.5 text-base">Sign in to continue your journey</p>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
           <Input
-            label="Email"
+            label="Email address"
             type="email"
             placeholder="your@email.com"
             leftIcon={<Mail size={16} />}
@@ -70,7 +90,7 @@ export default function LoginPage() {
             placeholder="Enter your password"
             leftIcon={<Lock size={16} />}
             rightIcon={
-              <button type="button" onClick={() => setShowPw(s => !s)}>
+              <button type="button" onClick={() => setShowPw(s => !s)} aria-label={showPw ? 'Hide password' : 'Show password'}>
                 {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             }
@@ -78,16 +98,27 @@ export default function LoginPage() {
             {...register('password')}
           />
 
-          <div className="text-right">
-            <Link to="/forgot-password" className="text-sm text-[#236B63] font-medium">Forgot password?</Link>
+          <div className="flex justify-end -mt-1">
+            <Link to="/forgot-password" className="text-sm text-[#236B63] font-semibold">
+              Forgot password?
+            </Link>
           </div>
 
-          <Button type="submit" size="lg" loading={isSubmitting} className="mt-2">Sign In</Button>
+          <Button type="submit" size="lg" loading={isSubmitting} className="mt-1">
+            Sign In
+          </Button>
         </form>
 
-        <p className="text-center text-[#77817C] text-sm mt-6">
+        {/* Divider */}
+        <div className="flex items-center gap-3 my-6">
+          <div className="flex-1 h-px bg-[#E8EAE6]" />
+          <span className="text-xs text-[#A1AAA5] font-medium">or</span>
+          <div className="flex-1 h-px bg-[#E8EAE6]" />
+        </div>
+
+        <p className="text-center text-[#77817C] text-sm">
           Don't have an account?{' '}
-          <Link to="/register" className="text-[#236B63] font-semibold">Sign up</Link>
+          <Link to="/register" className="text-[#236B63] font-bold">Sign up free</Link>
         </p>
       </motion.div>
     </div>

@@ -48,12 +48,25 @@ export default function ConnectionsPage() {
       <PageHeader title="Connections" />
 
       {/* Tabs */}
-      <div className="flex border-b border-[#E8EAE6] px-4">
+      <div className="flex gap-1 px-4 py-2 border-b border-[#E8EAE6]/60">
         {tabs.map(t => (
-          <button key={t} onClick={() => setTab(t)} className={`flex-1 py-3 text-sm font-semibold font-manrope transition-colors relative ${tab === t ? 'text-[#236B63]' : 'text-[#A1AAA5]'}`}>
+          <button
+            key={t}
+            onClick={() => setTab(t)}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-semibold font-manrope transition-all ${
+              tab === t
+                ? 'bg-[#E8F0EA] text-[#236B63]'
+                : 'text-[#A1AAA5] hover:text-[#77817C]'
+            }`}
+          >
             {t}
-            {count[t] > 0 && <span className="ml-1 text-xs bg-[#236B63] text-white rounded-full px-1.5 py-0.5">{count[t]}</span>}
-            {tab === t && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#236B63] rounded-full" />}
+            {count[t] > 0 && (
+              <span className={`text-[10px] font-bold rounded-full px-1.5 py-0.5 leading-none ${
+                tab === t ? 'bg-[#236B63] text-white' : 'bg-[#E8EAE6] text-[#A1AAA5]'
+              }`}>
+                {count[t]}
+              </span>
+            )}
           </button>
         ))}
       </div>
