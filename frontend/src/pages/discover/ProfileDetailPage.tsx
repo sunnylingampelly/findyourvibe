@@ -1,17 +1,32 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, MapPin, Star, Bookmark, Heart, Flag, MessageCircle, Languages, Clock } from 'lucide-react'
+import { ArrowLeft, MapPin, Star, Bookmark, Heart, Flag, MessageCircle, Languages, Clock, CheckCircle2 } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { discoverApi } from '../../api/discover'
 import { connectionsApi } from '../../api/connections'
 import { profileApi } from '../../api/profile'
 import { useToast } from '../../components/ui/Toast'
 import { Skeleton } from '../../components/ui/Skeleton'
 import Button from '../../components/ui/Button'
-import Badge from '../../components/ui/Badge'
 import BottomSheet from '../../components/ui/BottomSheet'
 import { getInitials } from '../../lib/utils'
 import type { PublicProfile } from '../../types'
+
+const SERVICE_ICONS: Record<string, string> = {
+  'movie-companion': '🎬',
+  'coffee-buddy': '☕',
+  'event-companion': '🎭',
+  'travel-buddy': '✈️',
+  'shopping-companion': '🛍️',
+  'food-explorer': '🍜',
+  'city-explorer': '🗺️',
+  'weekend-companion': '🌅',
+  'adventure-companion': '🏔️',
+  'gaming-buddy': '🎮',
+}
+
+type Tab = 'about' | 'services' | 'reviews'
 
 export default function ProfileDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -22,6 +37,7 @@ export default function ProfileDetailPage() {
   const [showReport, setShowReport] = useState(false)
   const [connectMessage, setConnectMessage] = useState('')
   const [saved, setSaved] = useState(false)
+  const [tab, setTab] = useState<Tab>('about')
 
   const { data, isLoading } = useQuery({
     queryKey: ['profile', id],
@@ -42,160 +58,290 @@ export default function ProfileDetailPage() {
   })
 
   const saveMutation = useMutation({
-    mutationFn: async () => { if (!saved) await discoverApi.saveProfile(id!) },
-    onSuccess: () => { setSaved(s => !s); toast(saved ? 'Removed from saved' : 'Profile saved!', 'success') },
+    mutationFn: async () => {
+      if (!saved) await discoverApi.saveProfile(id!)
+    },
+    onSuccess: () => {
+      setSaved(s => !s)
+      toast(saved ? 'Removed from saved' : 'Profile saved!', 'success')
+    },
   })
 
   if (isLoading || !profile) {
     return (
       <div className="app-container min-h-dvh bg-[#FAF9F6]">
-        <div className="h-72 skeleton" />
-        <div className="p-4 space-y-3">
-          <Skeleton className="h-6 w-48" />
+        <div className="h-[55vh] skeleton" />
+        <div className="p-5 space-y-3">
+          <Skeleton className="h-7 w-48" />
           <Skeleton className="h-4 w-32" />
-          <Skeleton className="h-20 w-full" />
+          <div className="mt-5 space-y-2">
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-3/4" />
+          </div>
         </div>
       </div>
     )
   }
 
+  const hasAbout = !!(profile.introduction || profile.bio || (profile.interests && profile.interests.length > 0) || (profile.languages && profile.languages.length > 0))
+  const hasServices = !!(profile.services && profile.services.length > 0)
+
   return (
-    <div className="app-container min-h-dvh bg-[#FAF9F6]">
-      {/* Photo hero */}
-      <div className="relative h-[65vw] max-h-80 bg-[#A8C5B5]">
+    <div className="app-container min-h-dvh bg-[#FAF9F6] overflow-y-auto screen-scroll">
+      {/* Full-bleed hero */}
+      <div className="relative" style={{ height: '62vh', minHeight: 320 }}>
         {profile.profile_photo_url ? (
           <img src={profile.profile_photo_url} alt={profile.display_name} className="w-full h-full object-cover" />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-[#A8C5B5] to-[#236B63] flex items-center justify-center">
-            <span className="text-6xl font-manrope font-bold text-white">{getInitials(profile.display_name)}</span>
+          <div className="w-full h-full bg-gradient-to-br from-[#A8C5B5] to-[#194E49] flex items-center justify-center">
+            <span className="font-manrope font-extrabold text-7xl text-white">{getInitials(profile.display_name)}</span>
           </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
-        {/* Nav */}
+        {/* Gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-black/15" />
+
+        {/* Nav buttons */}
         <div className="absolute top-0 left-0 right-0 flex justify-between items-center p-4 pt-safe">
-          <button onClick={() => navigate(-1)} className="w-10 h-10 bg-black/30 backdrop-blur-sm rounded-full flex items-center justify-center text-white">
+          <button
+            onClick={() => navigate(-1)}
+            className="w-10 h-10 bg-black/35 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/10"
+          >
             <ArrowLeft size={20} />
           </button>
           <div className="flex gap-2">
-            <button onClick={() => saveMutation.mutate()} className={`w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-sm ${saved ? 'bg-[#236B63] text-white' : 'bg-black/30 text-white'}`}>
+            <button
+              onClick={() => saveMutation.mutate()}
+              className={`w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-md border ${saved ? 'bg-[#236B63] border-[#236B63] text-white' : 'bg-black/35 border-white/10 text-white'}`}
+            >
               <Bookmark size={18} fill={saved ? 'white' : 'none'} />
             </button>
-            <button onClick={() => setShowReport(true)} className="w-10 h-10 bg-black/30 backdrop-blur-sm rounded-full flex items-center justify-center text-white">
+            <button
+              onClick={() => setShowReport(true)}
+              className="w-10 h-10 bg-black/35 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/10"
+            >
               <Flag size={18} />
             </button>
           </div>
         </div>
 
-        {/* Name overlay */}
-        <div className="absolute bottom-4 left-4 right-4">
+        {/* Identity bar — frosted glass over hero */}
+        <div className="absolute bottom-0 left-0 right-0 p-5 pb-6">
+          {/* Rating badge */}
+          {profile.avg_rating && profile.avg_rating > 0 && (
+            <div className="flex items-center gap-1.5 mb-2">
+              {[1,2,3,4,5].map(n => (
+                <Star
+                  key={n}
+                  size={13}
+                  className={Number(profile.avg_rating) >= n ? 'text-[#D9A45B] fill-[#D9A45B]' : 'text-white/30'}
+                />
+              ))}
+              <span className="text-white/80 text-xs ml-1">{Number(profile.avg_rating).toFixed(1)} · {profile.rating_count ?? 0} reviews</span>
+            </div>
+          )}
+
           <div className="flex items-end justify-between">
             <div>
-              <h1 className="font-manrope font-extrabold text-2xl text-white">
-                {profile.display_name}{profile.age ? `, ${profile.age}` : ''}
-              </h1>
+              <div className="flex items-center gap-2 mb-0.5">
+                <h1 className="font-manrope font-extrabold text-[1.75rem] text-white leading-tight tracking-tight">
+                  {profile.display_name}{profile.age ? `, ${profile.age}` : ''}
+                </h1>
+                {profile.companion_verification_status === 'approved' && (
+                  <CheckCircle2 size={20} className="text-[#4D9274] fill-white shrink-0" />
+                )}
+              </div>
               {profile.city && (
-                <p className="text-white/80 text-sm flex items-center gap-1 mt-0.5">
-                  <MapPin size={13} />{profile.city.name}{profile.country ? `, ${profile.country.name}` : ''}
+                <p className="text-white/70 text-sm flex items-center gap-1">
+                  <MapPin size={13} />
+                  {profile.city.name}{profile.country ? `, ${profile.country.name}` : ''}
                 </p>
               )}
             </div>
-            {profile.companion_verification_status === 'approved' && (
-              <Badge variant="verified">Verified</Badge>
-            )}
           </div>
+
+          {/* Interest tags on hero */}
+          {profile.interests && profile.interests.length > 0 && (
+            <div className="flex gap-2 mt-3 flex-wrap">
+              {profile.interests.slice(0, 4).map(i => (
+                <span key={i.id} className="text-xs bg-white/15 backdrop-blur-sm text-white px-3 py-1 rounded-full border border-white/15">
+                  {i.name}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Content */}
-      <div className="px-4 pb-28">
-        {/* Rating */}
-        {profile.avg_rating && profile.avg_rating > 0 && (
-          <div className="flex items-center gap-2 py-3 border-b border-[#E8EAE6]">
-            <Star size={16} className="text-[#D9A45B] fill-[#D9A45B]" />
-            <span className="font-semibold text-[#24332F]">{Number(profile.avg_rating).toFixed(1)}</span>
-            <span className="text-[#A1AAA5] text-sm">({profile.rating_count} ratings)</span>
-          </div>
-        )}
-
-        {/* Bio */}
-        {profile.introduction && (
-          <section className="py-4 border-b border-[#E8EAE6]">
-            <h2 className="font-manrope font-semibold text-[#24332F] mb-2 text-sm uppercase tracking-wide text-[#A1AAA5]">Introduction</h2>
-            <p className="text-[#24332F] leading-relaxed">{profile.introduction}</p>
-          </section>
-        )}
-
-        {profile.bio && (
-          <section className="py-4 border-b border-[#E8EAE6]">
-            <h2 className="font-manrope font-semibold text-sm uppercase tracking-wide text-[#A1AAA5] mb-2">About</h2>
-            <p className="text-[#24332F] leading-relaxed">{profile.bio}</p>
-          </section>
-        )}
-
-        {/* Interests */}
-        {profile.interests && profile.interests.length > 0 && (
-          <section className="py-4 border-b border-[#E8EAE6]">
-            <h2 className="font-manrope font-semibold text-sm uppercase tracking-wide text-[#A1AAA5] mb-3">Interests</h2>
-            <div className="flex flex-wrap gap-2">
-              {profile.interests.map(i => (
-                <span key={i.id} className="px-3 py-1.5 bg-[#E8F0EA] text-[#236B63] rounded-full text-sm font-medium">{i.name}</span>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Languages */}
-        {profile.languages && profile.languages.length > 0 && (
-          <section className="py-4 border-b border-[#E8EAE6]">
-            <h2 className="flex items-center gap-2 font-manrope font-semibold text-sm uppercase tracking-wide text-[#A1AAA5] mb-3">
-              <Languages size={14} /> Languages
-            </h2>
-            <div className="flex flex-wrap gap-2">
-              {profile.languages.map(l => (
-                <span key={l.id} className="px-3 py-1.5 bg-[#F4F1EA] text-[#77817C] rounded-full text-sm">{l.name}</span>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Services */}
-        {profile.services && profile.services.length > 0 && (
-          <section className="py-4">
-            <h2 className="flex items-center gap-2 font-manrope font-semibold text-sm uppercase tracking-wide text-[#A1AAA5] mb-3">
-              <Clock size={14} /> Available For
-            </h2>
-            <div className="flex flex-wrap gap-2">
-              {profile.services.map(s => (
-                <span key={s.id} className="px-3 py-1.5 bg-white border border-[#E8EAE6] text-[#24332F] rounded-full text-sm font-medium">{s.name}</span>
-              ))}
-            </div>
-          </section>
-        )}
+      {/* Tabs */}
+      <div className="sticky top-0 z-30 bg-white border-b border-[#E8EAE6]">
+        <div className="flex">
+          {(['about', 'services', 'reviews'] as Tab[]).map(t => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              className={`flex-1 py-3.5 text-sm font-semibold font-manrope capitalize relative transition-colors ${
+                tab === t ? 'text-[#236B63]' : 'text-[#A1AAA5]'
+              }`}
+            >
+              {t}
+              {tab === t && (
+                <motion.div
+                  layoutId="tab-indicator"
+                  className="absolute bottom-0 left-1/4 right-1/4 h-0.5 bg-[#236B63] rounded-full"
+                />
+              )}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Sticky bottom actions */}
-      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-white border-t border-[#E8EAE6] p-4 pb-safe flex gap-3">
-        <Button variant="secondary" className="flex-1" onClick={() => {}}>
-          <Heart size={18} /> Like
-        </Button>
-        <Button className="flex-1" onClick={() => setShowConnect(true)}>
-          <MessageCircle size={18} /> Connect
-        </Button>
+      {/* Tab content */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={tab}
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -6 }}
+          transition={{ duration: 0.18 }}
+          className="px-4 py-5 pb-32"
+        >
+          {tab === 'about' && (
+            <div className="space-y-5">
+              {!hasAbout && (
+                <p className="text-[#A1AAA5] text-sm text-center py-8">No profile details yet.</p>
+              )}
+
+              {profile.introduction && (
+                <div className="bg-white rounded-2xl p-4 border border-[#E8EAE6]">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-[#A1AAA5] mb-2">Introduction</p>
+                  <p className="text-[#24332F] leading-relaxed text-[0.925rem]">{profile.introduction}</p>
+                </div>
+              )}
+
+              {profile.bio && (
+                <div className="bg-white rounded-2xl p-4 border border-[#E8EAE6]">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-[#A1AAA5] mb-2">About</p>
+                  <p className="text-[#24332F] leading-relaxed text-[0.925rem]">{profile.bio}</p>
+                </div>
+              )}
+
+              {profile.interests && profile.interests.length > 0 && (
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-[#A1AAA5] mb-3">Interests</p>
+                  <div className="flex flex-wrap gap-2">
+                    {profile.interests.map(i => (
+                      <span key={i.id} className="px-3.5 py-1.5 bg-[#E8F0EA] text-[#236B63] rounded-full text-sm font-medium border border-[#C8DDD2]">
+                        {i.name}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {profile.languages && profile.languages.length > 0 && (
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-[#A1AAA5] mb-3 flex items-center gap-1.5">
+                    <Languages size={11} /> Languages
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {profile.languages.map(l => (
+                      <span key={l.id} className="px-3.5 py-1.5 bg-[#F4F1EA] text-[#77817C] rounded-full text-sm border border-[#E8E5DC]">
+                        {l.name}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {tab === 'services' && (
+            <div className="space-y-3">
+              {!hasServices ? (
+                <p className="text-[#A1AAA5] text-sm text-center py-8">No services listed yet.</p>
+              ) : (
+                <>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-[#A1AAA5] mb-4 flex items-center gap-1.5">
+                    <Clock size={11} /> Available For
+                  </p>
+                  {profile.services!.map(s => (
+                    <div key={s.id} className="bg-white rounded-2xl p-4 border border-[#E8EAE6] flex items-center gap-4">
+                      <div className="w-11 h-11 bg-[#E8F0EA] rounded-xl flex items-center justify-center text-xl shrink-0">
+                        {SERVICE_ICONS[s.slug] || '✨'}
+                      </div>
+                      <div>
+                        <p className="font-manrope font-semibold text-[#24332F] text-sm">{s.name}</p>
+                        {s.description && (
+                          <p className="text-[#A1AAA5] text-xs mt-0.5 leading-relaxed">{s.description}</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </>
+              )}
+            </div>
+          )}
+
+          {tab === 'reviews' && (
+            <div>
+              {profile.avg_rating && profile.avg_rating > 0 ? (
+                <div className="bg-white rounded-2xl p-5 border border-[#E8EAE6] text-center mb-4">
+                  <div className="font-manrope font-extrabold text-5xl text-[#24332F] mb-1">{Number(profile.avg_rating).toFixed(1)}</div>
+                  <div className="flex justify-center gap-1 mb-2">
+                    {[1,2,3,4,5].map(n => (
+                      <Star key={n} size={16} className={Number(profile.avg_rating) >= n ? 'text-[#D9A45B] fill-[#D9A45B]' : 'text-[#E8EAE6]'} />
+                    ))}
+                  </div>
+                  <p className="text-[#A1AAA5] text-sm">{profile.rating_count ?? 0} reviews</p>
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <div className="w-14 h-14 bg-[#E8F0EA] rounded-2xl flex items-center justify-center mx-auto mb-3">
+                    <Star size={22} className="text-[#236B63]" />
+                  </div>
+                  <p className="text-[#A1AAA5] text-sm">No reviews yet</p>
+                </div>
+              )}
+            </div>
+          )}
+        </motion.div>
+      </AnimatePresence>
+
+      {/* Bottom action bar */}
+      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-white/90 backdrop-blur-xl border-t border-[#E8EAE6] p-4 pb-safe">
+        <div className="flex gap-3">
+          <button
+            onClick={() => saveMutation.mutate()}
+            className={`w-12 h-12 rounded-2xl border flex items-center justify-center shrink-0 transition-colors ${
+              saved ? 'bg-[#E8F0EA] border-[#C8DDD2] text-[#236B63]' : 'bg-white border-[#E8EAE6] text-[#A1AAA5]'
+            }`}
+          >
+            <Heart size={20} fill={saved ? '#236B63' : 'none'} />
+          </button>
+          <Button className="flex-1 !h-12" onClick={() => setShowConnect(true)}>
+            <MessageCircle size={18} /> Connect with {profile.display_name.split(' ')[0]}
+          </Button>
+        </div>
       </div>
 
       {/* Connect sheet */}
       <BottomSheet open={showConnect} onClose={() => setShowConnect(false)} title="Send Connection Request">
         <div className="space-y-4">
-          <p className="text-sm text-[#77817C]">Add a personal message to increase your chances of connecting with {profile.display_name}.</p>
+          <p className="text-sm text-[#77817C] leading-relaxed">
+            Add a personal message to increase your chances of connecting with <strong className="text-[#24332F]">{profile.display_name}</strong>.
+          </p>
           <textarea
             value={connectMessage}
             onChange={e => setConnectMessage(e.target.value)}
-            placeholder="Introduce yourself briefly…"
+            placeholder={`Hey ${profile.display_name.split(' ')[0]}! I'd love to connect…`}
             rows={4}
             className="w-full border-[1.5px] border-[#E8EAE6] rounded-2xl px-4 py-3 text-sm text-[#24332F] placeholder:text-[#A1AAA5] focus:outline-none focus:border-[#236B63] resize-none"
           />
-          <Button size="lg" loading={connectMutation.isPending} onClick={() => connectMutation.mutate()}>Send Request</Button>
+          <Button size="lg" loading={connectMutation.isPending} onClick={() => connectMutation.mutate()}>
+            Send Request
+          </Button>
         </div>
       </BottomSheet>
 
