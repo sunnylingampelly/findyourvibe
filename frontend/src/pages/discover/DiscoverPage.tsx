@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { motion } from 'framer-motion'
-import { Bell, Search, Star, MapPin, CheckCircle2 } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Bell, Search, Star, MapPin, CheckCircle2, Download, X } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { discoverApi } from '../../api/discover'
 import { useAuthStore } from '../../stores/authStore'
@@ -9,6 +9,7 @@ import AppShell from '../../components/layout/AppShell'
 import { useToast } from '../../components/ui/Toast'
 import { normalizeProfile, getInitials } from '../../lib/utils'
 import { type PublicProfile, type Service } from '../../types'
+import { usePWAInstall } from '../../hooks/usePWAInstall'
 
 const SERVICE_ICONS: Record<string, string> = {
   'movie-companion': '🎬',
@@ -124,6 +125,16 @@ export default function DiscoverPage() {
   const [search, setSearch] = useState('')
   const [searchInput, setSearchInput] = useState('')
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const { canInstall, install } = usePWAInstall()
+  const [bannerDismissed, setBannerDismissed] = useState(() => {
+    try { return localStorage.getItem('pwa-banner-dismissed') === '1' } catch { return false }
+  })
+  const showBanner = canInstall && !bannerDismissed
+
+  const dismissBanner = () => {
+    setBannerDismissed(true)
+    try { localStorage.setItem('pwa-banner-dismissed', '1') } catch { /* ignore */ }
+  }
 
   const { data: servicesData } = useQuery({
     queryKey: ['services'],
@@ -200,6 +211,41 @@ export default function DiscoverPage() {
               <span className="absolute top-2 right-2 w-2 h-2 bg-[#D76D6D] rounded-full border border-white" />
             </Link>
           </div>
+
+          {/* PWA install banner */}
+          <AnimatePresence>
+            {showBanner && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden px-4 pb-2"
+              >
+                <div className="flex items-center gap-3 bg-[#236B63] rounded-2xl px-4 py-2.5">
+                  <div className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
+                    <Download size={15} className="text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white text-xs font-bold leading-tight">Install FindYourVibe</p>
+                    <p className="text-white/70 text-[10px] leading-tight mt-0.5">Add to home screen for the best experience</p>
+                  </div>
+                  <button
+                    onClick={install}
+                    className="shrink-0 bg-white text-[#236B63] text-xs font-bold px-3 py-1.5 rounded-xl"
+                  >
+                    Install
+                  </button>
+                  <button
+                    onClick={dismissBanner}
+                    className="shrink-0 w-6 h-6 flex items-center justify-center text-white/70 hover:text-white"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Search */}
           <div className="relative px-4 mb-3">
