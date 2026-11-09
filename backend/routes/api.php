@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\BlockController;
+use App\Http\Controllers\Api\V1\BookingController;
+use App\Http\Controllers\Api\V1\CompanionPricingController;
 use App\Http\Controllers\Api\V1\ProfilePhotosController;
 use App\Http\Controllers\Api\V1\CompanionController;
 use App\Http\Controllers\Api\V1\ConnectionController;
@@ -100,6 +102,12 @@ Route::prefix('v1')->group(function () {
         Route::post('companion/applications', [CompanionController::class, 'store']);
         Route::put('companion/applications/me', [CompanionController::class, 'update']);
         Route::post('companion/applications/me/documents', [CompanionController::class, 'uploadDocument']);
+        Route::put('companion/pricing', [CompanionPricingController::class, 'update']);
+
+        // Bookings
+        Route::get('bookings', [BookingController::class, 'index']);
+        Route::post('bookings', [BookingController::class, 'store']);
+        Route::patch('bookings/{id}', [BookingController::class, 'update']);
 
         // Safety
         Route::post('reports', [ReportController::class, 'store']);
@@ -125,6 +133,7 @@ Route::prefix('v1')->group(function () {
             Route::post('companion-applications/{id}/approve', [Admin\CompanionApplicationController::class, 'approve']);
             Route::post('companion-applications/{id}/reject', [Admin\CompanionApplicationController::class, 'reject']);
             Route::post('companion-applications/{id}/request-information', [Admin\CompanionApplicationController::class, 'requestInformation']);
+            Route::get('companion-applications/{id}/documents/{docId}/download', [Admin\CompanionApplicationController::class, 'downloadDocument']);
 
             Route::get('reports', [Admin\ReportController::class, 'index']);
             Route::get('reports/{id}', [Admin\ReportController::class, 'show']);

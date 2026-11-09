@@ -9,6 +9,7 @@ use App\Services\AuditService;
 use App\Services\CompanionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class CompanionApplicationController extends Controller
 {
@@ -19,7 +20,7 @@ class CompanionApplicationController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $query = CompanionApplication::with(['user.profile']);
+        $query = CompanionApplication::with(['user.profile', 'documents']);
 
         if ($status = $request->input('status')) {
             $query->where('status', $status);
@@ -67,6 +68,11 @@ class CompanionApplicationController extends Controller
 
         $application = $this->companionService->approve($application, $request->user());
 
+        if ($request->filled('admin_notes')) {
+            $application->update(['admin_notes' => $request->admin_notes]);
+            $application = $application->fresh();
+        }
+
         $this->auditService->logFromRequest($request, 'companion_approved', 'CompanionApplication', $application->id);
 
         return response()->json([
@@ -113,5 +119,21 @@ class CompanionApplicationController extends Controller
             'message' => 'Additional information requested.',
             'data' => new CompanionApplicationResource($application),
         ]);
+    }
+
+    public function downloadDocument(Request $request, string $id, string $docId): \Symfony\Component\HttpFoundation\StreamedResponse|\Illuminate\Http\JsonResponse
+    {
+        $application = CompanionApplication::findOrFail($id);
+        $doc = $application->documents()->findOrFail($docId);
+
+        if (!Storage::disk('local')->exists($doc->file_path)) {
+            return response()->json(['success' => false, 'message' => 'File not found.'], 404);
+        }
+
+        return Storage::disk('local')->download(
+            $doc->file_path,
+            $doc->original_name,
+            ['Content-Type' => $doc->mime_type ?? 'application/octet-stream']
+        );
     }
 }

@@ -62,7 +62,9 @@ class User extends Authenticatable
 
     public function services(): BelongsToMany
     {
-        return $this->belongsToMany(Service::class, 'user_services');
+        return $this->belongsToMany(Service::class, 'user_services')
+            ->withPivot('price_per_session', 'price_currency', 'price_unit')
+            ->withTimestamps();
     }
 
     public function swipesGiven(): HasMany

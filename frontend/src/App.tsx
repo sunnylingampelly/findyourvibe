@@ -26,6 +26,8 @@ import ChatPage from './pages/messages/ChatPage'
 import ProfilePage from './pages/profile/ProfilePage'
 import EditProfilePage from './pages/profile/EditProfilePage'
 import CompanionApplyPage from './pages/companion/CompanionApplyPage'
+import CompanionDashboardPage from './pages/companion/CompanionDashboardPage'
+import BookingsPage from './pages/bookings/BookingsPage'
 import NotificationsPage from './pages/misc/NotificationsPage'
 import AccountSettingsPage from './pages/misc/AccountSettingsPage'
 import HelpPage from './pages/misc/HelpPage'
@@ -116,6 +118,8 @@ export default function App() {
             <Route path="/profile/edit" element={<RequireAuth><EditProfilePage /></RequireAuth>} />
             <Route path="/companion/apply" element={<RequireAuth><CompanionApplyPage /></RequireAuth>} />
             <Route path="/companion/status" element={<RequireAuth><CompanionApplyPage /></RequireAuth>} />
+            <Route path="/companion/dashboard" element={<RequireAuth><CompanionDashboardPage /></RequireAuth>} />
+            <Route path="/bookings" element={<RequireAuth><BookingsPage /></RequireAuth>} />
             <Route path="/notifications" element={<RequireAuth><NotificationsPage /></RequireAuth>} />
             <Route path="/settings" element={<RequireAuth><AccountSettingsPage /></RequireAuth>} />
             <Route path="/settings/privacy" element={<RequireAuth><AccountSettingsPage /></RequireAuth>} />

@@ -85,11 +85,11 @@ class CompanionController extends Controller
         }
 
         $request->validate([
-            'document' => ['required', 'file', 'mimes:jpeg,jpg,png,pdf', 'max:10240'],
+            'document' => ['required', 'file', 'max:20480'],
             'document_type' => ['required', Rule::in(['identity', 'selfie', 'other'])],
         ]);
 
-        $path = $request->file('document')->store('companion-documents/' . $application->id, 'private');
+        $path = $request->file('document')->store('companion-documents/' . $application->id, 'local');
 
         $doc = $application->documents()->create([
             'document_type' => $request->document_type,

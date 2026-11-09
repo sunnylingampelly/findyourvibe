@@ -23,14 +23,13 @@ class CompanionApplicationResource extends JsonResource
             'rejection_reason' => $this->rejection_reason,
             'reviewed_at' => $this->reviewed_at,
             'reviewer' => $this->when($isAdmin && $this->reviewed_by, fn() => $this->reviewer?->name),
-            'documents' => $this->when($isAdmin, fn() =>
-                $this->documents->map(fn($d) => [
-                    'id' => $d->id,
-                    'document_type' => $d->document_type,
-                    'original_name' => $d->original_name,
-                    'mime_type' => $d->mime_type,
-                ])
-            ),
+            'documents' => ($this->documents ?? collect())->map(fn($d) => [
+                'id' => $d->id,
+                'document_type' => $d->document_type,
+                'original_name' => $d->original_name,
+                'mime_type' => $d->mime_type,
+                'created_at' => $d->created_at,
+            ]),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

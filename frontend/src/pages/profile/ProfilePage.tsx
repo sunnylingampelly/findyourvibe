@@ -1,9 +1,10 @@
+import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import {
   Edit2, Settings, Shield, Users, Bell, LogOut,
-  ChevronRight, Star, Bookmark, ShieldCheck, HelpCircle, FileText
+  ChevronRight, Star, Bookmark, ShieldCheck, HelpCircle, FileText, CalendarDays, LayoutDashboard
 } from 'lucide-react'
 import { profileApi } from '../../api/profile'
 import { authApi } from '../../api/auth'
@@ -13,45 +14,65 @@ import Avatar from '../../components/ui/Avatar'
 import Badge from '../../components/ui/Badge'
 import type { User } from '../../types'
 
-const menuSections = [
-  {
-    label: 'Account',
-    items: [
-      { icon: Edit2, label: 'Edit Profile', to: '/profile/edit' },
-      { icon: Bookmark, label: 'Saved Profiles', to: '/saved' },
-      { icon: Bell, label: 'Notifications', to: '/notifications' },
-      { icon: Settings, label: 'Account Settings', to: '/settings' },
-    ],
-  },
-  {
-    label: 'Companion',
-    items: [
-      { icon: ShieldCheck, label: 'Become a Companion', to: '/companion/apply', highlight: true },
-      { icon: Star, label: 'My Companion Status', to: '/companion/status' },
-      { icon: Users, label: 'My Connections', to: '/connections' },
-    ],
-  },
-  {
-    label: 'Support',
-    items: [
-      { icon: Shield, label: 'Privacy Settings', to: '/settings/privacy' },
-      { icon: HelpCircle, label: 'Help & Support', to: '/help' },
-      { icon: FileText, label: 'Terms & Privacy', to: '/terms' },
-    ],
-  },
-]
-
 export default function ProfilePage() {
   const navigate = useNavigate()
-  const { user: storeUser, logout } = useAuthStore()
+  const { user: storeUser, logout, setUser } = useAuthStore()
 
   const { data } = useQuery({
     queryKey: ['me'],
     queryFn: () => profileApi.getMe(),
+    staleTime: 0,
   })
+
+  useEffect(() => {
+    if (data?.data?.data) setUser(data.data.data)
+  }, [data, setUser])
 
   const user: User = data?.data?.data ?? storeUser
   const profile = user?.profile
+  const companionStatus = profile?.companion_verification_status
+  const isApproved = companionStatus === 'approved'
+  const hasPendingApp = companionStatus && !['not_started', 'approved', 'rejected'].includes(companionStatus)
+
+  const companionItems = isApproved
+    ? [
+        { icon: LayoutDashboard, label: 'Companion Dashboard', to: '/companion/dashboard', highlight: true },
+        { icon: CalendarDays, label: 'My Bookings', to: '/bookings', highlight: false },
+        { icon: Users, label: 'My Connections', to: '/connections', highlight: false },
+      ]
+    : hasPendingApp
+    ? [
+        { icon: Star, label: 'Application Status', to: '/companion/apply', highlight: false },
+        { icon: Users, label: 'My Connections', to: '/connections', highlight: false },
+      ]
+    : [
+        { icon: ShieldCheck, label: 'Become a Companion', to: '/companion/apply', highlight: true },
+        { icon: Users, label: 'My Connections', to: '/connections', highlight: false },
+      ]
+
+  const menuSections = [
+    {
+      label: 'Account',
+      items: [
+        { icon: Edit2, label: 'Edit Profile', to: '/profile/edit' },
+        { icon: Bookmark, label: 'Saved Profiles', to: '/saved' },
+        { icon: Bell, label: 'Notifications', to: '/notifications' },
+        { icon: Settings, label: 'Account Settings', to: '/settings' },
+      ],
+    },
+    {
+      label: 'Companion',
+      items: companionItems,
+    },
+    {
+      label: 'Support',
+      items: [
+        { icon: Shield, label: 'Privacy Settings', to: '/settings/privacy' },
+        { icon: HelpCircle, label: 'Help & Support', to: '/help' },
+        { icon: FileText, label: 'Terms & Privacy', to: '/terms' },
+      ],
+    },
+  ]
 
   const handleLogout = async () => {
     try { await authApi.logout() } finally {

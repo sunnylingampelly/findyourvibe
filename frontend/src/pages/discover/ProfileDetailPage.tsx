@@ -1,17 +1,18 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, MapPin, Star, Bookmark, Heart, Flag, MessageCircle, Languages, Clock, CheckCircle2 } from 'lucide-react'
+import { ArrowLeft, MapPin, Star, Bookmark, Heart, Flag, MessageCircle, Languages, Clock, CheckCircle2, CalendarDays, IndianRupee } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { discoverApi } from '../../api/discover'
 import { connectionsApi } from '../../api/connections'
 import { profileApi } from '../../api/profile'
+import { bookingsApi } from '../../api/bookings'
 import { useToast } from '../../components/ui/Toast'
 import { Skeleton } from '../../components/ui/Skeleton'
 import Button from '../../components/ui/Button'
 import BottomSheet from '../../components/ui/BottomSheet'
 import { getInitials } from '../../lib/utils'
-import type { PublicProfile } from '../../types'
+import type { PublicProfile, Service } from '../../types'
 
 const SERVICE_ICONS: Record<string, string> = {
   'movie-companion': '🎬',
@@ -35,9 +36,16 @@ export default function ProfileDetailPage() {
   const qc = useQueryClient()
   const [showConnect, setShowConnect] = useState(false)
   const [showReport, setShowReport] = useState(false)
+  const [showBook, setShowBook] = useState(false)
+  const [bookingService, setBookingService] = useState<Service | null>(null)
   const [connectMessage, setConnectMessage] = useState('')
   const [saved, setSaved] = useState(false)
   const [tab, setTab] = useState<Tab>('about')
+  const [bookDate, setBookDate] = useState('')
+  const [bookTime, setBookTime] = useState('')
+  const [bookDuration, setBookDuration] = useState('2')
+  const [bookNotes, setBookNotes] = useState('')
+  const [bookLocation, setBookLocation] = useState('')
 
   const { data, isLoading } = useQuery({
     queryKey: ['profile', id],
@@ -55,6 +63,25 @@ export default function ProfileDetailPage() {
       qc.invalidateQueries({ queryKey: ['connections-sent'] })
     },
     onError: () => toast('Could not send request', 'error'),
+  })
+
+  const bookMutation = useMutation({
+    mutationFn: () => bookingsApi.createBooking({
+      companion_id: id!,
+      service_id: Number(bookingService!.id),
+      proposed_date: bookDate,
+      proposed_time: bookTime,
+      duration_hours: bookDuration,
+      notes: bookNotes,
+      location_notes: bookLocation,
+      agreed_rate: bookingService?.price_per_session ?? undefined,
+    }),
+    onSuccess: () => {
+      toast('Booking request sent!', 'success')
+      setShowBook(false)
+      qc.invalidateQueries({ queryKey: ['bookings'] })
+    },
+    onError: () => toast('Could not send booking request', 'error'),
   })
 
   const saveMutation = useMutation({
@@ -267,16 +294,34 @@ export default function ProfileDetailPage() {
                     <Clock size={11} /> Available For
                   </p>
                   {profile.services!.map(s => (
-                    <div key={s.id} className="bg-white rounded-2xl p-4 border border-[#E8EAE6] flex items-center gap-4">
-                      <div className="w-11 h-11 bg-[#E8F0EA] rounded-xl flex items-center justify-center text-xl shrink-0">
-                        {SERVICE_ICONS[s.slug] || '✨'}
+                    <div key={s.id} className="bg-white rounded-2xl p-4 border border-[#E8EAE6]">
+                      <div className="flex items-center gap-4">
+                        <div className="w-11 h-11 bg-[#E8F0EA] rounded-xl flex items-center justify-center text-xl shrink-0">
+                          {SERVICE_ICONS[s.slug] || '✨'}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-manrope font-semibold text-[#24332F] text-sm">{s.name}</p>
+                          {s.price_per_session != null && (
+                            <p className="text-[#236B63] text-xs font-semibold mt-0.5 flex items-center gap-0.5">
+                              <IndianRupee size={11} />{Number(s.price_per_session).toLocaleString('en-IN')}
+                              <span className="text-[#A1AAA5] font-normal ml-0.5">
+                                {s.price_unit === 'per_hour' ? '/hr' : s.price_unit === 'negotiable' ? '(negotiable)' : '/session'}
+                              </span>
+                            </p>
+                          )}
+                          {s.description && (
+                            <p className="text-[#A1AAA5] text-xs mt-0.5 leading-relaxed">{s.description}</p>
+                          )}
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-manrope font-semibold text-[#24332F] text-sm">{s.name}</p>
-                        {s.description && (
-                          <p className="text-[#A1AAA5] text-xs mt-0.5 leading-relaxed">{s.description}</p>
-                        )}
-                      </div>
+                      {profile.companion_verification_status === 'approved' && (
+                        <button
+                          onClick={() => { setBookingService(s); setShowBook(true) }}
+                          className="mt-3 w-full py-2 rounded-xl bg-[#E8F0EA] text-[#236B63] text-sm font-semibold flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
+                        >
+                          <CalendarDays size={15} /> Book this service
+                        </button>
+                      )}
                     </div>
                   ))}
                 </>
@@ -361,6 +406,98 @@ export default function ProfileDetailPage() {
               {cat}
             </button>
           ))}
+        </div>
+      </BottomSheet>
+
+      {/* Booking sheet */}
+      <BottomSheet open={showBook} onClose={() => setShowBook(false)} title={`Book ${bookingService?.name ?? 'Service'}`}>
+        <div className="space-y-4">
+          {bookingService && (
+            <div className="bg-[#E8F0EA] rounded-2xl p-3 flex items-center gap-3">
+              <span className="text-2xl">{SERVICE_ICONS[bookingService.slug] || '✨'}</span>
+              <div>
+                <p className="font-semibold text-[#24332F] text-sm">{bookingService.name}</p>
+                {bookingService.price_per_session != null && (
+                  <p className="text-[#236B63] text-xs font-semibold flex items-center gap-0.5">
+                    <IndianRupee size={10} />{Number(bookingService.price_per_session).toLocaleString('en-IN')}
+                    <span className="text-[#77817C] font-normal ml-0.5">
+                      {bookingService.price_unit === 'per_hour' ? '/hr' : bookingService.price_unit === 'negotiable' ? '(negotiable)' : '/session'}
+                    </span>
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-semibold text-[#A1AAA5] uppercase tracking-wide mb-1 block">Date *</label>
+              <input
+                type="date"
+                value={bookDate}
+                min={new Date().toISOString().split('T')[0]}
+                onChange={e => setBookDate(e.target.value)}
+                className="w-full border-[1.5px] border-[#E8EAE6] rounded-xl px-3 py-2.5 text-sm text-[#24332F] focus:outline-none focus:border-[#236B63]"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-[#A1AAA5] uppercase tracking-wide mb-1 block">Time *</label>
+              <input
+                type="time"
+                value={bookTime}
+                onChange={e => setBookTime(e.target.value)}
+                className="w-full border-[1.5px] border-[#E8EAE6] rounded-xl px-3 py-2.5 text-sm text-[#24332F] focus:outline-none focus:border-[#236B63]"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="text-xs font-semibold text-[#A1AAA5] uppercase tracking-wide mb-1 block">Duration (hours)</label>
+            <select
+              value={bookDuration}
+              onChange={e => setBookDuration(e.target.value)}
+              className="w-full border-[1.5px] border-[#E8EAE6] rounded-xl px-3 py-2.5 text-sm text-[#24332F] focus:outline-none focus:border-[#236B63] bg-white"
+            >
+              {['1', '2', '3', '4', '5', '6', '8'].map(h => (
+                <option key={h} value={h}>{h} hour{h !== '1' ? 's' : ''}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="text-xs font-semibold text-[#A1AAA5] uppercase tracking-wide mb-1 block">Preferred Location / Meet Point</label>
+            <input
+              type="text"
+              value={bookLocation}
+              onChange={e => setBookLocation(e.target.value)}
+              placeholder="e.g. Indiranagar, Bengaluru"
+              className="w-full border-[1.5px] border-[#E8EAE6] rounded-xl px-3 py-2.5 text-sm text-[#24332F] placeholder:text-[#A1AAA5] focus:outline-none focus:border-[#236B63]"
+            />
+          </div>
+
+          <div>
+            <label className="text-xs font-semibold text-[#A1AAA5] uppercase tracking-wide mb-1 block">Message to companion</label>
+            <textarea
+              value={bookNotes}
+              onChange={e => setBookNotes(e.target.value)}
+              placeholder="Tell them what you're looking for..."
+              rows={3}
+              className="w-full border-[1.5px] border-[#E8EAE6] rounded-2xl px-4 py-3 text-sm text-[#24332F] placeholder:text-[#A1AAA5] focus:outline-none focus:border-[#236B63] resize-none"
+            />
+          </div>
+
+          <p className="text-xs text-[#A1AAA5] leading-relaxed">
+            No payment required. You'll coordinate details directly with {profile.display_name.split(' ')[0]} after they accept.
+          </p>
+
+          <Button
+            size="lg"
+            loading={bookMutation.isPending}
+            disabled={!bookDate || !bookTime}
+            onClick={() => bookMutation.mutate()}
+          >
+            <CalendarDays size={18} /> Send Booking Request
+          </Button>
         </div>
       </BottomSheet>
     </div>

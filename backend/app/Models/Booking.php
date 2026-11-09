@@ -15,11 +15,15 @@ class Booking extends Model
     protected $fillable = [
         'requester_id', 'companion_id', 'service_id',
         'proposed_date', 'proposed_time', 'status', 'notes',
+        'agreed_rate', 'duration_hours', 'location_notes', 'companion_response_note',
     ];
 
     protected function casts(): array
     {
-        return ['proposed_date' => 'date'];
+        return [
+            'proposed_date' => 'date',
+            'agreed_rate' => 'decimal:2',
+        ];
     }
 
     public function requester(): BelongsTo

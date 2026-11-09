@@ -45,9 +45,32 @@ export interface UserPreferences {
 
 export interface Interest { id: string; name: string; icon?: string; color?: string }
 export interface Language { id: string; name: string; code: string }
-export interface Service { id: string; name: string; slug: string; description?: string; icon?: string; color?: string }
+export interface Service {
+  id: string; name: string; slug: string; description?: string; icon?: string; color?: string
+  price_per_session?: number | null
+  price_currency?: string | null
+  price_unit?: string | null
+}
 export interface Country { id: string; name: string; code: string; phone_code: string }
 export interface City { id: string; name: string; country_id: string }
+
+export type BookingStatus = 'pending' | 'accepted' | 'declined' | 'cancelled' | 'completed'
+
+export interface Booking {
+  id: string
+  status: BookingStatus
+  proposed_date: string
+  proposed_time: string
+  duration_hours?: string
+  notes?: string
+  location_notes?: string
+  agreed_rate?: number
+  companion_response_note?: string
+  requester?: { id: string; display_name: string; profile_photo_url?: string }
+  companion?: { id: string; display_name: string; profile_photo_url?: string }
+  service?: { id: string; name: string; slug: string }
+  created_at: string
+}
 
 export interface PublicProfile {
   id: string
@@ -112,6 +135,14 @@ export interface Notification {
   created_at: string
 }
 
+export interface CompanionDocument {
+  id: string
+  document_type: string
+  original_name: string
+  mime_type?: string
+  created_at: string
+}
+
 export interface CompanionApplication {
   id: string
   user_id: string
@@ -122,6 +153,7 @@ export interface CompanionApplication {
   rejection_reason?: string
   reviewed_at?: string
   created_at: string
+  documents?: CompanionDocument[]
 }
 
 export interface ApiResponse<T> {

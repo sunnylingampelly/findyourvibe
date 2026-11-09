@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery, useMutation } from '@tanstack/react-query'
-import { ShieldCheck, Upload, ChevronRight } from 'lucide-react'
+import { ShieldCheck, Upload, ChevronRight, CheckCircle2, Clock, Loader2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { profileApi } from '../../api/profile'
 import { discoverApi } from '../../api/discover'
@@ -14,7 +14,7 @@ import type { CompanionApplication, Service } from '../../types'
 const STATUS_LABELS: Record<string, string> = {
   not_started: 'Not Applied',
   draft: 'Draft',
-  submitted: 'Submitted',
+  submitted: 'Submitted — Under Review',
   under_review: 'Under Review',
   additional_info_required: 'More Info Needed',
   approved: 'Approved ✓',
@@ -27,11 +27,19 @@ const STATUS_VARIANTS: Record<string, 'default' | 'verified' | 'warning' | 'erro
   rejected: 'error', suspended: 'error', draft: 'muted', not_started: 'muted',
 }
 
+const ServiceIcons: Record<string, string> = {
+  'movie-companion': '🎬', 'coffee-buddy': '☕', 'event-companion': '🎭',
+  'travel-buddy': '✈️', 'shopping-companion': '🛍️', 'food-explorer': '🍜',
+  'city-explorer': '🗺️', 'weekend-companion': '🌅', 'adventure-companion': '🏔️', 'gaming-buddy': '🎮',
+}
+
 export default function CompanionApplyPage() {
   const navigate = useNavigate()
   const { toast } = useToast()
-  const [step, setStep] = useState<'info' | 'form' | 'docs'>('info')
+  const [step, setStep] = useState<'info' | 'form' | 'docs' | 'pending'>('info')
   const [form, setForm] = useState({ legal_name: '', bio: '', service_ids: [] as string[] })
+  const [uploadingType, setUploadingType] = useState<string | null>(null)
+  const [uploadedTypes, setUploadedTypes] = useState<Set<string>>(new Set())
 
   const { data: appData, refetch } = useQuery({
     queryKey: ['companion-app'],
@@ -42,41 +50,68 @@ export default function CompanionApplyPage() {
   const application: CompanionApplication | null = appData?.data?.data ?? null
   const services: Service[] = servicesData?.data?.data ?? []
 
+  // If draft already exists, skip straight to docs step
+  useEffect(() => {
+    if (application?.status === 'draft' && (step === 'info' || step === 'form')) {
+      setStep('docs')
+    }
+  }, [application, step])
+
   const apply = useMutation({
-    mutationFn: () => profileApi.startCompanionApp({ ...form, status: 'submitted' }),
-    onSuccess: () => { toast('Application submitted!', 'success'); refetch(); setStep('docs') },
+    mutationFn: () => profileApi.startCompanionApp({ legal_name: form.legal_name, submission_notes: form.bio }),
+    onSuccess: () => { refetch(); setStep('docs') },
+    onError: () => toast('Could not save application', 'error'),
+  })
+
+  const submitApp = useMutation({
+    mutationFn: () => profileApi.updateCompanionApp({ submit: true }),
+    onSuccess: () => { refetch(); setStep('pending') },
     onError: () => toast('Submission failed', 'error'),
   })
 
   const uploadDoc = async (file: File, type: string) => {
+    setUploadingType(type)
     try {
       await profileApi.uploadCompanionDoc(file, type)
+      setUploadedTypes(prev => new Set([...prev, type]))
       toast('Document uploaded!', 'success')
       refetch()
     } catch {
       toast('Upload failed', 'error')
+    } finally {
+      setUploadingType(null)
     }
   }
 
-  const ServiceIcons: Record<string, string> = {
-    'movie-companion': '🎬', 'coffee-buddy': '☕', 'event-companion': '🎭',
-    'travel-buddy': '✈️', 'shopping-companion': '🛍️', 'food-explorer': '🍜',
-    'city-explorer': '🗺️', 'weekend-companion': '🌅', 'adventure-companion': '🏔️', 'gaming-buddy': '🎮',
-  }
+  // Show status page for any non-draft submitted application
+  if (application && application.status !== 'draft' && step !== 'pending') {
+    const isApproved = application.status === 'approved'
+    const isPending = application.status === 'submitted' || application.status === 'under_review' || application.status === 'additional_info_required'
 
-  if (application && application.status !== 'draft') {
     return (
       <div className="app-container min-h-dvh bg-[#FAF9F6]">
         <PageHeader title="Companion Status" back />
-        <div className="px-4 pb-10 text-center">
-          <div className="py-10">
-            <div className="w-20 h-20 bg-[#E8F0EA] rounded-full flex items-center justify-center mx-auto mb-4">
-              <ShieldCheck size={36} className="text-[#236B63]" />
+        <div className="px-4 pb-10">
+          <div className="py-10 text-center">
+            <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 ${isApproved ? 'bg-[#E8F0EA]' : isPending ? 'bg-[#FFF5E6]' : 'bg-red-50'}`}>
+              {isApproved
+                ? <CheckCircle2 size={36} className="text-[#236B63]" />
+                : isPending
+                  ? <Clock size={36} className="text-[#D9A45B]" />
+                  : <ShieldCheck size={36} className="text-[#D76D6D]" />
+              }
             </div>
             <h2 className="font-manrope font-bold text-xl text-[#24332F] mb-2">Application Status</h2>
             <Badge variant={STATUS_VARIANTS[application.status] || 'muted'} className="text-sm px-4 py-1.5 mb-4">
               {STATUS_LABELS[application.status]}
             </Badge>
+
+            {isPending && (
+              <div className="bg-[#FFF5E6] border border-[#D9A45B]/30 rounded-2xl p-4 mt-4 text-left">
+                <p className="text-sm font-semibold text-[#D9A45B] mb-1">Application Under Review</p>
+                <p className="text-xs text-[#77817C]">We're reviewing your submission. This typically takes 2-3 business days. We'll notify you once a decision is made.</p>
+              </div>
+            )}
             {application.admin_notes && (
               <div className="bg-[#F4F1EA] rounded-2xl p-4 mt-4 text-left">
                 <p className="text-xs text-[#A1AAA5] mb-1">Notes from reviewer:</p>
@@ -89,6 +124,9 @@ export default function CompanionApplyPage() {
                 <p className="text-sm text-[#24332F]">{application.rejection_reason}</p>
               </div>
             )}
+            <button onClick={() => navigate('/profile')} className="mt-6 w-full py-3 border border-[#E8EAE6] rounded-2xl text-sm text-[#77817C]">
+              Back to Profile
+            </button>
           </div>
         </div>
       </div>
@@ -98,6 +136,15 @@ export default function CompanionApplyPage() {
   return (
     <div className="app-container min-h-dvh bg-[#FAF9F6]">
       <PageHeader title="Become a Companion" back />
+
+      {/* Progress indicator */}
+      {step !== 'info' && step !== 'pending' && (
+        <div className="flex gap-1.5 px-4 pb-4">
+          {(['form', 'docs'] as const).map(s => (
+            <div key={s} className={`h-1 flex-1 rounded-full transition-colors ${step === s || (s === 'form' && step === 'docs') ? 'bg-[#236B63]' : 'bg-[#E8EAE6]'}`} />
+          ))}
+        </div>
+      )}
 
       {step === 'info' && (
         <div className="px-4 pb-10">
@@ -109,7 +156,7 @@ export default function CompanionApplyPage() {
             </p>
           </div>
           <div className="space-y-3 mb-8">
-            {['Complete your profile', 'Submit identity verification', 'Await admin review (2-3 days)', 'Get your verified badge'].map((item, i) => (
+            {['Fill in your application details', 'Upload identity documents', 'Submit for admin review (2-3 days)', 'Get your verified badge'].map((item, i) => (
               <div key={item} className="flex items-center gap-3">
                 <div className="w-7 h-7 rounded-full bg-[#E8F0EA] flex items-center justify-center shrink-0">
                   <span className="text-xs font-bold text-[#236B63]">{i + 1}</span>
@@ -134,9 +181,14 @@ export default function CompanionApplyPage() {
             <h2 className="font-manrope font-bold text-xl text-[#24332F] mb-1">Application Details</h2>
             <p className="text-sm text-[#77817C]">This information will be reviewed by our team</p>
           </div>
-          <Input label="Legal Name (as on ID)" placeholder="Your full legal name" value={form.legal_name} onChange={e => setForm(f => ({ ...f, legal_name: e.target.value }))} />
+          <Input
+            label="Legal Name (as on ID)"
+            placeholder="Your full legal name"
+            value={form.legal_name}
+            onChange={e => setForm(f => ({ ...f, legal_name: e.target.value }))}
+          />
           <div>
-            <label className="text-sm font-medium text-[#24332F] font-manrope">Companion Bio</label>
+            <label className="text-sm font-medium text-[#24332F] font-manrope">About Yourself</label>
             <textarea
               value={form.bio}
               onChange={e => setForm(f => ({ ...f, bio: e.target.value }))}
@@ -163,7 +215,14 @@ export default function CompanionApplyPage() {
               })}
             </div>
           </div>
-          <Button size="lg" loading={apply.isPending} onClick={() => apply.mutate()}>Submit Application</Button>
+          <Button
+            size="lg"
+            loading={apply.isPending}
+            disabled={!form.legal_name.trim()}
+            onClick={() => apply.mutate()}
+          >
+            <span className="flex items-center gap-2">Save & Continue <ChevronRight size={18} /></span>
+          </Button>
         </div>
       )}
 
@@ -173,24 +232,95 @@ export default function CompanionApplyPage() {
             <h2 className="font-manrope font-bold text-xl text-[#24332F] mb-1">Upload Documents</h2>
             <p className="text-sm text-[#77817C]">Required for verification. Documents are stored securely and never shown publicly.</p>
           </div>
+
           {[
-            { type: 'identity', label: 'Government ID', desc: 'Passport, Aadhaar, Driving License, etc.' },
-            { type: 'selfie', label: 'Selfie', desc: 'A clear photo of your face' },
-          ].map(({ type, label, desc }) => (
-            <label key={type} className="block cursor-pointer">
-              <div className="border-2 border-dashed border-[#E8EAE6] rounded-2xl p-6 text-center hover:border-[#236B63] transition-colors">
-                <Upload size={28} className="text-[#A1AAA5] mx-auto mb-2" />
-                <p className="font-semibold text-[#24332F] text-sm">{label}</p>
-                <p className="text-xs text-[#A1AAA5] mt-1">{desc}</p>
-              </div>
-              <input type="file" accept="image/*,.pdf" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) uploadDoc(f, type) }} />
-            </label>
-          ))}
-          <div className="bg-[#E8F0EA] rounded-2xl p-4">
-            <p className="text-xs text-[#236B63] font-medium">Application Submitted ✓</p>
-            <p className="text-xs text-[#77817C] mt-1">We'll review your application and contact you within 2-3 business days.</p>
+            { type: 'identity', label: 'Government ID', desc: 'Passport, Aadhaar, Driving License, or any official ID' },
+            { type: 'selfie', label: 'Selfie with ID', desc: 'A clear photo of your face holding your ID' },
+            { type: 'other', label: 'Additional Document (optional)', desc: 'Any supporting document' },
+          ].map(({ type, label, desc }) => {
+            const uploaded = uploadedTypes.has(type) || (application?.documents ?? []).some((d: { document_type: string }) => d.document_type === type)
+            const isUploading = uploadingType === type
+
+            return (
+              <label key={type} className="block cursor-pointer">
+                <div className={`border-2 rounded-2xl p-5 text-center transition-colors ${uploaded ? 'border-[#236B63] bg-[#E8F0EA]' : 'border-dashed border-[#E8EAE6] hover:border-[#236B63]'}`}>
+                  {isUploading ? (
+                    <Loader2 size={28} className="text-[#236B63] mx-auto mb-2 animate-spin" />
+                  ) : uploaded ? (
+                    <CheckCircle2 size={28} className="text-[#236B63] mx-auto mb-2" />
+                  ) : (
+                    <Upload size={28} className="text-[#A1AAA5] mx-auto mb-2" />
+                  )}
+                  <p className={`font-semibold text-sm ${uploaded ? 'text-[#236B63]' : 'text-[#24332F]'}`}>
+                    {uploaded ? `${label} — Uploaded ✓` : label}
+                  </p>
+                  <p className="text-xs text-[#A1AAA5] mt-1">{uploaded ? 'Tap to replace' : desc}</p>
+                  <p className="text-[10px] text-[#B8BDB9] mt-1">Any file type accepted (max 20 MB)</p>
+                </div>
+                <input
+                  type="file"
+                  className="hidden"
+                  disabled={isUploading}
+                  onChange={e => { const f = e.target.files?.[0]; if (f) uploadDoc(f, type) }}
+                />
+              </label>
+            )
+          })}
+
+          <div className="bg-[#F4F6F8] rounded-2xl p-4 border border-[#E8EAE6]">
+            <p className="text-xs text-[#77817C]">Upload at least your Government ID before submitting. Your application will be reviewed by our team within 2-3 business days.</p>
           </div>
-          <Button size="lg" variant="secondary" onClick={() => navigate('/profile')}>Done</Button>
+
+          {(() => {
+            const hasIdentity = uploadedTypes.has('identity') ||
+              (application?.documents ?? []).some((d: { document_type: string }) => d.document_type === 'identity')
+            return (
+              <>
+                {!hasIdentity && (
+                  <p className="text-xs text-[#D9A45B] text-center flex items-center justify-center gap-1.5">
+                    ⚠️ Upload your Government ID to enable submission
+                  </p>
+                )}
+                <Button
+                  size="lg"
+                  loading={submitApp.isPending}
+                  disabled={!hasIdentity}
+                  onClick={() => submitApp.mutate()}
+                >
+                  Submit Application
+                </Button>
+              </>
+            )
+          })()}
+          <button onClick={() => navigate('/profile')} className="w-full py-2.5 text-sm text-[#A1AAA5]">
+            Save & finish later
+          </button>
+        </div>
+      )}
+
+      {step === 'pending' && (
+        <div className="px-4 pb-10 text-center">
+          <div className="py-10">
+            <div className="w-20 h-20 bg-[#FFF5E6] rounded-full flex items-center justify-center mx-auto mb-4">
+              <Clock size={36} className="text-[#D9A45B]" />
+            </div>
+            <h2 className="font-manrope font-bold text-xl text-[#24332F] mb-2">Application Submitted!</h2>
+            <p className="text-sm text-[#77817C] mb-6 leading-relaxed max-w-[280px] mx-auto">
+              Your application is now under review. We'll notify you within 2-3 business days once a decision is made.
+            </p>
+            <div className="bg-[#FFF5E6] border border-[#D9A45B]/30 rounded-2xl p-4 text-left mb-6">
+              <p className="text-xs font-semibold text-[#D9A45B] mb-2">What happens next?</p>
+              <div className="space-y-1.5">
+                {['Our team reviews your application & documents', 'We may contact you for additional info', 'Upon approval, your profile gets a verified badge'].map(item => (
+                  <div key={item} className="flex items-start gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#D9A45B] mt-1.5 shrink-0" />
+                    <p className="text-xs text-[#77817C]">{item}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <Button size="lg" onClick={() => navigate('/profile')}>Back to Profile</Button>
+          </div>
         </div>
       )}
     </div>

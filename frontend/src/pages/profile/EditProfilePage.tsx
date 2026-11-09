@@ -1,16 +1,23 @@
-import { useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm, Controller } from 'react-hook-form'
-import { Camera } from 'lucide-react'
+import { Camera, Check } from 'lucide-react'
 import { profileApi } from '../../api/profile'
+import { discoverApi } from '../../api/discover'
 import { useToast } from '../../components/ui/Toast'
 import PageHeader from '../../components/layout/PageHeader'
 import Avatar from '../../components/ui/Avatar'
 import Input from '../../components/ui/Input'
 import Button from '../../components/ui/Button'
 import { GenderPicker, DobPicker } from '../../components/ui/FormPickers'
-import type { User } from '../../types'
+import type { Service, User } from '../../types'
+
+const SERVICE_ICONS: Record<string, string> = {
+  'movie-companion': '🎬', 'coffee-buddy': '☕', 'event-companion': '🎭',
+  'travel-buddy': '✈️', 'shopping-companion': '🛍️', 'food-explorer': '🍜',
+  'city-explorer': '🗺️', 'weekend-companion': '🌅', 'adventure-companion': '🏔️', 'gaming-buddy': '🎮',
+}
 
 interface FormData {
   display_name: string
@@ -22,11 +29,21 @@ interface FormData {
 
 export default function EditProfilePage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { toast } = useToast()
   const qc = useQueryClient()
+  const servicesRef = useRef<HTMLDivElement>(null)
 
-  const { data } = useQuery({ queryKey: ['me'], queryFn: () => profileApi.getMe() })
+  const { data } = useQuery({ queryKey: ['me'], queryFn: () => profileApi.getMe(), staleTime: 0 })
   const user: User = data?.data?.data
+
+  const { data: servicesData } = useQuery({
+    queryKey: ['services'],
+    queryFn: () => discoverApi.getServices(),
+  })
+  const allServices: Service[] = servicesData?.data?.data ?? []
+
+  const [selectedServiceIds, setSelectedServiceIds] = useState<Set<string>>(new Set())
 
   const { register, handleSubmit, control, reset, formState: { errors, isSubmitting } } = useForm<FormData>()
 
@@ -40,14 +57,40 @@ export default function EditProfilePage() {
         date_of_birth: user.profile.date_of_birth ?? '',
       })
     }
+    if (user?.services) {
+      setSelectedServiceIds(new Set(user.services.map(s => String(s.id))))
+    }
   }, [user, reset])
 
+  // Scroll to services section if deep-linked from companion dashboard
+  useEffect(() => {
+    if (searchParams.get('section') === 'services' && servicesRef.current) {
+      setTimeout(() => {
+        servicesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 300)
+    }
+  }, [searchParams, allServices.length])
+
+  const toggleService = (id: string) => {
+    setSelectedServiceIds(prev => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
+
+  const fromDashboard = searchParams.get('section') === 'services'
+
   const save = useMutation({
-    mutationFn: (data: FormData) => profileApi.updateProfile(data as unknown as Record<string, unknown>),
+    mutationFn: (formData: FormData) =>
+      profileApi.updateProfile({
+        ...(formData as unknown as Record<string, unknown>),
+        service_ids: Array.from(selectedServiceIds),
+      }),
     onSuccess: () => {
       toast('Profile updated!', 'success')
       qc.invalidateQueries({ queryKey: ['me'] })
-      navigate('/profile')
+      navigate(fromDashboard ? '/companion/dashboard' : '/profile')
     },
     onError: () => toast('Failed to save', 'error'),
   })
@@ -68,7 +111,7 @@ export default function EditProfilePage() {
 
   return (
     <div className="app-container min-h-dvh bg-[#FAF9F6]">
-      <PageHeader title="Edit Profile" back />
+      <PageHeader title={fromDashboard ? 'Edit Profile & Services' : 'Edit Profile'} back />
 
       <div className="px-4 pb-10">
         {/* Photo upload */}
@@ -147,8 +190,60 @@ export default function EditProfilePage() {
             />
           </div>
 
+          {/* Services section */}
+          {allServices.length > 0 && (
+            <div ref={servicesRef} className="scroll-mt-4">
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-sm font-semibold text-[#24332F] font-manrope">
+                  Services I Offer
+                </label>
+                {selectedServiceIds.size > 0 && (
+                  <span className="text-xs font-bold text-[#236B63] bg-[#E8F0EA] px-2 py-0.5 rounded-full">
+                    {selectedServiceIds.size} selected
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-[#A1AAA5] mb-3 leading-relaxed">
+                Tap to select the services you offer. These appear on your public profile and users can book them.
+              </p>
+              <div className="grid grid-cols-2 gap-2.5">
+                {allServices.map(service => {
+                  const icon = SERVICE_ICONS[service.slug] || '✨'
+                  const selected = selectedServiceIds.has(String(service.id))
+                  return (
+                    <button
+                      key={service.id}
+                      type="button"
+                      onClick={() => toggleService(String(service.id))}
+                      className={`relative flex flex-col items-center gap-2 px-3 py-4 rounded-2xl border-2 text-center transition-all active:scale-95 ${
+                        selected
+                          ? 'border-[#236B63] bg-[#E8F0EA] shadow-sm'
+                          : 'border-[#E8EAE6] bg-white'
+                      }`}
+                    >
+                      <span className="text-2xl">{icon}</span>
+                      <span className={`text-xs font-semibold leading-tight ${selected ? 'text-[#236B63]' : 'text-[#24332F]'}`}>
+                        {service.name}
+                      </span>
+                      {selected && (
+                        <div className="absolute top-2 right-2 w-5 h-5 bg-[#236B63] rounded-full flex items-center justify-center shadow-sm">
+                          <Check size={11} className="text-white" strokeWidth={3} />
+                        </div>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+              {selectedServiceIds.size === 0 && (
+                <p className="text-xs text-[#D9A45B] text-center mt-3 flex items-center justify-center gap-1">
+                  <span>⚠️</span> Select at least one service to show on your profile
+                </p>
+              )}
+            </div>
+          )}
+
           <Button type="submit" size="lg" loading={isSubmitting} className="mt-2">
-            Save Changes
+            {fromDashboard ? 'Save & Go to Pricing' : 'Save Changes'}
           </Button>
         </form>
       </div>
