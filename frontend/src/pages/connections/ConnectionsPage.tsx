@@ -45,7 +45,12 @@ export default function ConnectionsPage() {
 
   const accept = useMutation({
     mutationFn: (id: string) => connectionsApi.accept(id),
-    onSuccess: () => { toast('Connection accepted!', 'success'); qc.invalidateQueries({ queryKey: ['connections-received'] }); qc.invalidateQueries({ queryKey: ['connections'] }) },
+    onSuccess: () => {
+      toast('Connection accepted!', 'success')
+      qc.invalidateQueries({ queryKey: ['connections-received'] })
+      qc.invalidateQueries({ queryKey: ['connections'] })
+      qc.invalidateQueries({ queryKey: ['conversations'] })
+    },
   })
   const decline = useMutation({
     mutationFn: (id: string) => connectionsApi.decline(id),

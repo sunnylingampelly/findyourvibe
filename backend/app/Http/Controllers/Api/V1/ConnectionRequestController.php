@@ -60,6 +60,7 @@ class ConnectionRequestController extends Controller
     {
         $requests = $request->user()->connectionRequestsSent()
             ->with(['receiver.profile.country', 'receiver.profile.city', 'receiver.interests'])
+            ->where('status', 'pending')
             ->latest()
             ->paginate(20);
 

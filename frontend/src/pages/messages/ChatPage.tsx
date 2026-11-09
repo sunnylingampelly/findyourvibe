@@ -88,28 +88,31 @@ export default function ChatPage() {
   useEffect(() => {
     if (!id) return
     const channel = echo.private(`conversation.${id}`)
-      .listen('.MessageSent', (data: Message) => {
-        qc.setQueryData(['messages', id], (old: { data: { data: Message[] } } | undefined) => {
-          if (!old) return old
-          if (old.data.data.find(m => m.id === data.id)) return old
-          return { ...old, data: { ...old.data, data: [...old.data.data, data] } }
-        })
-        qc.invalidateQueries({ queryKey: ['conversations'] })
+    channel.listen('.MessageSent', (data: Message) => {
+      qc.setQueryData(['messages', id], (old: { data: { data: Message[] } } | undefined) => {
+        if (!old) return old
+        if (old.data.data.find(m => m.id === data.id)) return old
+        return { ...old, data: { ...old.data, data: [...old.data.data, data] } }
       })
-    return () => { echo.leave(`conversation.${id}`); void channel }
+      qc.invalidateQueries({ queryKey: ['conversations'] })
+    })
+    return () => {
+      channel.stopListening('.MessageSent')
+      echo.leave(`conversation.${id}`)
+    }
   }, [id, qc])
 
   const send = useMutation({
     mutationFn: () => connectionsApi.sendMessage(id!, text.trim()),
     onSuccess: (res) => {
       setText('')
-      if (inputRef.current) {
-        inputRef.current.style.height = 'auto'
-      }
+      if (inputRef.current) inputRef.current.style.height = 'auto'
       const newMsg = res?.data?.data
       if (newMsg) {
         qc.setQueryData(['messages', id], (old: { data: { data: Message[] } } | undefined) => {
           if (!old) return old
+          // Dedup: WebSocket broadcast may have already added this message
+          if (old.data.data.find(m => m.id === newMsg.id)) return old
           return { ...old, data: { ...old.data, data: [...old.data.data, newMsg] } }
         })
       }
