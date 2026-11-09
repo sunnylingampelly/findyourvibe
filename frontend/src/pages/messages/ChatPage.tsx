@@ -57,7 +57,12 @@ export default function ChatPage() {
   const messages: Message[] = msgsData?.data?.data ?? []
   const conversations = convsData?.data?.data ?? []
   const conv = conversations.find((c: { id: string }) => c.id === id)
+
+  // Derive otherUser from conversation list; fall back to first message sender
   const otherUser = conv?.other_user
+    ?? (messages.length > 0
+        ? messages.find((m: Message) => m.sender.id !== undefined)?.sender
+        : undefined)
   const groups = groupMessages(messages)
 
   useEffect(() => {

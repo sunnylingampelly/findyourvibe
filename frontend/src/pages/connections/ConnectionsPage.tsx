@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
-import { UserCheck, Clock, Check, X } from 'lucide-react'
+import { UserCheck, Clock, Check, X, MessageCircle, Loader2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { connectionsApi } from '../../api/connections'
 import { useToast } from '../../components/ui/Toast'
@@ -23,6 +23,25 @@ export default function ConnectionsPage() {
   const { data: receivedData } = useQuery({ queryKey: ['connections-received'], queryFn: () => connectionsApi.getReceived() })
   const { data: sentData } = useQuery({ queryKey: ['connections-sent'], queryFn: () => connectionsApi.getSent() })
   const { data: connectionsData } = useQuery({ queryKey: ['connections'], queryFn: () => connectionsApi.getConnections() })
+
+  const [openingConv, setOpeningConv] = useState<string | null>(null)
+
+  const openChat = async (conn: Connection) => {
+    setOpeningConv(conn.id)
+    try {
+      if (conn.conversation_id) {
+        navigate(`/messages/${conn.conversation_id}`)
+      } else {
+        const res = await connectionsApi.createConversation(conn.id)
+        const convId = res.data.data.id
+        navigate(`/messages/${convId}`)
+      }
+    } catch {
+      toast('Could not open chat', 'error')
+    } finally {
+      setOpeningConv(null)
+    }
+  }
 
   const accept = useMutation({
     mutationFn: (id: string) => connectionsApi.accept(id),
@@ -127,15 +146,24 @@ export default function ConnectionsPage() {
               const other = conn.other_user
               return (
                 <motion.div key={conn.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-                  className="card p-4 flex items-center gap-3 cursor-pointer"
-                  onClick={() => navigate('/messages')}
+                  className="card p-4 flex items-center gap-3"
                 >
                   <Avatar src={other?.profile_photo_url} name={other?.display_name ?? 'User'} size="md" />
                   <div className="flex-1 min-w-0">
                     <h3 className="font-manrope font-semibold text-[#24332F]">{other?.display_name}</h3>
                     <p className="text-xs text-[#4D9274] flex items-center gap-1 mt-0.5"><UserCheck size={11} /> Connected</p>
                   </div>
-                  <button className="text-xs bg-[#E8F0EA] text-[#236B63] font-semibold px-3 py-1.5 rounded-xl">Message</button>
+                  <button
+                    onClick={() => openChat(conn)}
+                    disabled={openingConv === conn.id}
+                    className="flex items-center gap-1.5 text-xs bg-[#236B63] text-white font-semibold px-3 py-2 rounded-xl disabled:opacity-60 transition-opacity"
+                  >
+                    {openingConv === conn.id
+                      ? <Loader2 size={12} className="animate-spin" />
+                      : <MessageCircle size={12} />
+                    }
+                    Message
+                  </button>
                 </motion.div>
               )
             })}

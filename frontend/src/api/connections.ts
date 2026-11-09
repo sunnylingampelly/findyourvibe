@@ -9,6 +9,7 @@ export const connectionsApi = {
   decline: (id: string) => api.post(`/connections/requests/${id}/decline`),
   withdraw: (id: string) => api.post(`/connections/requests/${id}/withdraw`),
   getConnections: () => api.get('/connections'),
+  createConversation: (connection_id: string) => api.post('/conversations', { connection_id }),
   getConversations: () => api.get('/conversations'),
   getMessages: (conversationId: string) => api.get(`/conversations/${conversationId}/messages`),
   sendMessage: (conversationId: string, body: string) =>
