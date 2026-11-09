@@ -15,11 +15,16 @@ class ConversationController extends Controller
     {
         $userId = $request->user()->id;
 
-        $connectionIds = Connection::where('user_one_id', $userId)
+        $connections = Connection::where('user_one_id', $userId)
             ->orWhere('user_two_id', $userId)
-            ->pluck('id');
+            ->get();
 
-        $conversations = Conversation::whereIn('connection_id', $connectionIds)
+        // Ensure every connection has a conversation record
+        foreach ($connections as $connection) {
+            Conversation::firstOrCreate(['connection_id' => $connection->id]);
+        }
+
+        $conversations = Conversation::whereIn('connection_id', $connections->pluck('id'))
             ->with(['connection.userOne.profile', 'connection.userTwo.profile'])
             ->get();
 
