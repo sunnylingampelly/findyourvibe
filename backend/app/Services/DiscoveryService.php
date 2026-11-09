@@ -18,8 +18,8 @@ class DiscoveryService
 
         $query = User::with(['profile.country', 'profile.city', 'interests', 'languages', 'services'])
             ->active()
-            ->companion()
-            ->whereNotIn('id', $excludeIds);
+            ->whereNotIn('id', $excludeIds)
+            ->whereHas('profile');
 
         if (!empty($filters['search'])) {
             $s = $filters['search'];

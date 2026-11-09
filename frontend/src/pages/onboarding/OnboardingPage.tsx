@@ -8,6 +8,7 @@ import { discoverApi } from '../../api/discover'
 import { useToast } from '../../components/ui/Toast'
 import Button from '../../components/ui/Button'
 import Input from '../../components/ui/Input'
+import { GenderPicker, DobPicker } from '../../components/ui/FormPickers'
 import { useAuthStore } from '../../stores/authStore'
 import type { Interest, Language, Service } from '../../types'
 
@@ -171,17 +172,8 @@ export default function OnboardingPage() {
                 <p className="text-[#77817C] text-sm">Let people know who you are</p>
               </div>
               <Input label="Display Name" placeholder="How you want to be known" value={form.display_name} onChange={e => update('display_name', e.target.value)} />
-              <Input label="Date of Birth" type="date" value={form.date_of_birth} onChange={e => update('date_of_birth', e.target.value)} />
-              <div>
-                <label className="text-sm font-medium text-[#24332F] font-manrope">Gender</label>
-                <select value={form.gender} onChange={e => update('gender', e.target.value)} className="mt-1.5 w-full border-[1.5px] border-[#E8EAE6] rounded-[12px] px-4 py-3 text-sm text-[#24332F] bg-white focus:outline-none focus:border-[#236B63]">
-                  <option value="">Select gender</option>
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
-                  <option value="non_binary">Non-binary</option>
-                  <option value="prefer_not_to_say">Prefer not to say</option>
-                </select>
-              </div>
+              <DobPicker value={form.date_of_birth} onChange={v => update('date_of_birth', v)} />
+              <GenderPicker value={form.gender} onChange={v => update('gender', v)} />
             </div>
           )}
 

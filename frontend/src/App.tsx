@@ -26,6 +26,10 @@ import ChatPage from './pages/messages/ChatPage'
 import ProfilePage from './pages/profile/ProfilePage'
 import EditProfilePage from './pages/profile/EditProfilePage'
 import CompanionApplyPage from './pages/companion/CompanionApplyPage'
+import NotificationsPage from './pages/misc/NotificationsPage'
+import AccountSettingsPage from './pages/misc/AccountSettingsPage'
+import HelpPage from './pages/misc/HelpPage'
+import TermsPage from './pages/misc/TermsPage'
 
 // Admin
 import AdminLoginPage from './pages/admin/AdminLoginPage'
@@ -112,6 +116,11 @@ export default function App() {
             <Route path="/profile/edit" element={<RequireAuth><EditProfilePage /></RequireAuth>} />
             <Route path="/companion/apply" element={<RequireAuth><CompanionApplyPage /></RequireAuth>} />
             <Route path="/companion/status" element={<RequireAuth><CompanionApplyPage /></RequireAuth>} />
+            <Route path="/notifications" element={<RequireAuth><NotificationsPage /></RequireAuth>} />
+            <Route path="/settings" element={<RequireAuth><AccountSettingsPage /></RequireAuth>} />
+            <Route path="/settings/privacy" element={<RequireAuth><AccountSettingsPage /></RequireAuth>} />
+            <Route path="/help" element={<RequireAuth><HelpPage /></RequireAuth>} />
+            <Route path="/terms" element={<RequireAuth><TermsPage /></RequireAuth>} />
 
             {/* Admin */}
             <Route path="/admin/login" element={<AdminLoginPage />} />
