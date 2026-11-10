@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, MapPin, Star, Bookmark, Heart, Flag, MessageCircle, Languages, Clock, CheckCircle2, CalendarDays, IndianRupee, UserPlus, Lock } from 'lucide-react'
+import { ArrowLeft, MapPin, Star, Bookmark, Heart, Flag, MessageCircle, Languages, Clock, CheckCircle2, CalendarDays, IndianRupee, UserPlus, Lock, Send } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { discoverApi } from '../../api/discover'
 import { connectionsApi } from '../../api/connections'
@@ -67,7 +67,7 @@ export default function ProfileDetailPage() {
     enabled: !!id,
   })
 
-  // Check if already connected so we can gate booking
+  // Check accepted connections
   const { data: connsData } = useQuery({
     queryKey: ['connections'],
     queryFn: () => connectionsApi.getConnections(),
@@ -76,16 +76,32 @@ export default function ProfileDetailPage() {
     connsData?.data?.data ?? []
   const myConnection = connections.find(c => c.other_user?.id === id)
 
+  // Check pending sent requests
+  const { data: sentData } = useQuery({
+    queryKey: ['connections-sent'],
+    queryFn: () => connectionsApi.getSent(),
+  })
+  const sentRequests: Array<{ id: string; receiver: { id: string } }> =
+    sentData?.data?.data ?? []
+  const pendingRequest = sentRequests.find(r => r.receiver?.id === id)
+
+  // 3-state: connected | pending | none
+  const connState: 'connected' | 'pending' | 'none' =
+    myConnection ? 'connected' : pendingRequest ? 'pending' : 'none'
+
   const profile: PublicProfile | undefined = data?.data?.data
 
   const connectMutation = useMutation({
     mutationFn: () => connectionsApi.sendRequest(id!, connectMessage),
     onSuccess: () => {
-      toast('Connection request sent!', 'success')
+      toast('Connection request sent! 🎉', 'success')
       setShowConnect(false)
       qc.invalidateQueries({ queryKey: ['connections-sent'] })
     },
-    onError: () => toast('Could not send request', 'error'),
+    onError: (err: unknown) => {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
+      toast(msg ?? 'Could not send request', 'error')
+    },
   })
 
   const bookMutation = useMutation({
@@ -458,7 +474,7 @@ export default function ProfileDetailPage() {
           >
             <Heart size={20} fill={saved ? '#236B63' : 'none'} />
           </button>
-          {myConnection ? (
+          {connState === 'connected' && (
             <Button
               className="flex-1 !h-12"
               onClick={async () => {
@@ -467,14 +483,21 @@ export default function ProfileDetailPage() {
                   const convs: Array<{ id: string; other_user?: { id: string } }> = convsRes.data?.data ?? []
                   const conv = convs.find(c => c.other_user?.id === id)
                   if (conv) { navigate(`/messages/${conv.id}`); return }
-                  const newConv = await connectionsApi.createConversation(myConnection.id)
+                  const newConv = await connectionsApi.createConversation(myConnection!.id)
                   navigate(`/messages/${newConv.data?.data?.id}`)
                 } catch { navigate('/messages') }
               }}
             >
               <MessageCircle size={18} /> Message {profile.display_name.split(' ')[0]}
             </Button>
-          ) : (
+          )}
+          {connState === 'pending' && (
+            <div className="flex-1 h-12 rounded-2xl bg-[#FFF8EE] border border-[#F5D99A] flex items-center justify-center gap-2">
+              <Send size={16} className="text-[#D9A45B]" />
+              <span className="text-[#D9A45B] font-semibold text-sm">Request Sent</span>
+            </div>
+          )}
+          {connState === 'none' && (
             <Button className="flex-1 !h-12" onClick={() => setShowConnect(true)}>
               <UserPlus size={18} /> Connect with {profile.display_name.split(' ')[0]}
             </Button>
@@ -485,19 +508,41 @@ export default function ProfileDetailPage() {
       {/* Connect sheet */}
       <BottomSheet open={showConnect} onClose={() => setShowConnect(false)} title="Send Connection Request">
         <div className="space-y-4">
-          <p className="text-sm text-[#77817C] leading-relaxed">
-            Add a personal message to increase your chances of connecting with <strong className="text-[#24332F]">{profile.display_name}</strong>.
-          </p>
-          <textarea
-            value={connectMessage}
-            onChange={e => setConnectMessage(e.target.value)}
-            placeholder={`Hey ${profile.display_name.split(' ')[0]}! I'd love to connect…`}
-            rows={4}
-            className="w-full border-[1.5px] border-[#E8EAE6] rounded-2xl px-4 py-3 text-sm text-[#24332F] placeholder:text-[#A1AAA5] focus:outline-none focus:border-[#236B63] resize-none"
-          />
-          <Button size="lg" loading={connectMutation.isPending} onClick={() => connectMutation.mutate()}>
-            Send Request
-          </Button>
+          {connState === 'pending' ? (
+            <div className="text-center py-4">
+              <div className="w-14 h-14 bg-[#FFF8EE] rounded-2xl flex items-center justify-center mx-auto mb-3">
+                <Send size={22} className="text-[#D9A45B]" />
+              </div>
+              <p className="font-semibold text-[#24332F] mb-1">Request Already Sent</p>
+              <p className="text-sm text-[#77817C]">
+                You've already sent a connection request to <strong>{profile.display_name}</strong>. Wait for them to accept.
+              </p>
+            </div>
+          ) : connState === 'connected' ? (
+            <div className="text-center py-4">
+              <div className="w-14 h-14 bg-[#E8F0EA] rounded-2xl flex items-center justify-center mx-auto mb-3">
+                <CheckCircle2 size={22} className="text-[#236B63]" />
+              </div>
+              <p className="font-semibold text-[#24332F] mb-1">Already Connected</p>
+              <p className="text-sm text-[#77817C]">You are already connected with {profile.display_name}.</p>
+            </div>
+          ) : (
+            <>
+              <p className="text-sm text-[#77817C] leading-relaxed">
+                Add a personal message to increase your chances of connecting with <strong className="text-[#24332F]">{profile.display_name}</strong>.
+              </p>
+              <textarea
+                value={connectMessage}
+                onChange={e => setConnectMessage(e.target.value)}
+                placeholder={`Hey ${profile.display_name.split(' ')[0]}! I'd love to connect…`}
+                rows={4}
+                className="w-full border-[1.5px] border-[#E8EAE6] rounded-2xl px-4 py-3 text-sm text-[#24332F] placeholder:text-[#A1AAA5] focus:outline-none focus:border-[#236B63] resize-none"
+              />
+              <Button size="lg" loading={connectMutation.isPending} onClick={() => connectMutation.mutate()}>
+                Send Request
+              </Button>
+            </>
+          )}
         </div>
       </BottomSheet>
 

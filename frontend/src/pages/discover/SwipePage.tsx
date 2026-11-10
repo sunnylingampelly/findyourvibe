@@ -180,7 +180,7 @@ export default function SwipePage() {
               <div className="text-6xl mb-4">🌟</div>
               <h3 className="font-manrope font-semibold text-[#24332F] mb-2">You've seen everyone!</h3>
               <p className="text-[#77817C] text-sm mb-6">Check back later for new companions in your area.</p>
-              <button onClick={() => { setIndex(0); swipedRef.current.clear(); refetch() }} className="text-[#236B63] font-semibold text-sm">Refresh</button>
+              <button onClick={() => { setIndex(0); refetch() }} className="text-[#236B63] font-semibold text-sm">Refresh</button>
             </div>
           ) : (
             /* Render back-to-front: last in DOM = visually on top */
