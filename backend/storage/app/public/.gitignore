@@ -1,2 +1,8 @@
 *
 !.gitignore
+!profile-photos/
+!profile-photos/.gitkeep
+!profiles/
+!profiles/.gitkeep
+!messages/
+!messages/.gitkeep

@@ -90,6 +90,7 @@ class ProfileController extends Controller
             Storage::disk('public')->delete($existing);
         }
 
+        Storage::disk('public')->makeDirectory('profiles');
         $path = $request->file('photo')->store('profiles', 'public');
         $user->profile()->updateOrCreate(['user_id' => $user->id], ['profile_photo' => $path]);
 

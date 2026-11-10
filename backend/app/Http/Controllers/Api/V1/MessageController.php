@@ -64,6 +64,7 @@ class MessageController extends Controller
         ]);
 
         if ($request->hasFile('attachment')) {
+            Storage::disk('public')->makeDirectory('messages');
             $path = $request->file('attachment')->store('messages', 'public');
             $message->attachments()->create([
                 'file_path' => $path,

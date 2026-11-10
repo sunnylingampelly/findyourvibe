@@ -28,6 +28,7 @@ class ProfilePhotosController extends Controller
             return response()->json(['success' => false, 'message' => 'Maximum 5 photos allowed.'], 422);
         }
 
+        Storage::disk('public')->makeDirectory('profile-photos');
         $path = $request->file('photo')->store('profile-photos', 'public');
         $url = Storage::disk('public')->url($path);
 
