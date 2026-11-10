@@ -12,14 +12,13 @@ function isStandaloneMode() {
   )
 }
 
-function isIOSDevice() {
+export function isIOSDevice() {
   return /iPhone|iPad|iPod/i.test(navigator.userAgent) && !('MSStream' in window)
 }
 
 export function usePWAInstall() {
   const [promptEvent, setPromptEvent] = useState<BeforeInstallPromptEvent | null>(null)
   const [installed, setInstalled] = useState(isStandaloneMode)
-  const [showIOSSheet, setShowIOSSheet] = useState(false)
 
   useEffect(() => {
     if (isStandaloneMode()) { setInstalled(true); return }
@@ -33,25 +32,18 @@ export function usePWAInstall() {
     return () => window.removeEventListener('beforeinstallprompt', handler)
   }, [])
 
-  const install = async () => {
-    if (installed) return
-    if (isIOSDevice()) {
-      // iOS can't be prompted programmatically — show instructions
-      setShowIOSSheet(true)
-      return
-    }
-    if (promptEvent) {
-      await promptEvent.prompt()
-      const { outcome } = await promptEvent.userChoice
-      if (outcome === 'accepted') { setInstalled(true); setPromptEvent(null) }
-    } else {
-      // Android but beforeinstallprompt hasn't fired — show generic instructions
-      setShowIOSSheet(true)
-    }
+  // Trigger the native browser install prompt (Chrome/Android only)
+  const triggerNativePrompt = async (): Promise<boolean> => {
+    if (!promptEvent) return false
+    await promptEvent.prompt()
+    const { outcome } = await promptEvent.userChoice
+    if (outcome === 'accepted') { setInstalled(true); setPromptEvent(null) }
+    return outcome === 'accepted'
   }
 
-  // Show button whenever: not installed, not already in standalone
   const canInstall = !installed
+  const hasNativePrompt = !!promptEvent
+  const isIOS = isIOSDevice()
 
-  return { canInstall, install, showIOSSheet, setShowIOSSheet, isIOS: isIOSDevice() }
+  return { canInstall, hasNativePrompt, isIOS, triggerNativePrompt }
 }

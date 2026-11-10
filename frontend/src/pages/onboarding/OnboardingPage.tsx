@@ -105,6 +105,10 @@ export default function OnboardingPage() {
   }
 
   const next = async () => {
+    if (step === 1 && form.date_of_birth && !isDobValid(form.date_of_birth)) {
+      toast('You must be at least 18 years old to join.', 'error')
+      return
+    }
     if (step === 2) {
       // Photo step — just advance (photos already uploaded via API)
       if (photos.length < 2) { toast('Please upload at least 2 photos', 'error'); return }
@@ -130,8 +134,20 @@ export default function OnboardingPage() {
     'city-explorer': '🗺️', 'weekend-companion': '🌅', 'adventure-companion': '🏔️', 'gaming-buddy': '🎮',
   }
 
+  const isDobValid = (dob: string) => {
+    if (!dob) return false
+    const today = new Date()
+    const d = (() => { const [y, m, day] = dob.split('-').map(Number); return new Date(y, m - 1, day) })()
+    const maxDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate())
+    const minDate = new Date(today.getFullYear() - 100, today.getMonth(), today.getDate())
+    return d <= maxDate && d >= minDate
+  }
+
   const isNextDisabled = () => {
-    if (step === 1 && !form.display_name) return true
+    if (step === 1) {
+      if (!form.display_name.trim()) return true
+      if (form.date_of_birth && !isDobValid(form.date_of_birth)) return true
+    }
     return false
   }
 

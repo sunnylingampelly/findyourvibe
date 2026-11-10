@@ -92,8 +92,10 @@ function RequireOnboarding({ children }: { children: React.ReactNode }) {
   })
 
   useEffect(() => {
-    if (data?.data?.data) setUser(data.data.data)
-  }, [data, setUser])
+    // Only sync when we actually needed the check — prevents stale cached data
+    // (fetched before onboarding completed) from overwriting the freshly-set user.
+    if (data?.data?.data && needsCheck) setUser(data.data.data)
+  }, [data, needsCheck, setUser])
 
   if (needsCheck && isLoading) {
     return (

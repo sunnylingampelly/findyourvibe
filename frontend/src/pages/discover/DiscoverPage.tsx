@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { motion } from 'framer-motion'
-import { Bell, Search, Star, MapPin, CheckCircle2, Download, Share, X } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Bell, Search, Star, MapPin, CheckCircle2, Download, Share, X, Zap, Wifi } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { discoverApi } from '../../api/discover'
 import { useAuthStore } from '../../stores/authStore'
@@ -10,6 +10,7 @@ import { useToast } from '../../components/ui/Toast'
 import { normalizeProfile, getInitials } from '../../lib/utils'
 import { type PublicProfile, type Service } from '../../types'
 import { usePWAInstall } from '../../hooks/usePWAInstall'
+import { LogoMark } from '../../components/ui/Logo'
 
 const SERVICE_ICONS: Record<string, string> = {
   'movie-companion': '🎬',
@@ -125,7 +126,18 @@ export default function DiscoverPage() {
   const [search, setSearch] = useState('')
   const [searchInput, setSearchInput] = useState('')
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
-  const { canInstall, install, showIOSSheet, setShowIOSSheet, isIOS } = usePWAInstall()
+  const { canInstall, hasNativePrompt, isIOS, triggerNativePrompt } = usePWAInstall()
+  const [showInstallSheet, setShowInstallSheet] = useState(false)
+  const [installing, setInstalling] = useState(false)
+
+  const handleInstallClick = async () => {
+    if (hasNativePrompt) {
+      setInstalling(true)
+      await triggerNativePrompt()
+      setInstalling(false)
+      setShowInstallSheet(false)
+    }
+  }
 
   const { data: servicesData } = useQuery({
     queryKey: ['services'],
@@ -197,7 +209,7 @@ export default function DiscoverPage() {
             <div className="flex items-center gap-2">
               {canInstall && (
                 <button
-                  onClick={install}
+                  onClick={() => setShowInstallSheet(true)}
                   className="flex items-center gap-1.5 bg-[#236B63] text-white text-[11px] font-bold px-3 py-2 rounded-xl shadow-sm active:scale-95 transition-transform"
                 >
                   <Download size={12} />
@@ -324,63 +336,99 @@ export default function DiscoverPage() {
         )}
       </div>
 
-      {/* iOS / fallback install instructions sheet */}
-      {showIOSSheet && (
-        <div className="fixed inset-0 z-[200] flex items-end justify-center" onClick={() => setShowIOSSheet(false)}>
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
-          <div
-            className="relative w-full max-w-[430px] bg-white rounded-t-3xl px-5 pt-5 pb-safe pb-8 shadow-2xl"
-            onClick={e => e.stopPropagation()}
-          >
-            <button
-              onClick={() => setShowIOSSheet(false)}
-              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-[#F0EDE8] flex items-center justify-center"
+      {/* Install PWA bottom sheet */}
+      <AnimatePresence>
+        {showInstallSheet && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 z-[200]"
+              onClick={() => setShowInstallSheet(false)}
+            />
+            <motion.div
+              initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 28, stiffness: 320 }}
+              className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-white rounded-t-3xl z-[201] px-6 pt-5 pb-10"
             >
-              <X size={16} className="text-[#77817C]" />
-            </button>
+              <div className="w-10 h-1 bg-[#E8EAE6] rounded-full mx-auto mb-5" />
+              <div className="flex items-center justify-between mb-5">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-[#236B63] rounded-2xl flex items-center justify-center shadow-md">
+                    <LogoMark size={28} />
+                  </div>
+                  <div>
+                    <p className="font-manrope font-bold text-[#24332F] text-base leading-tight">FindYourVibe</p>
+                    <p className="text-[#A1AAA5] text-xs">findyourvibe.com</p>
+                  </div>
+                </div>
+                <button onClick={() => setShowInstallSheet(false)} className="w-8 h-8 rounded-full bg-[#F5F5F3] flex items-center justify-center text-[#A1AAA5]">
+                  <X size={16} />
+                </button>
+              </div>
 
-            <div className="w-10 h-10 bg-[#E8F0EA] rounded-2xl flex items-center justify-center mb-3">
-              <Download size={20} className="text-[#236B63]" />
-            </div>
-            <h3 className="font-manrope font-bold text-lg text-[#24332F] mb-1">Install FindYourVibe</h3>
-            <p className="text-sm text-[#77817C] mb-5 leading-relaxed">
-              Add this app to your home screen for a full-screen experience with quick access.
-            </p>
+              <div className="bg-[#F9FAF8] rounded-2xl p-4 space-y-3 mb-6">
+                {[
+                  { icon: Zap, text: 'Faster — loads instantly like a native app' },
+                  { icon: Wifi, text: 'Works offline — browse even without internet' },
+                  { icon: Bell, text: 'Notifications — never miss a connection request' },
+                ].map(({ icon: Icon, text }) => (
+                  <div key={text} className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-[#E8F0EA] flex items-center justify-center shrink-0">
+                      <Icon size={15} className="text-[#236B63]" />
+                    </div>
+                    <span className="text-sm text-[#24332F] leading-snug">{text}</span>
+                  </div>
+                ))}
+              </div>
 
-            {isIOS ? (
-              <ol className="space-y-3 text-sm text-[#24332F]">
-                <li className="flex items-start gap-3">
-                  <span className="w-6 h-6 rounded-full bg-[#236B63] text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">1</span>
-                  <span>Tap the <strong>Share</strong> button <Share size={14} className="inline text-[#236B63] mb-0.5" /> at the bottom of your browser</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="w-6 h-6 rounded-full bg-[#236B63] text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">2</span>
-                  <span>Scroll down and tap <strong>"Add to Home Screen"</strong></span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="w-6 h-6 rounded-full bg-[#236B63] text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">3</span>
-                  <span>Tap <strong>"Add"</strong> in the top right corner</span>
-                </li>
-              </ol>
-            ) : (
-              <ol className="space-y-3 text-sm text-[#24332F]">
-                <li className="flex items-start gap-3">
-                  <span className="w-6 h-6 rounded-full bg-[#236B63] text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">1</span>
-                  <span>Tap the <strong>⋮ menu</strong> in your browser (top right)</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="w-6 h-6 rounded-full bg-[#236B63] text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">2</span>
-                  <span>Tap <strong>"Add to Home screen"</strong> or <strong>"Install app"</strong></span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="w-6 h-6 rounded-full bg-[#236B63] text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">3</span>
-                  <span>Tap <strong>"Install"</strong> to confirm</span>
-                </li>
-              </ol>
-            )}
-          </div>
-        </div>
-      )}
+              {!isIOS && hasNativePrompt ? (
+                <button
+                  onClick={handleInstallClick}
+                  disabled={installing}
+                  className="w-full bg-[#236B63] text-white rounded-2xl py-4 font-manrope font-bold text-base disabled:opacity-60 active:scale-[0.98] transition-transform"
+                >
+                  {installing ? 'Installing…' : 'Install Now'}
+                </button>
+              ) : (
+                <>
+                  <p className="text-sm font-semibold text-[#24332F] mb-3">
+                    {isIOS ? 'Install on iPhone / iPad' : 'Install from your browser'}
+                  </p>
+                  <ol className="space-y-3">
+                    {isIOS ? (
+                      <>
+                        <li className="flex items-start gap-3 text-sm text-[#24332F]">
+                          <span className="w-6 h-6 rounded-full bg-[#E8F0EA] text-[#236B63] font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">1</span>
+                          <span>Tap the <Share size={13} className="inline text-[#236B63] mb-0.5" /> <strong>Share</strong> button in Safari toolbar.</span>
+                        </li>
+                        <li className="flex items-start gap-3 text-sm text-[#24332F]">
+                          <span className="w-6 h-6 rounded-full bg-[#E8F0EA] text-[#236B63] font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">2</span>
+                          <span>Scroll and tap <strong>"Add to Home Screen"</strong>.</span>
+                        </li>
+                        <li className="flex items-start gap-3 text-sm text-[#24332F]">
+                          <span className="w-6 h-6 rounded-full bg-[#E8F0EA] text-[#236B63] font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">3</span>
+                          <span>Tap <strong>"Add"</strong> to confirm.</span>
+                        </li>
+                      </>
+                    ) : (
+                      <>
+                        <li className="flex items-start gap-3 text-sm text-[#24332F]">
+                          <span className="w-6 h-6 rounded-full bg-[#E8F0EA] text-[#236B63] font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">1</span>
+                          <span>Tap the <strong>⋮ menu</strong> in your browser's top-right corner.</span>
+                        </li>
+                        <li className="flex items-start gap-3 text-sm text-[#24332F]">
+                          <span className="w-6 h-6 rounded-full bg-[#E8F0EA] text-[#236B63] font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">2</span>
+                          <span>Tap <strong>"Add to Home Screen"</strong> or <strong>"Install App"</strong>.</span>
+                        </li>
+                      </>
+                    )}
+                  </ol>
+                </>
+              )}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </AppShell>
   )
 }
