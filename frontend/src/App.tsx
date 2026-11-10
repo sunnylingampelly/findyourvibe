@@ -53,6 +53,18 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
+// Redirect authenticated users away from login/welcome screens
+function GuestRoute({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated } = useAuthStore()
+  if (isAuthenticated()) return <Navigate to="/discover" replace />
+  return <>{children}</>
+}
+
+function RootRedirect() {
+  const { isAuthenticated } = useAuthStore()
+  return <Navigate to={isAuthenticated() ? '/discover' : '/welcome'} replace />
+}
+
 function RequireAdmin({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isAdmin } = useAuthStore()
   if (!isAuthenticated()) return <Navigate to="/admin/login" replace />
@@ -96,12 +108,12 @@ export default function App() {
       <ToastProvider>
         <BrowserRouter>
           <Routes>
-            {/* Public */}
-            <Route path="/" element={<Navigate to="/welcome" replace />} />
-            <Route path="/welcome" element={<WelcomePage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            {/* Public — guests only; logged-in users land on /discover */}
+            <Route path="/" element={<RootRedirect />} />
+            <Route path="/welcome" element={<GuestRoute><WelcomePage /></GuestRoute>} />
+            <Route path="/login" element={<GuestRoute><LoginPage /></GuestRoute>} />
+            <Route path="/register" element={<GuestRoute><RegisterPage /></GuestRoute>} />
+            <Route path="/forgot-password" element={<GuestRoute><ForgotPasswordPage /></GuestRoute>} />
 
             {/* Onboarding */}
             <Route path="/onboarding" element={<RequireAuth><OnboardingPage /></RequireAuth>} />
@@ -137,7 +149,7 @@ export default function App() {
             <Route path="/admin/settings" element={<RequireAdmin><SettingsPage /></RequireAdmin>} />
 
             {/* Fallback */}
-            <Route path="*" element={<Navigate to="/welcome" replace />} />
+            <Route path="*" element={<RootRedirect />} />
           </Routes>
         </BrowserRouter>
       </ToastProvider>

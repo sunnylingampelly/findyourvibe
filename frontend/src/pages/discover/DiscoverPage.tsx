@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Bell, Search, Star, MapPin, CheckCircle2, Download, X } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { Bell, Search, Star, MapPin, CheckCircle2, Download } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { discoverApi } from '../../api/discover'
 import { useAuthStore } from '../../stores/authStore'
@@ -126,15 +126,6 @@ export default function DiscoverPage() {
   const [searchInput, setSearchInput] = useState('')
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const { canInstall, install } = usePWAInstall()
-  const [bannerDismissed, setBannerDismissed] = useState(() => {
-    try { return localStorage.getItem('pwa-banner-dismissed') === '1' } catch { return false }
-  })
-  const showBanner = canInstall && !bannerDismissed
-
-  const dismissBanner = () => {
-    setBannerDismissed(true)
-    try { localStorage.setItem('pwa-banner-dismissed', '1') } catch { /* ignore */ }
-  }
 
   const { data: servicesData } = useQuery({
     queryKey: ['services'],
@@ -203,49 +194,25 @@ export default function DiscoverPage() {
                 {firstName} 👋
               </h1>
             </div>
-            <Link
-              to="/notifications"
-              className="relative w-10 h-10 bg-white rounded-2xl border border-[#E8EAE6] flex items-center justify-center shadow-sm"
-            >
-              <Bell size={18} className="text-[#24332F]" />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-[#D76D6D] rounded-full border border-white" />
-            </Link>
-          </div>
-
-          {/* PWA install banner */}
-          <AnimatePresence>
-            {showBanner && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.2 }}
-                className="overflow-hidden px-4 pb-2"
+            <div className="flex items-center gap-2">
+              {canInstall && (
+                <button
+                  onClick={install}
+                  className="flex items-center gap-1.5 bg-[#236B63] text-white text-[11px] font-bold px-3 py-2 rounded-xl shadow-sm active:scale-95 transition-transform"
+                >
+                  <Download size={12} />
+                  Install App
+                </button>
+              )}
+              <Link
+                to="/notifications"
+                className="relative w-10 h-10 bg-white rounded-2xl border border-[#E8EAE6] flex items-center justify-center shadow-sm"
               >
-                <div className="flex items-center gap-3 bg-[#236B63] rounded-2xl px-4 py-2.5">
-                  <div className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
-                    <Download size={15} className="text-white" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-white text-xs font-bold leading-tight">Install FindYourVibe</p>
-                    <p className="text-white/70 text-[10px] leading-tight mt-0.5">Add to home screen for the best experience</p>
-                  </div>
-                  <button
-                    onClick={install}
-                    className="shrink-0 bg-white text-[#236B63] text-xs font-bold px-3 py-1.5 rounded-xl"
-                  >
-                    Install
-                  </button>
-                  <button
-                    onClick={dismissBanner}
-                    className="shrink-0 w-6 h-6 flex items-center justify-center text-white/70 hover:text-white"
-                  >
-                    <X size={14} />
-                  </button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                <Bell size={18} className="text-[#24332F]" />
+                <span className="absolute top-2 right-2 w-2 h-2 bg-[#D76D6D] rounded-full border border-white" />
+              </Link>
+            </div>
+          </div>
 
           {/* Search */}
           <div className="relative px-4 mb-3">
