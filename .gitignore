@@ -7,5 +7,9 @@ Thumbs.db
 .vscode/
 *.swp
 
-# Build artifacts (each sub-project has its own .gitignore for node_modules etc.)
+# Build artifacts
 frontend/dist/
+
+# Local env files (contain secrets — never commit)
+frontend/.env.local
+frontend/.env.production

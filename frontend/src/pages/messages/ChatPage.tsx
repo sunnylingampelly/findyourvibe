@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Send, Smile, MoreVertical, Info } from 'lucide-react'
+import { ArrowLeft, Send, Smile, MoreVertical, Info, CalendarDays, MapPin, Clock, IndianRupee } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { connectionsApi } from '../../api/connections'
 import Avatar from '../../components/ui/Avatar'
@@ -42,11 +42,20 @@ function groupMessages(messages: Message[]) {
   return groups
 }
 
+const SERVICE_ICONS: Record<string, string> = {
+  'movie-companion': '🎬', 'coffee-buddy': '☕', 'event-companion': '🎭',
+  'travel-buddy': '✈️', 'shopping-companion': '🛍️', 'food-explorer': '🍜',
+  'city-explorer': '🗺️', 'weekend-companion': '🌅', 'adventure-companion': '🏔️', 'gaming-buddy': '🎮',
+}
+
 export default function ChatPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const routeLocation = useLocation()
   const { user } = useAuthStore()
   const qc = useQueryClient()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const bookingDetails = (routeLocation.state as any)?.bookingDetails ?? null
   const [text, setText] = useState('')
   const [showEmoji, setShowEmoji] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -197,6 +206,43 @@ export default function ChatPage() {
           <MoreVertical size={18} />
         </button>
       </div>
+
+      {/* Booking context card — shown when navigated from a booking action */}
+      <AnimatePresence>
+        {bookingDetails && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            className="shrink-0 mx-4 mt-3"
+          >
+            <div className="bg-[#E8F0EA] border border-[#C8DDD2] rounded-2xl p-3.5">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-lg">{SERVICE_ICONS[bookingDetails.service?.slug] ?? '✨'}</span>
+                <div className="flex-1">
+                  <p className="text-xs font-bold text-[#236B63] uppercase tracking-wide">Booking Request Sent</p>
+                  <p className="font-manrope font-semibold text-[#24332F] text-sm">{bookingDetails.service?.name}</p>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-[#77817C]">
+                {bookingDetails.date && (
+                  <span className="flex items-center gap-1"><CalendarDays size={11} className="text-[#236B63]" />{new Date(bookingDetails.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })} at {bookingDetails.time}</span>
+                )}
+                {bookingDetails.duration && (
+                  <span className="flex items-center gap-1"><Clock size={11} className="text-[#236B63]" />{bookingDetails.duration}h</span>
+                )}
+                {bookingDetails.service?.price_per_session != null && (
+                  <span className="flex items-center gap-1"><IndianRupee size={11} className="text-[#236B63]" />{Number(bookingDetails.service.price_per_session).toLocaleString('en-IN')}</span>
+                )}
+                {bookingDetails.location && (
+                  <span className="flex items-center gap-1"><MapPin size={11} className="text-[#236B63]" />{bookingDetails.location}</span>
+                )}
+              </div>
+              <p className="text-[10px] text-[#A1AAA5] mt-2">Waiting for them to accept · Coordinate details here</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Messages area */}
       <div className="flex-1 overflow-y-auto px-4 py-5 space-y-5" style={{ scrollbarWidth: 'none' }}>

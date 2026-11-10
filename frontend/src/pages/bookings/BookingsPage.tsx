@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Calendar, Clock, MapPin, CheckCircle, XCircle, MessageCircle, ChevronRight } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { bookingsApi } from '../../api/bookings'
+import { connectionsApi } from '../../api/connections'
 import { useAuthStore } from '../../stores/authStore'
 import { useToast } from '../../components/ui/Toast'
 import AppShell from '../../components/layout/AppShell'
@@ -189,7 +190,17 @@ export default function BookingsPage() {
                             >
                               <CheckCircle size={13} /> Respond
                             </button>
-                            <button onClick={() => navigate('/messages')}
+                            <button
+                              onClick={async () => {
+                                try {
+                                  const convsRes = await connectionsApi.getConversations()
+                                  const convs: Array<{ id: string; other_user?: { id: string } }> = convsRes.data?.data ?? []
+                                  const otherId = tab === 'received' ? booking.requester?.id : booking.companion?.id
+                                  const conv = convs.find(c => c.other_user?.id === otherId)
+                                  if (conv) navigate(`/messages/${conv.id}`, { state: { bookingDetails: { service: booking.service, date: booking.proposed_date, time: booking.proposed_time, duration: booking.duration_hours, location: booking.location_notes } } })
+                                  else navigate('/messages')
+                                } catch { navigate('/messages') }
+                              }}
                               className="flex items-center justify-center gap-1.5 py-2 px-4 border border-[#E8EAE6] text-[#236B63] rounded-xl text-xs font-semibold">
                               <MessageCircle size={13} /> Chat
                             </button>

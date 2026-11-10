@@ -11,6 +11,7 @@ import { useToast } from '../../components/ui/Toast'
 import { Skeleton } from '../../components/ui/Skeleton'
 import Button from '../../components/ui/Button'
 import BottomSheet from '../../components/ui/BottomSheet'
+import { PlacesAutocomplete, staticMapUrl } from '../../components/ui/PlacesAutocomplete'
 import { getInitials } from '../../lib/utils'
 import type { PublicProfile, Service } from '../../types'
 
@@ -76,10 +77,35 @@ export default function ProfileDetailPage() {
       location_notes: bookLocation,
       agreed_rate: bookingService?.price_per_session ?? undefined,
     }),
-    onSuccess: () => {
-      toast('Booking request sent!', 'success')
+    onSuccess: async () => {
       setShowBook(false)
       qc.invalidateQueries({ queryKey: ['bookings'] })
+      // Find existing conversation with this companion and redirect to chat
+      try {
+        const convsRes = await connectionsApi.getConversations()
+        const convs: Array<{ id: string; other_user?: { id: string } }> = convsRes.data?.data ?? []
+        const conv = convs.find(c => c.other_user?.id === id)
+        const bookingState = {
+          bookingDetails: {
+            service: bookingService,
+            date: bookDate,
+            time: bookTime,
+            duration: bookDuration,
+            location: bookLocation,
+            notes: bookNotes,
+            companionName: profile?.display_name,
+          },
+        }
+        if (conv) {
+          navigate(`/messages/${conv.id}`, { state: bookingState })
+        } else {
+          toast('Booking sent! Connect with them to start chatting 💬', 'success')
+          navigate('/messages')
+        }
+      } catch {
+        toast('Booking request sent!', 'success')
+        navigate('/messages')
+      }
     },
     onError: () => toast('Could not send booking request', 'error'),
   })
@@ -281,6 +307,28 @@ export default function ProfileDetailPage() {
                   </div>
                 </div>
               )}
+
+              {/* City location map */}
+              {profile.city && (
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-[#A1AAA5] mb-3 flex items-center gap-1.5">
+                    <MapPin size={11} /> Location
+                  </p>
+                  <div className="rounded-2xl overflow-hidden border border-[#E8EAE6] relative">
+                    <img
+                      src={staticMapUrl(profile.city.name, profile.country?.name)}
+                      alt={`Map of ${profile.city.name}`}
+                      className="w-full h-36 object-cover"
+                    />
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent px-4 py-3">
+                      <p className="text-white text-sm font-semibold flex items-center gap-1.5">
+                        <MapPin size={13} />
+                        {profile.city.name}{profile.country ? `, ${profile.country.name}` : ''}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -466,12 +514,11 @@ export default function ProfileDetailPage() {
 
           <div>
             <label className="text-xs font-semibold text-[#A1AAA5] uppercase tracking-wide mb-1 block">Preferred Location / Meet Point</label>
-            <input
-              type="text"
+            <PlacesAutocomplete
               value={bookLocation}
-              onChange={e => setBookLocation(e.target.value)}
-              placeholder="e.g. Indiranagar, Bengaluru"
-              className="w-full border-[1.5px] border-[#E8EAE6] rounded-xl px-3 py-2.5 text-sm text-[#24332F] placeholder:text-[#A1AAA5] focus:outline-none focus:border-[#236B63]"
+              onChange={setBookLocation}
+              placeholder="Search venue, café, landmark…"
+              className="w-full border-[1.5px] border-[#E8EAE6] rounded-xl py-2.5 text-sm text-[#24332F] placeholder:text-[#A1AAA5] focus:outline-none focus:border-[#236B63]"
             />
           </div>
 
