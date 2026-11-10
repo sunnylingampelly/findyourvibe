@@ -129,7 +129,7 @@ export default function EditProfilePage() {
             <div className="absolute bottom-0 right-0 w-10 h-10 bg-[#236B63] rounded-full border-2 border-white flex items-center justify-center shadow-md">
               <Camera size={17} className="text-white" />
             </div>
-            <input type="file" accept="image/*" onChange={handlePhotoChange} className="hidden" />
+            <input type="file" accept="image/*,.heic,.heif" onChange={handlePhotoChange} className="hidden" />
           </label>
         </div>
 

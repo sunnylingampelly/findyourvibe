@@ -41,9 +41,9 @@ class ProfilePhotosController extends Controller
             'is_primary' => $isPrimary,
         ]);
 
-        // Set as main profile photo if this is the first
+        // Store PATH (not full URL) so the accessor generates the correct URL
         if ($isPrimary) {
-            $user->profile()->updateOrCreate(['user_id' => $user->id], ['profile_photo' => $url]);
+            $user->profile()->updateOrCreate(['user_id' => $user->id], ['profile_photo' => $path]);
         }
 
         return response()->json(['success' => true, 'data' => $photo], 201);
@@ -63,7 +63,7 @@ class ProfilePhotosController extends Controller
             $next = $user->profilePhotos()->first();
             if ($next) {
                 $next->update(['is_primary' => true]);
-                $user->profile()->update(['profile_photo' => $next->url]);
+                $user->profile()->update(['profile_photo' => $next->path]);
             } else {
                 $user->profile()->update(['profile_photo' => null]);
             }
@@ -79,7 +79,7 @@ class ProfilePhotosController extends Controller
 
         $user->profilePhotos()->update(['is_primary' => false]);
         $photo->update(['is_primary' => true]);
-        $user->profile()->update(['profile_photo' => $photo->url]);
+        $user->profile()->update(['profile_photo' => $photo->path]);
 
         return response()->json(['success' => true, 'data' => $photo]);
     }

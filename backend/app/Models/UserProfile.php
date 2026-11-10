@@ -50,6 +50,10 @@ class UserProfile extends Model
         if (!$this->profile_photo) {
             return null;
         }
+        // Already a full URL (stored by older upload code)
+        if (str_starts_with($this->profile_photo, 'http')) {
+            return $this->profile_photo;
+        }
         return url('storage/' . $this->profile_photo);
     }
 }

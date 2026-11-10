@@ -79,13 +79,15 @@ class ProfileController extends Controller
     public function updatePhoto(Request $request): JsonResponse
     {
         $request->validate([
-            'photo' => ['required', 'image', 'mimes:jpeg,jpg,png,webp', 'max:5120'],
+            'photo' => ['required', 'image', 'max:10240'],
         ]);
 
         $user = $request->user();
 
-        if ($user->profile?->profile_photo) {
-            Storage::disk('public')->delete($user->profile->profile_photo);
+        // Delete previous file — only if it's a path (not a full URL)
+        $existing = $user->profile?->profile_photo;
+        if ($existing && !str_starts_with($existing, 'http')) {
+            Storage::disk('public')->delete($existing);
         }
 
         $path = $request->file('photo')->store('profiles', 'public');

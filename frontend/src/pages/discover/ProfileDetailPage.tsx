@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, MapPin, Star, Bookmark, Heart, Flag, MessageCircle, Languages, Clock, CheckCircle2, CalendarDays, IndianRupee } from 'lucide-react'
+import { ArrowLeft, MapPin, Star, Bookmark, Heart, Flag, MessageCircle, Languages, Clock, CheckCircle2, CalendarDays, IndianRupee, UserPlus, Lock } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { discoverApi } from '../../api/discover'
 import { connectionsApi } from '../../api/connections'
@@ -67,6 +67,15 @@ export default function ProfileDetailPage() {
     enabled: !!id,
   })
 
+  // Check if already connected so we can gate booking
+  const { data: connsData } = useQuery({
+    queryKey: ['connections'],
+    queryFn: () => connectionsApi.getConnections(),
+  })
+  const connections: Array<{ id: string; other_user: { id: string }; conversation_id?: string }> =
+    connsData?.data?.data ?? []
+  const myConnection = connections.find(c => c.other_user?.id === id)
+
   const profile: PublicProfile | undefined = data?.data?.data
 
   const connectMutation = useMutation({
@@ -93,30 +102,46 @@ export default function ProfileDetailPage() {
     onSuccess: async () => {
       setShowBook(false)
       qc.invalidateQueries({ queryKey: ['bookings'] })
-      // Find existing conversation with this companion and redirect to chat
+
+      const bookingState = {
+        bookingDetails: {
+          service: bookingService,
+          date: bookDate,
+          time: bookTime,
+          duration: bookDuration,
+          location: bookLocation,
+          notes: bookNotes,
+          companionName: profile?.display_name,
+        },
+      }
+
       try {
+        // 1. Find existing conversation
         const convsRes = await connectionsApi.getConversations()
         const convs: Array<{ id: string; other_user?: { id: string } }> = convsRes.data?.data ?? []
-        const conv = convs.find(c => c.other_user?.id === id)
-        const bookingState = {
-          bookingDetails: {
-            service: bookingService,
-            date: bookDate,
-            time: bookTime,
-            duration: bookDuration,
-            location: bookLocation,
-            notes: bookNotes,
-            companionName: profile?.display_name,
-          },
+        const existingConv = convs.find(c => c.other_user?.id === id)
+
+        if (existingConv) {
+          navigate(`/messages/${existingConv.id}`, { state: bookingState })
+          return
         }
-        if (conv) {
-          navigate(`/messages/${conv.id}`, { state: bookingState })
-        } else {
-          toast('Booking sent! Connect with them to start chatting 💬', 'success')
-          navigate('/messages')
+
+        // 2. No conversation yet — create one using the connection
+        if (myConnection) {
+          const newConvRes = await connectionsApi.createConversation(myConnection.id)
+          const convId = newConvRes.data?.data?.id
+          qc.invalidateQueries({ queryKey: ['conversations'] })
+          if (convId) {
+            navigate(`/messages/${convId}`, { state: bookingState })
+            return
+          }
         }
+
+        // Fallback
+        toast('Booking sent! 🎉 Start chatting to coordinate details', 'success')
+        navigate('/messages')
       } catch {
-        toast('Booking request sent!', 'success')
+        toast('Booking sent! 🎉', 'success')
         navigate('/messages')
       }
     },
@@ -376,12 +401,19 @@ export default function ProfileDetailPage() {
                         </div>
                       </div>
                       {profile.companion_verification_status === 'approved' && (
-                        <button
-                          onClick={() => { setBookingService(s); setShowBook(true) }}
-                          className="mt-3 w-full py-2 rounded-xl bg-[#E8F0EA] text-[#236B63] text-sm font-semibold flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
-                        >
-                          <CalendarDays size={15} /> Book this service
-                        </button>
+                        myConnection ? (
+                          <button
+                            onClick={() => { setBookingService(s); setShowBook(true) }}
+                            className="mt-3 w-full py-2 rounded-xl bg-[#E8F0EA] text-[#236B63] text-sm font-semibold flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
+                          >
+                            <CalendarDays size={15} /> Book this service
+                          </button>
+                        ) : (
+                          <div className="mt-3 w-full py-2 rounded-xl bg-[#F4F1EA] border border-[#E8EAE6] flex items-center justify-center gap-1.5">
+                            <Lock size={13} className="text-[#A1AAA5]" />
+                            <span className="text-[#A1AAA5] text-xs font-semibold">Connect first to book</span>
+                          </div>
+                        )
                       )}
                     </div>
                   ))}
@@ -426,9 +458,27 @@ export default function ProfileDetailPage() {
           >
             <Heart size={20} fill={saved ? '#236B63' : 'none'} />
           </button>
-          <Button className="flex-1 !h-12" onClick={() => setShowConnect(true)}>
-            <MessageCircle size={18} /> Connect with {profile.display_name.split(' ')[0]}
-          </Button>
+          {myConnection ? (
+            <Button
+              className="flex-1 !h-12"
+              onClick={async () => {
+                try {
+                  const convsRes = await connectionsApi.getConversations()
+                  const convs: Array<{ id: string; other_user?: { id: string } }> = convsRes.data?.data ?? []
+                  const conv = convs.find(c => c.other_user?.id === id)
+                  if (conv) { navigate(`/messages/${conv.id}`); return }
+                  const newConv = await connectionsApi.createConversation(myConnection.id)
+                  navigate(`/messages/${newConv.data?.data?.id}`)
+                } catch { navigate('/messages') }
+              }}
+            >
+              <MessageCircle size={18} /> Message {profile.display_name.split(' ')[0]}
+            </Button>
+          ) : (
+            <Button className="flex-1 !h-12" onClick={() => setShowConnect(true)}>
+              <UserPlus size={18} /> Connect with {profile.display_name.split(' ')[0]}
+            </Button>
+          )}
         </div>
       </div>
 
