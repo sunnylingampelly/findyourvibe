@@ -2,11 +2,12 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import { Search, MessageCircle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { connectionsApi } from '../../api/connections'
 import AppShell from '../../components/layout/AppShell'
 import Avatar from '../../components/ui/Avatar'
 import { timeAgo, truncate } from '../../lib/utils'
+import echo from '../../lib/echo'
 import type { Connection, Conversation } from '../../types'
 
 export default function MessagesPage() {
@@ -17,7 +18,7 @@ export default function MessagesPage() {
   const { data: convsData, isLoading: convsLoading } = useQuery({
     queryKey: ['conversations'],
     queryFn: () => connectionsApi.getConversations(),
-    refetchInterval: 10000,
+    refetchInterval: 30000,
   })
 
   const { data: connsData, isLoading: connsLoading } = useQuery({
@@ -56,6 +57,20 @@ export default function MessagesPage() {
 
   const totalUnread = conversations.reduce((n, c) => n + (c.unread_count ?? 0), 0)
   const isLoading = convsLoading && connsLoading
+
+  // Real-time: subscribe to each loaded conversation channel so the list updates instantly
+  useEffect(() => {
+    if (conversations.length === 0) return
+    const ids = conversations.map(c => c.id)
+    ids.forEach(convId => {
+      echo.private(`conversation.${convId}`).listen('.MessageSent', () => {
+        qc.invalidateQueries({ queryKey: ['conversations'] })
+      })
+    })
+    return () => {
+      ids.forEach(convId => echo.leave(`conversation.${convId}`))
+    }
+  }, [conversations.length, qc])
 
   const openChat = async (conn: Connection, conv?: Conversation) => {
     if (conv) {

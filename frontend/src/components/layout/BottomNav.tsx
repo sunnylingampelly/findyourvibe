@@ -27,9 +27,8 @@ export default function BottomNav() {
   const totalUnread = conversations.reduce((n, c) => n + (c.unread_count ?? 0), 0)
 
   return (
-    <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] z-[100] pb-safe">
-      <div className="mx-3 mb-2 bg-white/90 backdrop-blur-xl border border-[#E8EAE6]/80 rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.08)]">
-        <div className="flex items-center justify-around px-1 py-1">
+    <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] z-[100] bg-white border-t border-[#E8EAE6]">
+      <div className="flex items-center justify-around px-1 pt-1 pb-safe">
           {tabs.map(({ to, icon: Icon, label }) => {
             const active = location.pathname.startsWith(to)
             const isMessages = to === '/messages'
@@ -65,7 +64,6 @@ export default function BottomNav() {
               </NavLink>
             )
           })}
-        </div>
       </div>
     </nav>
   )

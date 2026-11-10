@@ -9,8 +9,7 @@ interface AppShellProps {
 export default function AppShell({ children, showNav = true }: AppShellProps) {
   return (
     <div className="app-container">
-      {/* Extra bottom padding accounts for floating nav bar + safe area */}
-      <main className={showNav ? 'pb-[88px]' : ''}>
+      <main className={showNav ? 'pb-[64px]' : ''}>
         {children}
       </main>
       {showNav && <BottomNav />}

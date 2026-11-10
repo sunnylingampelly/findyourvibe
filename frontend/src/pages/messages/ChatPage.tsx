@@ -70,7 +70,7 @@ export default function ChatPage() {
 
   const otherUser = conv?.other_user
     ?? (messages.length > 0
-        ? messages.find((m: Message) => m.sender.id !== undefined)?.sender
+        ? messages.find((m: Message) => m.sender.id !== user?.id)?.sender
         : undefined)
   const groups = groupMessages(messages)
 
