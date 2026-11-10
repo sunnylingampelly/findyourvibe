@@ -100,7 +100,8 @@ export default function EditProfilePage() {
     if (!file) return
     try {
       await profileApi.updatePhoto(file)
-      await qc.invalidateQueries({ queryKey: ['me'] })
+      // refetchQueries awaits the full refetch so Avatar shows the new photo immediately
+      await qc.refetchQueries({ queryKey: ['me'] })
       toast('Photo updated!', 'success')
     } catch {
       toast('Failed to upload photo', 'error')

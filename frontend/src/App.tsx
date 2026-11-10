@@ -72,6 +72,13 @@ function RequireAdmin({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
+// If the user has already completed onboarding, kick them out of /onboarding
+function OnboardingGuard({ children }: { children: React.ReactNode }) {
+  const { user } = useAuthStore()
+  if (user?.onboarding_completed_at) return <Navigate to="/discover" replace />
+  return <>{children}</>
+}
+
 function RequireOnboarding({ children }: { children: React.ReactNode }) {
   const { user, setUser } = useAuthStore()
   const needsCheck = !!(user && !user.onboarding_completed_at)
@@ -116,7 +123,7 @@ export default function App() {
             <Route path="/forgot-password" element={<GuestRoute><ForgotPasswordPage /></GuestRoute>} />
 
             {/* Onboarding */}
-            <Route path="/onboarding" element={<RequireAuth><OnboardingPage /></RequireAuth>} />
+            <Route path="/onboarding" element={<RequireAuth><OnboardingGuard><OnboardingPage /></OnboardingGuard></RequireAuth>} />
 
             {/* Protected user app */}
             <Route path="/discover" element={<RequireAuth><RequireOnboarding><DiscoverPage /></RequireOnboarding></RequireAuth>} />

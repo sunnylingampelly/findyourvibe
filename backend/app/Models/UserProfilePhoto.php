@@ -15,4 +15,14 @@ class UserProfilePhoto extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    // Always regenerate from path so legacy full-URL records (with old ports)
+    // are served correctly via the current APP_URL.
+    public function getUrlAttribute(): ?string
+    {
+        if (!$this->path) {
+            return $this->attributes['url'] ?? null;
+        }
+        return url('storage/' . $this->path);
+    }
 }
