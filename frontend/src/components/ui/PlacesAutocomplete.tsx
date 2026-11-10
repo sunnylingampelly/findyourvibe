@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { MapPin } from 'lucide-react'
+import { MapPin, LocateFixed, Loader2 } from 'lucide-react'
+import { useGeolocation } from '../../hooks/useGeolocation'
 
 const MAPS_KEY = import.meta.env.VITE_GOOGLE_MAPS_KEY as string
 
@@ -26,11 +27,19 @@ interface Props {
   onChange: (value: string) => void
   placeholder?: string
   className?: string
+  showLocateButton?: boolean
 }
 
-export function PlacesAutocomplete({ value, onChange, placeholder = 'Search location…', className }: Props) {
+export function PlacesAutocomplete({
+  value,
+  onChange,
+  placeholder = 'Search location…',
+  className,
+  showLocateButton = true,
+}: Props) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [ready, setReady] = useState(_loaded)
+  const { loading: geoLoading, getLocation } = useGeolocation()
 
   useEffect(() => {
     if (_loaded) return
@@ -54,19 +63,42 @@ export function PlacesAutocomplete({ value, onChange, placeholder = 'Search loca
     }
   }, [ready, onChange])
 
+  const handleLocate = async () => {
+    try {
+      const result = await getLocation()
+      onChange(result.label)
+      if (inputRef.current) inputRef.current.value = result.label
+    } catch { /* user denied — ignore */ }
+  }
+
   return (
-    <div className="relative">
-      <MapPin size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#236B63] pointer-events-none z-10" />
-      <input
-        ref={inputRef}
-        type="text"
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        placeholder={placeholder}
-        autoComplete="off"
-        className={className}
-        style={{ paddingLeft: '2rem' }}
-      />
+    <div className="space-y-1.5">
+      <div className="relative">
+        <MapPin size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#236B63] pointer-events-none z-10" />
+        <input
+          ref={inputRef}
+          type="text"
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          placeholder={placeholder}
+          autoComplete="off"
+          className={className}
+          style={{ paddingLeft: '2rem' }}
+        />
+      </div>
+      {showLocateButton && (
+        <button
+          type="button"
+          onClick={handleLocate}
+          disabled={geoLoading}
+          className="flex items-center gap-1.5 text-[11px] text-[#236B63] font-semibold disabled:opacity-50"
+        >
+          {geoLoading
+            ? <Loader2 size={12} className="animate-spin" />
+            : <LocateFixed size={12} />}
+          {geoLoading ? 'Getting your location…' : 'Use my current location'}
+        </button>
+      )}
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, MapPin, Star, Bookmark, Heart, Flag, MessageCircle, Languages, Clock, CheckCircle2, CalendarDays, IndianRupee } from 'lucide-react'
@@ -12,6 +12,7 @@ import { Skeleton } from '../../components/ui/Skeleton'
 import Button from '../../components/ui/Button'
 import BottomSheet from '../../components/ui/BottomSheet'
 import { PlacesAutocomplete, staticMapUrl } from '../../components/ui/PlacesAutocomplete'
+import { useGeolocation } from '../../hooks/useGeolocation'
 import { getInitials } from '../../lib/utils'
 import type { PublicProfile, Service } from '../../types'
 
@@ -47,6 +48,18 @@ export default function ProfileDetailPage() {
   const [bookDuration, setBookDuration] = useState('2')
   const [bookNotes, setBookNotes] = useState('')
   const [bookLocation, setBookLocation] = useState('')
+
+  const { getLocation } = useGeolocation()
+
+  // Auto-fill location when booking sheet opens
+  useEffect(() => {
+    if (showBook && !bookLocation) {
+      getLocation()
+        .then(r => setBookLocation(r.label))
+        .catch(() => { /* user denied — that's fine */ })
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showBook])
 
   const { data, isLoading } = useQuery({
     queryKey: ['profile', id],
