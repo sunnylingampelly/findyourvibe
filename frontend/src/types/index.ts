@@ -123,7 +123,7 @@ export interface Message {
   sender: PublicProfile
   body?: string
   type: 'text' | 'image'
-  read_at?: string
+  read_at?: string | null
   created_at: string
 }
 
