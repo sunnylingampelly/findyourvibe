@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  Star, CalendarDays, User, IndianRupee, CheckCircle2, Sparkles,
+  CalendarDays, User, IndianRupee, CheckCircle2, Sparkles,
   Shield, MessageCircle, TrendingUp, ChevronRight, Info, PlusCircle,
   BadgeCheck, Clock, Pencil
 } from 'lucide-react'

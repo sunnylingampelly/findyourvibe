@@ -64,9 +64,12 @@ const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December']
 const DAY_LABELS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
 
-function toLocalDate(iso: string): Date {
-  const [y, m, d] = iso.split('-').map(Number)
-  return new Date(y, m - 1, d)
+function toLocalDate(iso: string): Date | null {
+  const parts = iso.split('-').map(Number)
+  if (parts.length < 3 || parts.some(isNaN)) return null
+  const [y, m, d] = parts
+  const date = new Date(y, m - 1, d)
+  return isNaN(date.getTime()) ? null : date
 }
 
 function isSameDay(a: Date, b: Date) {

@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
-  ArrowLeft, Send, Smile, Info, CalendarDays, MapPin,
+  ArrowLeft, Send, Smile, Info, CalendarDays,
   Clock, IndianRupee, Check, CheckCheck, CornerUpLeft, Copy, ChevronDown, X, Trash2,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -428,11 +428,12 @@ export default function ChatPage() {
           >
             {(() => {
               const st = liveBooking.status
-              const cfg = {
+              const cfg = ({
                 pending:  { bg: '#FFF8EE', border: '#F5D99A', accent: '#D9A45B', label: 'Awaiting Response', step: 1 },
                 accepted: { bg: '#E8F0EA', border: '#C8DDD2', accent: '#236B63', label: 'Booking Confirmed ✓', step: 2 },
                 declined: { bg: '#FFF0EE', border: '#F5B8B8', accent: '#D76D6D', label: 'Booking Declined',   step: 2 },
-              }[st] ?? { bg: '#F4F6F8', border: '#E8EAE6', accent: '#A1AAA5', label: st, step: 0 }
+              } as Record<string, { bg: string; border: string; accent: string; label: string; step: number }>)[st]
+                ?? { bg: '#F4F6F8', border: '#E8EAE6', accent: '#A1AAA5', label: st, step: 0 }
               const steps = ['Requested', 'Waiting', st === 'accepted' ? 'Confirmed' : st === 'declined' ? 'Declined' : 'Pending']
 
               return (

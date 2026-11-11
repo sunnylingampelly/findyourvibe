@@ -5,6 +5,7 @@ import { useForm, Controller } from 'react-hook-form'
 import { Camera, Check } from 'lucide-react'
 import { profileApi } from '../../api/profile'
 import { discoverApi } from '../../api/discover'
+import { useAuthStore } from '../../stores/authStore'
 import { useToast } from '../../components/ui/Toast'
 import PageHeader from '../../components/layout/PageHeader'
 import Avatar from '../../components/ui/Avatar'
@@ -34,8 +35,9 @@ export default function EditProfilePage() {
   const qc = useQueryClient()
   const servicesRef = useRef<HTMLDivElement>(null)
 
+  const { user: storeUser } = useAuthStore()
   const { data } = useQuery({ queryKey: ['me'], queryFn: () => profileApi.getMe(), staleTime: 0 })
-  const user: User = data?.data?.data
+  const user: User = data?.data?.data ?? storeUser
 
   const { data: servicesData } = useQuery({
     queryKey: ['services'],

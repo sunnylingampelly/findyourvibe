@@ -54,10 +54,10 @@ export default function ProfilePage() {
     {
       label: 'Account',
       items: [
-        { icon: Edit2, label: 'Edit Profile', to: '/profile/edit' },
-        { icon: Bookmark, label: 'Saved Profiles', to: '/saved' },
-        { icon: Bell, label: 'Notifications', to: '/notifications' },
-        { icon: Settings, label: 'Account Settings', to: '/settings' },
+        { icon: Edit2, label: 'Edit Profile', to: '/profile/edit', highlight: false },
+        { icon: Bookmark, label: 'Saved Profiles', to: '/saved', highlight: false },
+        { icon: Bell, label: 'Notifications', to: '/notifications', highlight: false },
+        { icon: Settings, label: 'Account Settings', to: '/settings', highlight: false },
       ],
     },
     {
@@ -67,9 +67,9 @@ export default function ProfilePage() {
     {
       label: 'Support',
       items: [
-        { icon: Shield, label: 'Privacy Settings', to: '/settings/privacy' },
-        { icon: HelpCircle, label: 'Help & Support', to: '/help' },
-        { icon: FileText, label: 'Terms & Privacy', to: '/terms' },
+        { icon: Shield, label: 'Privacy Settings', to: '/settings/privacy', highlight: false },
+        { icon: HelpCircle, label: 'Help & Support', to: '/help', highlight: false },
+        { icon: FileText, label: 'Terms & Privacy', to: '/terms', highlight: false },
       ],
     },
   ]
