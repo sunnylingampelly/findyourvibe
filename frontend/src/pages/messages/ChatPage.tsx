@@ -633,8 +633,11 @@ export default function ChatPage() {
       <div
         ref={scrollRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto px-4 py-5"
-        style={{ scrollbarWidth: 'none' }}
+        className="flex-1 overflow-y-auto px-4 py-3"
+        style={{
+          scrollbarWidth: 'none',
+          backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='24' height='24' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='1.5' cy='1.5' r='1.5' fill='%23236B63' fill-opacity='0.07'/%3E%3C/svg%3E\")",
+        }}
       >
         {isLoading ? (
           <div className="flex flex-col gap-3 pt-6">
@@ -670,11 +673,11 @@ export default function ChatPage() {
             </div>
           </motion.div>
         ) : (
-          <div className="space-y-5">
+          <div className="space-y-3">
             {groups.map(group => (
               <div key={group.date}>
                 {/* Date divider */}
-                <div className="flex items-center gap-3 mb-4">
+                <div className="flex items-center gap-3 mb-2.5">
                   <div className="flex-1 h-px bg-[#E0E5E2]" />
                   <span className="text-[10px] font-semibold text-[#9BAAA4] uppercase tracking-wider px-2.5 py-1 bg-white/80 rounded-full border border-[#E8EAE6] shadow-sm">
                     {group.date}

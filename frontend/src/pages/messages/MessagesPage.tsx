@@ -179,7 +179,9 @@ export default function MessagesPage() {
                       )}
                     </div>
                     <p className={`text-xs truncate mt-0.5 ${hasUnread ? 'text-[#24332F] font-medium' : 'text-[#A1AAA5]'}`}>
-                      {lastMsg ? truncate(lastMsg.body ?? '📷 Photo', 52) : '💬 Tap to start chatting'}
+                      {lastMsg
+                        ? (lastMsg.deleted ? '🚫 Message deleted' : truncate(lastMsg.body ?? '📷 Photo', 52))
+                        : 'Say hello! 👋'}
                     </p>
                   </div>
 
