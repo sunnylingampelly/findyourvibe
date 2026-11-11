@@ -126,7 +126,8 @@ export default function ChatPage() {
     refetchIntervalInBackground: false,
   })
 
-  const serverMessages: Message[] = msgsData?.data?.data ?? []
+  const rawMsgs = msgsData?.data?.data
+  const serverMessages: Message[] = Array.isArray(rawMsgs) ? rawMsgs : []
 
   const messages = useMemo(() => {
     const serverIds = new Set(serverMessages.map(m => m.id))

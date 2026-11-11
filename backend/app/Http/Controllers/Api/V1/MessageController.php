@@ -30,7 +30,7 @@ class MessageController extends Controller
             ->latest()
             ->take(200)
             ->get()
-            ->reverse()
+            ->sortBy('created_at')
             ->values();
 
         $conversation->messages()
@@ -38,10 +38,14 @@ class MessageController extends Controller
             ->whereNull('read_at')
             ->update(['read_at' => now()]);
 
+        // Use toArray() to get a plain PHP array — avoids ResourceCollection
+        // JSON serialization ambiguity when embedded inside a response array
+        $data = MessageResource::collection($messages)->toArray($request);
+
         return response()->json([
             'success' => true,
             'data' => [
-                'data' => MessageResource::collection($messages),
+                'data' => array_values($data),
             ],
         ]);
     }
