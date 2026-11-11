@@ -23,7 +23,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             ref={ref}
             className={cn(
               'w-full border-[1.5px] border-[#E8EAE6] rounded-[12px] px-4 py-3 text-sm text-[#24332F] bg-white',
-              'placeholder:text-[#A1AAA5] focus:outline-none focus:border-[#236B63] transition-colors',
+              'placeholder:text-[#A1AAA5] focus:outline-none focus:border-[#C8D5D2] transition-colors',
               leftIcon && 'pl-10',
               rightIcon && 'pr-10',
               error && 'border-[#D76D6D]',

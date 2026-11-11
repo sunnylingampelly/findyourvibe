@@ -74,9 +74,9 @@ function TypingDots() {
 }
 
 function ReadReceipt({ msg, isOptimistic }: { msg: Message; isOptimistic: boolean }) {
-  if (isOptimistic) return <Check size={12} className="text-white/50" />
-  if (msg.read_at) return <CheckCheck size={12} className="text-[#A8E6CF]" />
-  return <CheckCheck size={12} className="text-white/60" />
+  if (isOptimistic) return <Check size={11} style={{ color: '#9BB5AE' }} />
+  if (msg.read_at) return <CheckCheck size={11} style={{ color: '#53BDEB' }} />
+  return <CheckCheck size={11} style={{ color: '#9BB5AE' }} />
 }
 
 export default function ChatPage() {
@@ -426,43 +426,43 @@ export default function ChatPage() {
   return (
     <div className="app-container flex flex-col h-dvh" style={{ background: '#ECE5DD' }}>
 
-      {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3 pt-safe bg-white/95 backdrop-blur-md border-b border-[#E8EAE6] shrink-0 shadow-sm">
+      {/* Header — dark teal, modern WhatsApp style */}
+      <div className="flex items-center gap-3 px-3 py-2.5 pt-safe shrink-0" style={{ background: '#236B63' }}>
         <button
           onClick={() => navigate(-1)}
-          className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-[#F4F1EA] transition-colors"
+          className="w-9 h-9 flex items-center justify-center rounded-xl active:bg-white/10 transition-colors"
         >
-          <ArrowLeft size={20} className="text-[#24332F]" />
+          <ArrowLeft size={20} className="text-white" />
         </button>
 
         {otherUser ? (
           <button
             onClick={() => navigate(`/profiles/${otherUser.id}`)}
-            className="flex items-center gap-3 flex-1 min-w-0 text-left"
+            className="flex items-center gap-2.5 flex-1 min-w-0 text-left"
           >
             <div className="relative shrink-0">
               <Avatar src={otherUser.profile_photo_url} name={otherUser.display_name} size="sm" />
-              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-[#4D9274] rounded-full border-2 border-white" />
+              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-[#A8E6CF] rounded-full border-2 border-[#236B63]" />
             </div>
             <div className="min-w-0">
-              <h2 className="font-manrope font-bold text-[#24332F] text-sm truncate">{otherUser.display_name}</h2>
-              <p className="text-xs text-[#4D9274] font-medium">
-                {otherTyping ? 'typing…' : 'Active now'}
+              <h2 className="font-semibold text-white text-sm truncate">{otherUser.display_name}</h2>
+              <p className="text-[11px] text-white/70">
+                {otherTyping ? 'typing…' : 'tap here for info'}
               </p>
             </div>
           </button>
         ) : (
-          <div className="flex items-center gap-3 flex-1 min-w-0">
-            <div className="w-8 h-8 skeleton rounded-full shrink-0" />
+          <div className="flex items-center gap-2.5 flex-1 min-w-0">
+            <div className="w-8 h-8 rounded-full bg-white/20 shrink-0" />
             <div className="space-y-1 flex-1">
-              <div className="skeleton h-3.5 w-28 rounded" />
-              <div className="skeleton h-2.5 w-16 rounded" />
+              <div className="h-3.5 w-28 rounded bg-white/20" />
+              <div className="h-2.5 w-16 rounded bg-white/15" />
             </div>
           </div>
         )}
 
-        <button className="w-9 h-9 flex items-center justify-center rounded-xl text-[#A1AAA5] hover:bg-[#F4F1EA] transition-colors">
-          <Info size={18} />
+        <button className="w-9 h-9 flex items-center justify-center rounded-xl active:bg-white/10 transition-colors">
+          <Info size={18} className="text-white/80" />
         </button>
       </div>
 
@@ -727,50 +727,51 @@ export default function ChatPage() {
                             {/* Speech-bubble tail on first message in chain */}
                             {isFirstInChain && (
                               <div style={isMe ? {
-                                position: 'absolute', bottom: 0, right: -7, width: 0, height: 0,
-                                borderLeft: `7px solid ${msg.deleted ? '#E8F5F2' : '#D9FDD3'}`,
-                                borderBottom: '7px solid transparent',
+                                position: 'absolute', bottom: 0, right: -6, width: 0, height: 0,
+                                borderLeft: `6px solid ${msg.deleted ? '#CDEEE2' : '#D9FDD3'}`,
+                                borderBottom: '6px solid transparent',
                               } : {
-                                position: 'absolute', bottom: 0, left: -7, width: 0, height: 0,
-                                borderRight: '7px solid #FFFFFF',
-                                borderBottom: '7px solid transparent',
+                                position: 'absolute', bottom: 0, left: -6, width: 0, height: 0,
+                                borderRight: '6px solid #FFFFFF',
+                                borderBottom: '6px solid transparent',
                               }} />
                             )}
                             <div
                               className={cn(
-                                'relative px-3.5 text-sm leading-relaxed transition-opacity select-none overflow-hidden',
-                                isLastInChain ? 'pt-2 pb-5' : 'py-2',
+                                'px-3 pt-1.5 text-sm leading-snug transition-opacity select-none',
+                                isLastInChain ? 'pb-1' : 'pb-1.5',
                                 isOptimistic ? 'opacity-70' : 'opacity-100',
                                 msg.deleted
                                   ? (isMe ? 'text-[#5A8A7A] italic' : 'bg-white text-[#A1AAA5] italic')
-                                  : isMe ? 'text-[#1A3D35]' : 'bg-white text-[#24332F]',
-                                isMe && isFirstInChain ? 'rounded-[18px] rounded-br-[5px]' :
-                                isMe && isLastInChain ? 'rounded-[18px] rounded-tr-[5px]' :
-                                isMe ? 'rounded-[18px] rounded-r-[5px]' :
-                                !isMe && isFirstInChain ? 'rounded-[18px] rounded-bl-[5px]' :
-                                !isMe && isLastInChain ? 'rounded-[18px] rounded-tl-[5px]' :
-                                'rounded-[18px] rounded-l-[5px]'
+                                  : isMe ? 'text-[#111B21]' : 'bg-white text-[#111B21]',
+                                isMe && isFirstInChain ? 'rounded-[14px] rounded-br-[4px]' :
+                                isMe && isLastInChain ? 'rounded-[14px] rounded-tr-[4px]' :
+                                isMe ? 'rounded-[14px] rounded-r-[4px]' :
+                                !isMe && isFirstInChain ? 'rounded-[14px] rounded-bl-[4px]' :
+                                !isMe && isLastInChain ? 'rounded-[14px] rounded-tl-[4px]' :
+                                'rounded-[14px] rounded-l-[4px]',
+                                'min-w-[70px]'
                               )}
                               style={isMe ? {
-                                background: msg.deleted ? '#E8F5F2' : '#D9FDD3',
-                                boxShadow: '0 1px 1px rgba(0,0,0,0.08)',
+                                background: msg.deleted ? '#CDEEE2' : '#D9FDD3',
+                                boxShadow: '0 1px 2px rgba(0,0,0,0.12)',
                               } : {
-                                boxShadow: '0 1px 1px rgba(0,0,0,0.08)',
+                                boxShadow: '0 1px 2px rgba(0,0,0,0.12)',
                               }}
                               onDoubleClick={() => !msg.deleted && setReplyTo(msg)}
                             >
-                              {msg.deleted ? '🚫 This message was deleted' : msg.body}
-                              {/* Timestamp inside bubble */}
+                              <span>{msg.deleted ? '🚫 This message was deleted' : msg.body}</span>
+                              {/* Timestamp row — only on last in chain */}
                               {isLastInChain && (
-                                <span className={cn(
-                                  'absolute bottom-1.5 right-2.5 flex items-center gap-0.5',
-                                  isMe ? 'text-[#5A8A7A]' : 'text-[#A1AAA5]'
+                                <div className={cn(
+                                  'flex items-center justify-end gap-1 mt-0.5',
+                                  isMe ? 'text-[#6C8A85]' : 'text-[#9BA8A3]'
                                 )}>
-                                  <span className="text-[10px] whitespace-nowrap">
+                                  <span className="text-[10px] whitespace-nowrap leading-none">
                                     {isOptimistic ? 'Sending…' : formatTime(msg.created_at)}
                                   </span>
                                   {isMe && <ReadReceipt msg={msg} isOptimistic={isOptimistic} />}
-                                </span>
+                                </div>
                               )}
                             </div>
                           </div>
@@ -988,7 +989,7 @@ export default function ChatPage() {
             <Smile size={22} />
           </button>
 
-          <div className="flex-1 bg-white rounded-full px-4 py-2.5 shadow-sm">
+          <div className="flex-1 bg-white rounded-full px-4 py-2.5 shadow-sm focus-within:outline-none focus-within:ring-0">
             <textarea
               ref={inputRef}
               value={text}
@@ -997,7 +998,7 @@ export default function ChatPage() {
               onFocus={() => setShowEmoji(false)}
               placeholder="Message…"
               rows={1}
-              className="w-full bg-transparent text-sm text-[#24332F] placeholder:text-[#A1AAA5] outline-none resize-none leading-relaxed"
+              className="w-full bg-transparent text-sm text-[#24332F] placeholder:text-[#A1AAA5] outline-none ring-0 resize-none leading-relaxed"
               style={{ minHeight: '20px', maxHeight: '120px', WebkitTapHighlightColor: 'transparent' }}
             />
           </div>

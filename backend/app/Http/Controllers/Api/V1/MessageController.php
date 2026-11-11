@@ -27,7 +27,11 @@ class MessageController extends Controller
         $messages = $conversation->messages()
             ->withTrashed()
             ->with(['sender.profile', 'attachments'])
-            ->paginate(50);
+            ->latest()
+            ->take(200)
+            ->get()
+            ->reverse()
+            ->values();
 
         $conversation->messages()
             ->where('sender_id', '!=', $userId)
@@ -36,7 +40,9 @@ class MessageController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => MessageResource::collection($messages),
+            'data' => [
+                'data' => MessageResource::collection($messages),
+            ],
         ]);
     }
 

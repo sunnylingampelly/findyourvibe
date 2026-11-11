@@ -217,12 +217,14 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: 10px;
 }
 
-/* Smooth focus rings */
-:focus-visible {
-  outline: 2px solid #236B63;
-  outline-offset: 2px;
-  border-radius: 8px;
+/* No focus rings — PWA native-app feel, suppress all green focus borders */
+:focus-visible { outline: none; }
+input:focus, textarea:focus, select:focus {
+  outline: none !important;
+  border-color: #D0D9D6 !important;
+  box-shadow: none !important;
 }
+button:focus { outline: none; }
 
 /* Prevent text selection on interactive elements */
 button, a {
