@@ -727,16 +727,16 @@ export default function ChatPage() {
                         >
                           {/* Bubble with tail */}
                           <div className="relative">
-                            {/* Speech-bubble tail on first message in chain */}
-                            {isFirstInChain && (
+                            {/* Speech-bubble tail on LAST message in chain (WhatsApp style) */}
+                            {isLastInChain && (
                               <div style={isMe ? {
-                                position: 'absolute', bottom: 0, right: -6, width: 0, height: 0,
-                                borderLeft: `6px solid ${msg.deleted ? '#CDEEE2' : '#D9FDD3'}`,
-                                borderBottom: '6px solid transparent',
+                                position: 'absolute', bottom: 0, right: -8, width: 0, height: 0,
+                                borderLeft: `9px solid ${msg.deleted ? '#CDEEE2' : '#D9FDD3'}`,
+                                borderBottom: '9px solid transparent',
                               } : {
-                                position: 'absolute', bottom: 0, left: -6, width: 0, height: 0,
-                                borderRight: '6px solid #FFFFFF',
-                                borderBottom: '6px solid transparent',
+                                position: 'absolute', bottom: 0, left: -8, width: 0, height: 0,
+                                borderRight: '9px solid #FFFFFF',
+                                borderBottom: '9px solid transparent',
                               }} />
                             )}
                             <div
@@ -747,12 +747,9 @@ export default function ChatPage() {
                                 msg.deleted
                                   ? (isMe ? 'text-[#5A8A7A] italic' : 'bg-white text-[#A1AAA5] italic')
                                   : isMe ? 'text-[#111B21]' : 'bg-white text-[#111B21]',
-                                isMe && isFirstInChain ? 'rounded-[14px] rounded-br-[4px]' :
-                                isMe && isLastInChain ? 'rounded-[14px] rounded-tr-[4px]' :
-                                isMe ? 'rounded-[14px] rounded-r-[4px]' :
-                                !isMe && isFirstInChain ? 'rounded-[14px] rounded-bl-[4px]' :
-                                !isMe && isLastInChain ? 'rounded-[14px] rounded-tl-[4px]' :
-                                'rounded-[14px] rounded-l-[4px]',
+                                isMe
+                                  ? (isFirstInChain ? 'rounded-[10px] rounded-br-[3px]' : 'rounded-[10px] rounded-r-[3px]')
+                                  : (isFirstInChain ? 'rounded-[10px] rounded-bl-[3px]' : 'rounded-[10px] rounded-l-[3px]'),
                                 'min-w-[70px]'
                               )}
                               style={isMe ? {
