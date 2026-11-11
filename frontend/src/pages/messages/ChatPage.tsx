@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { connectionsApi } from '../../api/connections'
 import Avatar from '../../components/ui/Avatar'
 import { useAuthStore } from '../../stores/authStore'
-import { cn, timeAgo } from '../../lib/utils'
+import { cn } from '../../lib/utils'
 import echo from '../../lib/echo'
 import type { Message } from '../../types'
 
@@ -100,10 +100,10 @@ export default function ChatPage() {
   const scrollRef = useRef<HTMLDivElement>(null)
   const contextMenuRef = useRef<HTMLDivElement>(null)
   const sendingRef = useRef(false)
-  const typingTimeout = useRef<ReturnType<typeof setTimeout>>()
+  const typingTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const lastWhisperTime = useRef(0)
   const isNearBottom = useRef(true)
-  const longPressTimer = useRef<ReturnType<typeof setTimeout>>()
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const swipeState = useRef({ startX: 0, startY: 0, msgId: '' as string, dx: 0 })
   const [swipeDx, setSwipeDx] = useState<Record<string, number>>({})
   const messagesRef = useRef<Message[]>([])
