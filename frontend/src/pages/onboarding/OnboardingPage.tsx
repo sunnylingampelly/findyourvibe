@@ -431,11 +431,12 @@ export default function OnboardingPage() {
           onClick={next}
           disabled={isNextDisabled()}
         >
-          {step === TOTAL_STEPS ? '🎉 Complete Setup' : step === 2 ? (
-              <span className="flex items-center gap-2">Set My Location <ArrowRight size={18} /></span>
-            ) : (
-            <span className="flex items-center gap-2">Continue <ArrowRight size={18} /></span>
-          ))}
+          {step === TOTAL_STEPS
+            ? '🎉 Complete Setup'
+            : step === 2
+              ? <span className="flex items-center gap-2">Set My Location <ArrowRight size={18} /></span>
+              : <span className="flex items-center gap-2">Continue <ArrowRight size={18} /></span>
+          }
         </Button>
       </div>
     </div>
