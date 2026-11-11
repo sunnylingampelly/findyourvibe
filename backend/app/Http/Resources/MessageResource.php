@@ -13,7 +13,7 @@ class MessageResource extends JsonResource
             'id' => $this->id,
             'conversation_id' => $this->conversation_id,
             'sender_id' => $this->sender_id,
-            'sender' => new UserResource($this->whenLoaded('sender')),
+            'sender' => $this->when($this->relationLoaded('sender'), fn() => new UserResource($this->sender)),
             'deleted' => (bool) $this->deleted_at,
             'body' => $this->deleted_at ? null : $this->body,
             'type' => $this->type,

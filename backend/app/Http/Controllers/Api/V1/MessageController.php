@@ -48,7 +48,8 @@ class MessageController extends Controller
     {
         $validated = $request->validate([
             'body' => ['required_without:attachment', 'nullable', 'string', 'max:5000'],
-            'attachment' => ['nullable', 'file', 'mimes:jpeg,jpg,png,webp,gif,mp3,m4a,wav,ogg,webm,opus', 'max:20480'],
+            'attachment' => ['nullable', 'file', 'max:20480',
+                'mimetypes:image/jpeg,image/png,image/webp,image/gif,image/jpg,audio/webm,audio/ogg,audio/mp4,audio/mpeg,audio/wav,audio/aac,audio/opus,video/webm'],
         ]);
 
         $userId = $request->user()->id;
@@ -62,7 +63,7 @@ class MessageController extends Controller
         $type = 'text';
         if ($request->hasFile('attachment')) {
             $mime = $request->file('attachment')->getMimeType() ?? '';
-            $type = str_starts_with($mime, 'audio/') ? 'audio' : 'image';
+            $type = (str_starts_with($mime, 'audio/') || $mime === 'video/webm') ? 'audio' : 'image';
         }
 
         $message = Message::create([
