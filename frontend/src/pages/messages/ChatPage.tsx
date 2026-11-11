@@ -60,7 +60,7 @@ function formatTime(dateStr: string): string {
 
 function TypingDots() {
   return (
-    <div className="flex items-center gap-1 px-4 py-3 bg-white rounded-[18px] rounded-bl-[6px] border border-[#E8EAE6] shadow-sm w-fit">
+    <div className="flex items-center gap-1 px-4 py-3 bg-white rounded-[18px] rounded-bl-[5px] shadow-sm w-fit" style={{ boxShadow: '0 1px 1px rgba(0,0,0,0.08)' }}>
       {[0, 1, 2].map(i => (
         <motion.div
           key={i}
@@ -424,7 +424,7 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="app-container flex flex-col h-dvh" style={{ background: 'linear-gradient(180deg, #EDF5F2 0%, #F4F2EE 100%)' }}>
+    <div className="app-container flex flex-col h-dvh" style={{ background: '#ECE5DD' }}>
 
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3 pt-safe bg-white/95 backdrop-blur-md border-b border-[#E8EAE6] shrink-0 shadow-sm">
@@ -633,11 +633,8 @@ export default function ChatPage() {
       <div
         ref={scrollRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto px-4 py-3"
-        style={{
-          scrollbarWidth: 'none',
-          backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='24' height='24' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='1.5' cy='1.5' r='1.5' fill='%23236B63' fill-opacity='0.07'/%3E%3C/svg%3E\")",
-        }}
+        className="flex-1 overflow-y-auto px-3 py-3"
+        style={{ scrollbarWidth: 'none' }}
       >
         {isLoading ? (
           <div className="flex flex-col gap-3 pt-6">
@@ -677,12 +674,10 @@ export default function ChatPage() {
             {groups.map(group => (
               <div key={group.date}>
                 {/* Date divider */}
-                <div className="flex items-center gap-3 mb-2.5">
-                  <div className="flex-1 h-px bg-[#E0E5E2]" />
-                  <span className="text-[10px] font-semibold text-[#9BAAA4] uppercase tracking-wider px-2.5 py-1 bg-white/80 rounded-full border border-[#E8EAE6] shadow-sm">
+                <div className="flex justify-center mb-2.5">
+                  <span className="text-[11px] font-medium text-[#8A7A6A] px-3.5 py-1 bg-white/85 rounded-full shadow-sm">
                     {group.date}
                   </span>
-                  <div className="flex-1 h-px bg-[#E0E5E2]" />
                 </div>
 
                 <div className="space-y-0.5">
@@ -693,7 +688,6 @@ export default function ChatPage() {
                     const nextMsg = group.messages[msgIdx + 1]
                     const isFirstInChain = !prevMsg || prevMsg.sender.id !== msg.sender.id
                     const isLastInChain = !nextMsg || nextMsg.sender.id !== msg.sender.id
-                    const showAvatar = !isMe && isLastInChain
                     const dx = swipeDx[msg.id] ?? 0
                     const msgReaction = reactions[msg.id]
 
@@ -712,15 +706,6 @@ export default function ChatPage() {
                         onTouchMove={handleMsgTouchMove}
                         onTouchEnd={handleMsgTouchEnd}
                       >
-                        {/* Other user avatar placeholder */}
-                        {!isMe && (
-                          <div className="w-7 shrink-0 self-end mb-1">
-                            {showAvatar && (
-                              <Avatar src={msg.sender.profile_photo_url} name={msg.sender.display_name} size="xs" />
-                            )}
-                          </div>
-                        )}
-
                         {/* Reply arrow indicator (swipe) */}
                         {dx > 0 && (
                           <div
@@ -734,34 +719,60 @@ export default function ChatPage() {
                         )}
 
                         <div
-                          className={cn('flex flex-col max-w-[75%]', isMe ? 'items-end' : 'items-start')}
+                          className={cn('flex flex-col max-w-[80%]', isMe ? 'items-end' : 'items-start')}
                           style={{ transform: `translateX(${isMe ? -dx : dx}px)`, transition: dx === 0 ? 'transform 0.25s ease' : 'none' }}
                         >
-                          {/* Bubble */}
-                          <div
-                            className={cn(
-                              'px-4 py-2.5 text-sm leading-relaxed transition-opacity select-none',
-                              isOptimistic ? 'opacity-70' : 'opacity-100',
-                              msg.deleted
-                                ? (isMe ? 'text-white/50 italic' : 'bg-white text-[#A1AAA5] italic shadow-sm')
-                                : isMe ? 'text-white shadow-sm' : 'bg-white text-[#24332F] shadow-sm',
-                              isMe && isFirstInChain && isLastInChain ? 'rounded-[18px]' :
-                              isMe && isFirstInChain ? 'rounded-[18px] rounded-br-[5px]' :
-                              isMe && isLastInChain ? 'rounded-[18px] rounded-tr-[5px]' :
-                              isMe ? 'rounded-[18px] rounded-r-[5px]' :
-                              !isMe && isFirstInChain && isLastInChain ? 'rounded-[18px]' :
-                              !isMe && isFirstInChain ? 'rounded-[18px] rounded-bl-[5px]' :
-                              !isMe && isLastInChain ? 'rounded-[18px] rounded-tl-[5px]' :
-                              'rounded-[18px] rounded-l-[5px]'
+                          {/* Bubble with tail */}
+                          <div className="relative">
+                            {/* Speech-bubble tail on first message in chain */}
+                            {isFirstInChain && (
+                              <div style={isMe ? {
+                                position: 'absolute', bottom: 0, right: -7, width: 0, height: 0,
+                                borderLeft: `7px solid ${msg.deleted ? '#E8F5F2' : '#D9FDD3'}`,
+                                borderBottom: '7px solid transparent',
+                              } : {
+                                position: 'absolute', bottom: 0, left: -7, width: 0, height: 0,
+                                borderRight: '7px solid #FFFFFF',
+                                borderBottom: '7px solid transparent',
+                              }} />
                             )}
-                            style={isMe ? {
-                              background: msg.deleted
-                                ? 'rgba(35,107,99,0.4)'
-                                : 'linear-gradient(135deg, #236B63 0%, #1D5A54 100%)'
-                            } : {}}
-                            onDoubleClick={() => !msg.deleted && setReplyTo(msg)}
-                          >
-                            {msg.deleted ? '🚫 This message was deleted' : msg.body}
+                            <div
+                              className={cn(
+                                'relative px-3.5 text-sm leading-relaxed transition-opacity select-none overflow-hidden',
+                                isLastInChain ? 'pt-2 pb-5' : 'py-2',
+                                isOptimistic ? 'opacity-70' : 'opacity-100',
+                                msg.deleted
+                                  ? (isMe ? 'text-[#5A8A7A] italic' : 'bg-white text-[#A1AAA5] italic')
+                                  : isMe ? 'text-[#1A3D35]' : 'bg-white text-[#24332F]',
+                                isMe && isFirstInChain ? 'rounded-[18px] rounded-br-[5px]' :
+                                isMe && isLastInChain ? 'rounded-[18px] rounded-tr-[5px]' :
+                                isMe ? 'rounded-[18px] rounded-r-[5px]' :
+                                !isMe && isFirstInChain ? 'rounded-[18px] rounded-bl-[5px]' :
+                                !isMe && isLastInChain ? 'rounded-[18px] rounded-tl-[5px]' :
+                                'rounded-[18px] rounded-l-[5px]'
+                              )}
+                              style={isMe ? {
+                                background: msg.deleted ? '#E8F5F2' : '#D9FDD3',
+                                boxShadow: '0 1px 1px rgba(0,0,0,0.08)',
+                              } : {
+                                boxShadow: '0 1px 1px rgba(0,0,0,0.08)',
+                              }}
+                              onDoubleClick={() => !msg.deleted && setReplyTo(msg)}
+                            >
+                              {msg.deleted ? '🚫 This message was deleted' : msg.body}
+                              {/* Timestamp inside bubble */}
+                              {isLastInChain && (
+                                <span className={cn(
+                                  'absolute bottom-1.5 right-2.5 flex items-center gap-0.5',
+                                  isMe ? 'text-[#5A8A7A]' : 'text-[#A1AAA5]'
+                                )}>
+                                  <span className="text-[10px] whitespace-nowrap">
+                                    {isOptimistic ? 'Sending…' : formatTime(msg.created_at)}
+                                  </span>
+                                  {isMe && <ReadReceipt msg={msg} isOptimistic={isOptimistic} />}
+                                </span>
+                              )}
+                            </div>
                           </div>
 
                           {/* Reaction */}
@@ -776,16 +787,6 @@ export default function ChatPage() {
                             >
                               {msgReaction}
                             </button>
-                          )}
-
-                          {/* Timestamp + read receipt */}
-                          {isLastInChain && (
-                            <div className={cn('flex items-center gap-1 mt-1 px-1', isMe ? 'flex-row-reverse' : 'flex-row')}>
-                              <span className="text-[10px] text-[#A1AAA5]">
-                                {isOptimistic ? 'Sending…' : formatTime(msg.created_at)}
-                              </span>
-                              {isMe && <ReadReceipt msg={msg} isOptimistic={isOptimistic} />}
-                            </div>
                           )}
                         </div>
 
@@ -815,11 +816,8 @@ export default function ChatPage() {
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 8 }}
-                  className="flex gap-2 items-end"
+                  className="flex items-end mt-1"
                 >
-                  <div className="w-7 shrink-0 self-end mb-1">
-                    <Avatar src={otherUser?.profile_photo_url} name={otherUser?.display_name ?? '?'} size="xs" />
-                  </div>
                   <TypingDots />
                 </motion.div>
               )}
@@ -923,7 +921,7 @@ export default function ChatPage() {
       </AnimatePresence>
 
       {/* Input bar */}
-      <div className="shrink-0 bg-white border-t border-[#E8EAE6] pb-safe shadow-[0_-1px_8px_rgba(0,0,0,0.04)]">
+      <div className="shrink-0 bg-[#F0EBE3] border-t border-[#DDD5CC] pb-safe">
         {/* Emoji picker */}
         <AnimatePresence>
           {showEmoji && (
@@ -990,7 +988,7 @@ export default function ChatPage() {
             <Smile size={22} />
           </button>
 
-          <div className="flex-1 bg-[#F4F1EA] rounded-2xl px-4 py-2.5">
+          <div className="flex-1 bg-white rounded-full px-4 py-2.5 shadow-sm">
             <textarea
               ref={inputRef}
               value={text}

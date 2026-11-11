@@ -11,7 +11,7 @@ class ConversationResource extends JsonResource
     {
         $userId = $request->user()->id;
         $otherUser = $this->getOtherParticipant($userId);
-        $latestMessage = $this->messages()->latest()->first();
+        $latestMessage = $this->latestMessage;
         $unreadCount = $this->messages()->where('sender_id', '!=', $userId)->whereNull('read_at')->count();
 
         return [
