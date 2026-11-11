@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   ArrowLeft, Send, Smile, Info, CalendarDays,
   Clock, IndianRupee, Check, CheckCheck, CornerUpLeft, Copy, ChevronDown, X, Trash2, Star,
+  Mic, Play, Pause,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { connectionsApi } from '../../api/connections'
@@ -79,6 +80,70 @@ function ReadReceipt({ msg, isOptimistic }: { msg: Message; isOptimistic: boolea
   return <CheckCheck size={11} style={{ color: '#9BB5AE' }} />
 }
 
+const WAVEFORM_BARS = [4, 8, 14, 10, 6, 16, 12, 8, 14, 6, 10, 18, 8, 12, 6, 14, 10, 8, 16, 6]
+
+function AudioMessage({ url, isMe }: { url: string; isMe: boolean }) {
+  const audioRef = useRef<HTMLAudioElement>(null)
+  const [playing, setPlaying] = useState(false)
+  const [progress, setProgress] = useState(0)
+  const [duration, setDuration] = useState(0)
+  const [currentTime, setCurrentTime] = useState(0)
+
+  const toggle = () => {
+    const a = audioRef.current
+    if (!a) return
+    if (playing) { a.pause(); setPlaying(false) }
+    else { a.play().catch(() => {}); setPlaying(true) }
+  }
+
+  const fmt = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`
+
+  return (
+    <div className="flex items-center gap-2.5 py-0.5" style={{ minWidth: 180 }}>
+      <audio
+        ref={audioRef}
+        src={url}
+        onTimeUpdate={e => {
+          const a = e.currentTarget
+          setCurrentTime(a.currentTime)
+          setProgress(a.duration ? a.currentTime / a.duration : 0)
+        }}
+        onLoadedMetadata={e => setDuration(e.currentTarget.duration)}
+        onEnded={() => { setPlaying(false); setProgress(0); setCurrentTime(0) }}
+      />
+      <button
+        onClick={toggle}
+        className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-all active:scale-90"
+        style={{ background: isMe ? '#1A5750' : '#236B63' }}
+      >
+        {playing
+          ? <Pause size={14} className="text-white" />
+          : <Play size={14} className="text-white ml-0.5" />}
+      </button>
+      <div className="flex-1 flex flex-col gap-1">
+        <div className="flex items-end gap-[2px]" style={{ height: 20 }}>
+          {WAVEFORM_BARS.map((h, i) => (
+            <div
+              key={i}
+              className="rounded-full transition-colors"
+              style={{
+                width: 3,
+                height: h,
+                background: i / WAVEFORM_BARS.length <= progress
+                  ? (isMe ? '#1A5750' : '#236B63')
+                  : (isMe ? '#9BCFC8' : '#C0D4D1'),
+              }}
+            />
+          ))}
+        </div>
+        <span className="text-[10px] leading-none" style={{ color: isMe ? '#6C8A85' : '#9BA8A3' }}>
+          {currentTime > 0.5 ? fmt(currentTime) : fmt(duration)}
+        </span>
+      </div>
+    </div>
+  )
+}
+
 export default function ChatPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -97,6 +162,9 @@ export default function ChatPage() {
   const [ratingValue, setRatingValue] = useState(0)
   const [ratingText, setRatingText] = useState('')
 
+  const [isRecording, setIsRecording] = useState(false)
+  const [recordingTime, setRecordingTime] = useState(0)
+
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const emojiRef = useRef<HTMLDivElement>(null)
@@ -110,6 +178,10 @@ export default function ChatPage() {
   const swipeState = useRef({ startX: 0, startY: 0, msgId: '' as string, dx: 0 })
   const [swipeDx, setSwipeDx] = useState<Record<string, number>>({})
   const messagesRef = useRef<Message[]>([])
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const audioChunksRef = useRef<Blob[]>([])
+  const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const streamRef = useRef<MediaStream | null>(null)
 
   const { data: msgsData, isLoading } = useQuery({
     queryKey: ['messages', id],
@@ -332,6 +404,68 @@ export default function ChatPage() {
       if (ctx?.tempId) setOptimistic(prev => prev.filter(m => m.id !== ctx.tempId))
     },
   })
+
+  const voiceSend = useMutation({
+    mutationFn: (form: FormData) => connectionsApi.sendAttachment(id!, form),
+    onSuccess: (res) => {
+      const newMsg = res?.data?.data
+      if (newMsg) {
+        qc.setQueryData(['messages', id], (old: { data: { data: Message[] } } | undefined) => {
+          if (!old) return old
+          const existing: Message[] = Array.isArray(old.data.data) ? old.data.data : []
+          if (existing.find(m => m.id === newMsg.id)) return old
+          return { ...old, data: { ...old.data, data: [...existing, newMsg] } }
+        })
+      }
+      qc.invalidateQueries({ queryKey: ['conversations'] })
+    },
+    onError: () => toast('Failed to send voice message', 'error'),
+  })
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      streamRef.current = stream
+      const mr = new MediaRecorder(stream)
+      mediaRecorderRef.current = mr
+      audioChunksRef.current = []
+
+      mr.ondataavailable = e => { if (e.data.size > 0) audioChunksRef.current.push(e.data) }
+      mr.onstop = () => {
+        streamRef.current?.getTracks().forEach(t => t.stop())
+        const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' })
+        if (audioChunksRef.current.length > 0 && blob.size > 0) {
+          const form = new FormData()
+          form.append('attachment', blob, `voice-${Date.now()}.webm`)
+          isNearBottom.current = true
+          voiceSend.mutate(form)
+        }
+      }
+
+      mr.start(100)
+      setIsRecording(true)
+      setRecordingTime(0)
+      recordingTimerRef.current = setInterval(() => setRecordingTime(t => t + 1), 1000)
+    } catch {
+      toast('Microphone access denied', 'error')
+    }
+  }
+
+  const stopRecording = (send = true) => {
+    if (!mediaRecorderRef.current) return
+    if (!send) {
+      mediaRecorderRef.current.ondataavailable = null
+      mediaRecorderRef.current.onstop = () => {
+        streamRef.current?.getTracks().forEach(t => t.stop())
+      }
+    }
+    try { mediaRecorderRef.current.stop() } catch { /* already stopped */ }
+    if (recordingTimerRef.current) clearInterval(recordingTimerRef.current)
+    setIsRecording(false)
+    setRecordingTime(0)
+  }
+
+  const fmtRecTime = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 
   const handleSend = () => {
     const body = text.trim()
@@ -637,7 +771,11 @@ export default function ChatPage() {
         ref={scrollRef}
         onScroll={handleScroll}
         className="flex-1 overflow-y-auto px-3 py-3"
-        style={{ scrollbarWidth: 'none' }}
+        style={{
+          scrollbarWidth: 'none',
+          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Ccircle cx='40' cy='40' r='1.2' fill='%23B8B0A6' opacity='0.25'/%3E%3C/svg%3E")`,
+          backgroundRepeat: 'repeat',
+        }}
       >
         {isLoading ? (
           <div className="flex flex-col gap-3 pt-6">
@@ -731,7 +869,7 @@ export default function ChatPage() {
                             {isLastInChain && (
                               <div style={isMe ? {
                                 position: 'absolute', bottom: 0, right: -8, width: 0, height: 0,
-                                borderLeft: `9px solid ${msg.deleted ? '#CDEEE2' : '#D9FDD3'}`,
+                                borderLeft: `9px solid ${msg.deleted ? '#CDEEE2' : '#C9F9D3'}`,
                                 borderBottom: '9px solid transparent',
                               } : {
                                 position: 'absolute', bottom: 0, left: -8, width: 0, height: 0,
@@ -753,14 +891,17 @@ export default function ChatPage() {
                                 'min-w-[70px]'
                               )}
                               style={isMe ? {
-                                background: msg.deleted ? '#CDEEE2' : '#D9FDD3',
-                                boxShadow: '0 1px 2px rgba(0,0,0,0.12)',
+                                background: msg.deleted ? '#CDEEE2' : 'linear-gradient(160deg, #DCFDD3 0%, #C9F9D3 100%)',
+                                boxShadow: '0 1px 3px rgba(0,0,0,0.13)',
                               } : {
-                                boxShadow: '0 1px 2px rgba(0,0,0,0.12)',
+                                boxShadow: '0 1px 3px rgba(0,0,0,0.11)',
                               }}
                               onDoubleClick={() => !msg.deleted && setReplyTo(msg)}
                             >
-                              <span>{msg.deleted ? '🚫 This message was deleted' : msg.body}</span>
+                              {msg.type === 'audio' && msg.attachments?.[0] && !msg.deleted
+                                ? <AudioMessage url={msg.attachments[0].url} isMe={isMe} />
+                                : <span>{msg.deleted ? '🚫 This message was deleted' : msg.body}</span>
+                              }
                               {/* Timestamp row — only on last in chain */}
                               {isLastInChain && (
                                 <div className={cn(
@@ -978,41 +1119,116 @@ export default function ChatPage() {
         </AnimatePresence>
 
         {/* Input row */}
-        <div className="flex items-end gap-2 px-2 py-2">
-          {/* Input field with emoji icon inside */}
-          <div className="flex-1 flex items-end bg-white rounded-full shadow-sm px-3 py-2">
-            <button
-              onClick={() => setShowEmoji(s => !s)}
-              className={cn(
-                'w-8 h-7 flex items-center justify-center rounded-full transition-colors shrink-0 mr-1',
-                showEmoji ? 'text-[#236B63]' : 'text-[#A1AAA5]'
-              )}
-            >
-              <Smile size={20} />
-            </button>
-            <textarea
-              ref={inputRef}
-              value={text}
-              onChange={e => { setText(e.target.value); autoResize(e.target); whisperTyping() }}
-              onKeyDown={handleKeyDown}
-              onFocus={() => setShowEmoji(false)}
-              placeholder="Message…"
-              rows={1}
-              className="flex-1 bg-transparent text-sm text-[#24332F] placeholder:text-[#A1AAA5] outline-none ring-0 resize-none leading-relaxed self-center"
-              style={{ minHeight: '20px', maxHeight: '120px', WebkitTapHighlightColor: 'transparent' }}
-            />
-          </div>
+        <div className="flex items-end gap-2 px-2 py-2 relative">
+          <AnimatePresence mode="wait">
+            {isRecording ? (
+              /* Recording UI */
+              <motion.div
+                key="recording"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 6 }}
+                transition={{ duration: 0.15 }}
+                className="flex-1 flex items-center gap-2.5 bg-white rounded-full px-3 py-2 shadow-sm"
+              >
+                <button onClick={() => stopRecording(false)} className="shrink-0 text-[#D76D6D] active:scale-90 transition-transform">
+                  <X size={18} />
+                </button>
+                <div className="flex-1 flex items-end gap-[2px] overflow-hidden" style={{ height: 24 }}>
+                  {Array.from({ length: 28 }, (_, i) => {
+                    const heights = [5, 10, 18, 8, 14, 20, 6, 16, 10, 22, 8, 14, 18, 6, 12, 20, 8, 16, 5, 14, 20, 8, 12, 6, 18, 10, 14, 8]
+                    return (
+                      <motion.div
+                        key={i}
+                        className="rounded-full bg-red-400"
+                        style={{ width: 2.5, height: heights[i], originY: 1 }}
+                        animate={{ scaleY: [0.2, 1, 0.4, 0.8, 0.2] }}
+                        transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.04, ease: 'easeInOut' }}
+                      />
+                    )
+                  })}
+                </div>
+                <span className="text-xs font-semibold text-red-500 tabular-nums shrink-0 w-9 text-right">
+                  {fmtRecTime(recordingTime)}
+                </span>
+              </motion.div>
+            ) : (
+              /* Normal input */
+              <motion.div
+                key="input"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.1 }}
+                className="flex-1 flex items-end bg-white rounded-full shadow-sm px-3 py-2"
+              >
+                <button
+                  onClick={() => setShowEmoji(s => !s)}
+                  className={cn(
+                    'w-8 h-7 flex items-center justify-center rounded-full transition-colors shrink-0 mr-1',
+                    showEmoji ? 'text-[#236B63]' : 'text-[#A1AAA5]'
+                  )}
+                >
+                  <Smile size={20} />
+                </button>
+                <textarea
+                  ref={inputRef}
+                  value={text}
+                  onChange={e => { setText(e.target.value); autoResize(e.target); whisperTyping() }}
+                  onKeyDown={handleKeyDown}
+                  onFocus={() => setShowEmoji(false)}
+                  placeholder="Message…"
+                  rows={1}
+                  className="flex-1 bg-transparent text-sm text-[#24332F] placeholder:text-[#A1AAA5] outline-none ring-0 resize-none leading-relaxed self-center"
+                  style={{ minHeight: '20px', maxHeight: '120px', WebkitTapHighlightColor: 'transparent' }}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-          <motion.button
-            onClick={handleSend}
-            animate={{ scale: text.trim() ? 1 : 0.85, opacity: text.trim() ? 1 : 0 }}
-            transition={{ type: 'spring', stiffness: 500, damping: 28 }}
-            disabled={!text.trim()}
-            className="w-10 h-10 rounded-full flex items-center justify-center text-white shrink-0 shadow-md active:scale-90 transition-transform"
-            style={{ background: 'linear-gradient(135deg, #236B63 0%, #1D5A54 100%)' }}
-          >
-            <Send size={17} />
-          </motion.button>
+          {/* Send / Voice / Stop button */}
+          <AnimatePresence mode="wait">
+            {isRecording ? (
+              <motion.button
+                key="stop"
+                initial={{ scale: 0.7, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.7, opacity: 0 }}
+                transition={{ type: 'spring', stiffness: 500, damping: 28 }}
+                onClick={() => stopRecording(true)}
+                className="w-10 h-10 rounded-full flex items-center justify-center text-white shrink-0 shadow-md active:scale-90 transition-transform"
+                style={{ background: 'linear-gradient(135deg, #D76D6D, #C45555)' }}
+              >
+                <Send size={16} />
+              </motion.button>
+            ) : text.trim() ? (
+              <motion.button
+                key="send"
+                initial={{ scale: 0.7, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.7, opacity: 0 }}
+                transition={{ type: 'spring', stiffness: 500, damping: 28 }}
+                onClick={handleSend}
+                className="w-10 h-10 rounded-full flex items-center justify-center text-white shrink-0 shadow-md active:scale-90 transition-transform"
+                style={{ background: 'linear-gradient(135deg, #236B63 0%, #1D5A54 100%)' }}
+              >
+                <Send size={17} />
+              </motion.button>
+            ) : (
+              <motion.button
+                key="mic"
+                initial={{ scale: 0.7, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.7, opacity: 0 }}
+                transition={{ type: 'spring', stiffness: 500, damping: 28 }}
+                onPointerDown={startRecording}
+                className="w-10 h-10 rounded-full flex items-center justify-center text-white shrink-0 shadow-md active:scale-90 transition-transform"
+                style={{ background: 'linear-gradient(135deg, #236B63 0%, #1D5A54 100%)' }}
+              >
+                <Mic size={18} />
+              </motion.button>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 

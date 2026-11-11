@@ -17,4 +17,6 @@ export const connectionsApi = {
   markRead: (messageId: string) => api.post(`/messages/${messageId}/read`),
   deleteMessage: (conversationId: string, messageId: string) =>
     api.delete(`/conversations/${conversationId}/messages/${messageId}`),
+  sendAttachment: (conversationId: string, form: FormData) =>
+    api.post(`/conversations/${conversationId}/messages`, form),
 }
