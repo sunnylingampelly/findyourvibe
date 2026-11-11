@@ -126,8 +126,7 @@ export default function ChatPage() {
     refetchIntervalInBackground: false,
   })
 
-  const rawMsgs = msgsData?.data?.data
-  const serverMessages: Message[] = Array.isArray(rawMsgs) ? rawMsgs : []
+  const serverMessages: Message[] = Array.isArray(msgsData?.data?.data) ? msgsData.data.data : []
 
   const messages = useMemo(() => {
     const serverIds = new Set(serverMessages.map(m => m.id))
@@ -209,8 +208,9 @@ export default function ChatPage() {
     channel.listen('.MessageSent', (data: Message) => {
       qc.setQueryData(['messages', id], (old: { data: { data: Message[] } } | undefined) => {
         if (!old) return old
-        if (old.data.data.find(m => m.id === data.id)) return old
-        return { ...old, data: { ...old.data, data: [...old.data.data, data] } }
+        const existing: Message[] = Array.isArray(old.data.data) ? old.data.data : []
+        if (existing.find(m => m.id === data.id)) return old
+        return { ...old, data: { ...old.data, data: [...existing, data] } }
       })
       qc.invalidateQueries({ queryKey: ['conversations'] })
     })
@@ -320,8 +320,9 @@ export default function ChatPage() {
       if (newMsg) {
         qc.setQueryData(['messages', id], (old: { data: { data: Message[] } } | undefined) => {
           if (!old) return old
-          if (old.data.data.find(m => m.id === newMsg.id)) return old
-          return { ...old, data: { ...old.data, data: [...old.data.data, newMsg] } }
+          const existing: Message[] = Array.isArray(old.data.data) ? old.data.data : []
+          if (existing.find(m => m.id === newMsg.id)) return old
+          return { ...old, data: { ...old.data, data: [...existing, newMsg] } }
         })
       }
       qc.invalidateQueries({ queryKey: ['conversations'] })
@@ -372,11 +373,12 @@ export default function ChatPage() {
     onSuccess: (_, msgId) => {
       qc.setQueryData(['messages', id], (old: { data: { data: Message[] } } | undefined) => {
         if (!old) return old
+        const existing: Message[] = Array.isArray(old.data.data) ? old.data.data : []
         return {
           ...old,
           data: {
             ...old.data,
-            data: old.data.data.map(m => m.id === msgId ? { ...m, deleted: true, body: null } : m),
+            data: existing.map(m => m.id === msgId ? { ...m, deleted: true, body: null } : m),
           },
         }
       })

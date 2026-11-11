@@ -25,7 +25,7 @@ class ConversationController extends Controller
         }
 
         $conversations = Conversation::whereIn('connection_id', $connections->pluck('id'))
-            ->with(['connection.userOne.profile', 'connection.userTwo.profile', 'latestMessage.sender.profile'])
+            ->with(['connection.userOne.profile', 'connection.userTwo.profile', 'latestMessage'])
             ->get();
 
         return response()->json([

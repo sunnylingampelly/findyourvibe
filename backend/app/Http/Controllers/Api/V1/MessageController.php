@@ -38,15 +38,9 @@ class MessageController extends Controller
             ->whereNull('read_at')
             ->update(['read_at' => now()]);
 
-        // Use toArray() to get a plain PHP array — avoids ResourceCollection
-        // JSON serialization ambiguity when embedded inside a response array
-        $data = MessageResource::collection($messages)->toArray($request);
-
         return response()->json([
             'success' => true,
-            'data' => [
-                'data' => array_values($data),
-            ],
+            'data' => array_values(MessageResource::collection($messages)->toArray($request)),
         ]);
     }
 
