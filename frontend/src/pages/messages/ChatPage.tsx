@@ -260,7 +260,6 @@ export default function ChatPage() {
       const optimisticMsg: Message = {
         id: tempId,
         conversation_id: id!,
-        sender_id: user!.id,
         sender: {
           id: user!.id,
           display_name: user?.name ?? '',

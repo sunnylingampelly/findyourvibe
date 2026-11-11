@@ -120,7 +120,6 @@ export interface Conversation {
 export interface Message {
   id: string
   conversation_id: string
-  sender_id?: string
   sender: PublicProfile
   body?: string
   type: 'text' | 'image'

@@ -1,4 +1,4 @@
-import { Bell, Heart, MessageCircle, Users, CheckCircle2, UserPlus } from 'lucide-react'
+import { Bell, Heart, MessageCircle, Users, UserPlus } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useCallback } from 'react'
@@ -46,10 +46,6 @@ export default function NotificationsPage() {
       qc.invalidateQueries({ queryKey: ['notifications'] })
       qc.invalidateQueries({ queryKey: ['notifications-unread'] })
     },
-  })
-
-  const markReadMutation = useMutation({
-    mutationFn: (id: string) => notificationsApi.markRead(id),
   })
 
   const notifications: AppNotification[] = data?.data?.data ?? []
