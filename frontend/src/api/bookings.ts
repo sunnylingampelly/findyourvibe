@@ -15,8 +15,11 @@ export const bookingsApi = {
     agreed_rate?: number
   }) => api.post('/bookings', data),
 
-  updateBooking: (id: string, status: 'accepted' | 'declined' | 'cancelled', companion_response_note?: string) =>
+  updateBooking: (id: string, status: 'accepted' | 'declined' | 'cancelled' | 'completed', companion_response_note?: string) =>
     api.patch(`/bookings/${id}`, { status, companion_response_note }),
+
+  rateBooking: (id: string, rating: number, review_text?: string) =>
+    api.patch(`/bookings/${id}`, { rating, review_text }),
 
   updatePricing: (services: { service_id: number; price_per_session?: number; price_currency?: string; price_unit?: string }[]) =>
     api.put('/companion/pricing', { services }),

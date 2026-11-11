@@ -50,7 +50,7 @@ export default function BookingsPage() {
   const bookings: Booking[] = data?.data?.data ?? []
 
   const updateBooking = useMutation({
-    mutationFn: ({ status }: { status: 'accepted' | 'declined' | 'cancelled' }) =>
+    mutationFn: ({ status }: { status: 'accepted' | 'declined' | 'cancelled' | 'completed' }) =>
       bookingsApi.updateBooking(selected!.id, status, responseNote),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['bookings'] })

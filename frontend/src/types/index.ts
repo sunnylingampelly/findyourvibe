@@ -66,6 +66,9 @@ export interface Booking {
   location_notes?: string
   agreed_rate?: number
   companion_response_note?: string
+  rating?: number
+  review_text?: string
+  completed_at?: string
   requester?: { id: string; display_name: string; profile_photo_url?: string }
   companion?: { id: string; display_name: string; profile_photo_url?: string }
   service?: { id: string; name: string; slug: string }

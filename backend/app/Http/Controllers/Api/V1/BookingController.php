@@ -71,22 +71,56 @@ class BookingController extends Controller
     {
         $booking = Booking::findOrFail($id);
         $userId = $request->user()->id;
+        $currentStatus = $booking->status;
 
-        if (in_array($booking->status, ['accepted', 'declined', 'cancelled', 'completed'])) {
+        // Rating submission for completed bookings (requester only)
+        if ($currentStatus === 'completed' && $request->has('rating')) {
+            if ($booking->requester_id !== $userId) {
+                return response()->json(['success' => false, 'message' => 'Only the requester can submit a review.'], 403);
+            }
+            $validated = $request->validate([
+                'rating'      => ['required', 'integer', 'min:1', 'max:5'],
+                'review_text' => ['nullable', 'string', 'max:1000'],
+            ]);
+            $booking->update($validated);
+            return response()->json([
+                'success' => true,
+                'data' => $this->formatBooking($booking->fresh(['requester.profile', 'companion.profile', 'service'])),
+            ]);
+        }
+
+        // Block terminal states
+        if (in_array($currentStatus, ['declined', 'cancelled', 'completed'])) {
             return response()->json(['success' => false, 'message' => 'This booking cannot be updated in its current state.'], 422);
         }
 
+        // Allowed transitions per current status
+        $allowed = $currentStatus === 'accepted'
+            ? ['cancelled', 'completed']
+            : ['accepted', 'declined', 'cancelled'];
+
         $validated = $request->validate([
-            'status' => ['required', Rule::in(['accepted', 'declined', 'cancelled'])],
+            'status'                  => ['required', Rule::in($allowed)],
             'companion_response_note' => ['nullable', 'string', 'max:500'],
         ]);
 
-        if ($validated['status'] === 'cancelled' && $booking->requester_id !== $userId) {
-            return response()->json(['success' => false, 'message' => 'Only the requester can cancel.'], 403);
-        }
+        $newStatus = $validated['status'];
 
-        if (in_array($validated['status'], ['accepted', 'declined']) && $booking->companion_id !== $userId) {
-            return response()->json(['success' => false, 'message' => 'Only the companion can accept or decline.'], 403);
+        // Authorization
+        if ($newStatus === 'cancelled') {
+            // Both requester and companion may cancel
+            if (!in_array($userId, [$booking->requester_id, $booking->companion_id])) {
+                return response()->json(['success' => false, 'message' => 'Not authorized to cancel this booking.'], 403);
+            }
+        } elseif (in_array($newStatus, ['accepted', 'declined'])) {
+            if ($booking->companion_id !== $userId) {
+                return response()->json(['success' => false, 'message' => 'Only the companion can accept or decline.'], 403);
+            }
+        } elseif ($newStatus === 'completed') {
+            if (!in_array($userId, [$booking->requester_id, $booking->companion_id])) {
+                return response()->json(['success' => false, 'message' => 'Not authorized.'], 403);
+            }
+            $validated['completed_at'] = now();
         }
 
         $booking->update($validated);
@@ -115,6 +149,9 @@ class BookingController extends Controller
             'location_notes' => $b->location_notes,
             'agreed_rate' => $b->agreed_rate,
             'companion_response_note' => $b->companion_response_note,
+            'rating' => $b->rating,
+            'review_text' => $b->review_text,
+            'completed_at' => $b->completed_at,
             'requester' => $profile($b->requester),
             'companion' => $profile($b->companion),
             'service' => $b->service ? ['id' => $b->service->id, 'name' => $b->service->name, 'slug' => $b->service->slug] : null,

@@ -3,13 +3,15 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   ArrowLeft, Send, Smile, Info, CalendarDays,
-  Clock, IndianRupee, Check, CheckCheck, CornerUpLeft, Copy, ChevronDown, X, Trash2,
+  Clock, IndianRupee, Check, CheckCheck, CornerUpLeft, Copy, ChevronDown, X, Trash2, Star,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { connectionsApi } from '../../api/connections'
 import { bookingsApi } from '../../api/bookings'
 import Avatar from '../../components/ui/Avatar'
+import BottomSheet from '../../components/ui/BottomSheet'
 import { useAuthStore } from '../../stores/authStore'
+import { useToast } from '../../components/ui/Toast'
 import { cn } from '../../lib/utils'
 import echo from '../../lib/echo'
 import type { Message, Booking } from '../../types'
@@ -81,6 +83,7 @@ export default function ChatPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { user } = useAuthStore()
+  const { toast } = useToast()
   const qc = useQueryClient()
   const [text, setText] = useState('')
   const [showEmoji, setShowEmoji] = useState(false)
@@ -90,6 +93,9 @@ export default function ChatPage() {
   const [reactions, setReactions] = useState<Record<string, string>>({})
   const [otherTyping, setOtherTyping] = useState(false)
   const [showScrollBtn, setShowScrollBtn] = useState(false)
+  const [showRating, setShowRating] = useState(false)
+  const [ratingValue, setRatingValue] = useState(0)
+  const [ratingText, setRatingText] = useState('')
 
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -137,7 +143,7 @@ export default function ChatPage() {
   const otherUser = conv?.other_user
     ?? (messages.find((m: Message) => m.sender.id !== user?.id)?.sender)
 
-  // Live bookings for this conversation's companion
+  // Bookings where current user is the requester (booked a companion)
   const { data: bookingsData } = useQuery({
     queryKey: ['bookings', 'requester', otherUser?.id],
     queryFn: () => bookingsApi.getMyBookings('requester'),
@@ -146,11 +152,31 @@ export default function ChatPage() {
     refetchIntervalInBackground: false,
   })
 
-  const liveBooking: Booking | null = useMemo(() => {
-    if (!otherUser?.id) return null
-    const all: Booking[] = bookingsData?.data?.data ?? []
-    return all.find(b => b.companion?.id === otherUser.id && !['cancelled', 'completed'].includes(b.status)) ?? null
-  }, [bookingsData, otherUser?.id])
+  // Bookings where current user is the companion (someone booked them)
+  const { data: compBookingsData } = useQuery({
+    queryKey: ['bookings', 'companion-chat', otherUser?.id],
+    queryFn: () => bookingsApi.getMyBookings('companion'),
+    enabled: !!otherUser?.id,
+    refetchInterval: 15000,
+    refetchIntervalInBackground: false,
+  })
+
+  const { liveBooking, userBookingRole } = useMemo(() => {
+    if (!otherUser?.id || !user?.id) return { liveBooking: null as Booking | null, userBookingRole: null as 'requester' | 'companion' | null }
+    const isActive = (b: Booking) => b.status !== 'cancelled' && !(b.status === 'completed' && b.rating)
+    const reqAll: Booking[] = bookingsData?.data?.data ?? []
+    const compAll: Booking[] = compBookingsData?.data?.data ?? []
+    const asReq = reqAll.find(b => b.companion?.id === otherUser.id && isActive(b)) ?? null
+    const asComp = compAll.find(b => b.requester?.id === otherUser.id && isActive(b)) ?? null
+    if (asReq) return { liveBooking: asReq, userBookingRole: 'requester' as const }
+    if (asComp) return { liveBooking: asComp, userBookingRole: 'companion' as const }
+    return { liveBooking: null as Booking | null, userBookingRole: null as 'requester' | 'companion' | null }
+  }, [bookingsData, compBookingsData, otherUser?.id, user?.id])
+
+  const isPastDate = useMemo(() => {
+    if (!liveBooking?.proposed_date) return false
+    return new Date(liveBooking.proposed_date) < new Date(new Date().toDateString())
+  }, [liveBooking?.proposed_date])
 
   const groups = groupMessages(messages)
 
@@ -357,6 +383,30 @@ export default function ChatPage() {
     },
   })
 
+  const bookingActionMutation = useMutation({
+    mutationFn: (status: 'accepted' | 'declined' | 'cancelled' | 'completed') =>
+      bookingsApi.updateBooking(liveBooking!.id, status),
+    onSuccess: (_, status) => {
+      qc.invalidateQueries({ queryKey: ['bookings'] })
+      if (status === 'completed' && userBookingRole === 'requester') {
+        setTimeout(() => setShowRating(true), 400)
+      }
+    },
+    onError: () => toast('Could not update booking, try again', 'error'),
+  })
+
+  const rateMutation = useMutation({
+    mutationFn: () => bookingsApi.rateBooking(liveBooking!.id, ratingValue, ratingText || undefined),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['bookings'] })
+      setShowRating(false)
+      setRatingValue(0)
+      setRatingText('')
+      toast('Thanks for your review! ⭐', 'success')
+    },
+    onError: () => toast('Could not submit review', 'error'),
+  })
+
   const copyMessage = (body: string) => {
     navigator.clipboard.writeText(body).catch(() => {})
     setContextMenu(null)
@@ -416,93 +466,166 @@ export default function ChatPage() {
         </button>
       </div>
 
-      {/* Live booking status banner — Swiggy/Zomato style */}
+      {/* Live booking banner — role-aware */}
       <AnimatePresence>
         {liveBooking && (
-          <motion.button
+          <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            onClick={() => navigate('/bookings')}
-            className="shrink-0 mx-3 mt-2 text-left w-[calc(100%-24px)]"
+            className="shrink-0 mx-3 mt-2"
           >
             {(() => {
               const st = liveBooking.status
+              const isCompRole = userBookingRole === 'companion'
               const cfg = ({
-                pending:  { bg: '#FFF8EE', border: '#F5D99A', accent: '#D9A45B', label: 'Awaiting Response', step: 1 },
-                accepted: { bg: '#E8F0EA', border: '#C8DDD2', accent: '#236B63', label: 'Booking Confirmed ✓', step: 2 },
-                declined: { bg: '#FFF0EE', border: '#F5B8B8', accent: '#D76D6D', label: 'Booking Declined',   step: 2 },
+                pending:   { bg: '#FFF8EE', border: '#F5D99A', accent: '#D9A45B',
+                             label: isCompRole ? 'New Booking Request!' : 'Awaiting Response', step: 1 },
+                accepted:  { bg: '#E8F0EA', border: '#C8DDD2', accent: '#236B63',
+                             label: 'Booking Confirmed ✓', step: 2 },
+                declined:  { bg: '#FFF0EE', border: '#F5B8B8', accent: '#D76D6D',
+                             label: 'Booking Declined', step: 2 },
+                completed: { bg: '#F0F7F4', border: '#B8D8CE', accent: '#4D9274',
+                             label: 'Experience Done!', step: 3 },
               } as Record<string, { bg: string; border: string; accent: string; label: string; step: number }>)[st]
                 ?? { bg: '#F4F6F8', border: '#E8EAE6', accent: '#A1AAA5', label: st, step: 0 }
-              const steps = ['Requested', 'Waiting', st === 'accepted' ? 'Confirmed' : st === 'declined' ? 'Declined' : 'Pending']
+
+              const steps = st === 'completed'
+                ? ['Requested', 'Confirmed', 'Done ✓']
+                : st === 'pending' && isCompRole
+                ? ['Requested', 'Respond', 'Confirmed']
+                : ['Requested', st === 'declined' ? 'Declined' : 'Confirmed', 'Done']
 
               return (
-                <div
-                  className="rounded-2xl overflow-hidden border"
-                  style={{ background: cfg.bg, borderColor: cfg.border }}
-                >
-                  {/* Top strip */}
-                  <div className="flex items-center gap-2.5 px-4 pt-3 pb-2">
-                    <span className="text-xl shrink-0">{SERVICE_ICONS[liveBooking.service?.slug ?? ''] ?? '✨'}</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: cfg.accent }}>{cfg.label}</p>
-                      <p className="font-manrope font-semibold text-[#24332F] text-sm truncate">{liveBooking.service?.name}</p>
+                <div className="rounded-2xl overflow-hidden border" style={{ background: cfg.bg, borderColor: cfg.border }}>
+
+                  {/* Info section — tappable, navigates to bookings */}
+                  <div className="cursor-pointer" onClick={() => navigate('/bookings')}>
+                    {/* Top strip */}
+                    <div className="flex items-center gap-2.5 px-4 pt-3 pb-2">
+                      <span className="text-xl shrink-0">{SERVICE_ICONS[liveBooking.service?.slug ?? ''] ?? '✨'}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: cfg.accent }}>{cfg.label}</p>
+                        <p className="font-manrope font-semibold text-[#24332F] text-sm truncate">{liveBooking.service?.name}</p>
+                      </div>
+                      {st === 'pending' && (
+                        <span className="relative flex h-2 w-2 shrink-0">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: cfg.accent }} />
+                          <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: cfg.accent }} />
+                        </span>
+                      )}
                     </div>
-                    {st === 'pending' && (
-                      <span className="relative flex h-2 w-2 shrink-0">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: cfg.accent }} />
-                        <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: cfg.accent }} />
-                      </span>
+
+                    {/* Step tracker */}
+                    <div className="flex items-center px-4 pb-2.5 gap-1.5">
+                      {steps.map((s, i) => {
+                        const done = i < cfg.step
+                        const active = i === cfg.step - 1
+                        return (
+                          <div key={s} className="flex items-center gap-1.5 flex-1 min-w-0">
+                            <div className="w-2 h-2 rounded-full shrink-0 transition-all"
+                              style={{ background: done || active ? cfg.accent : '#E8EAE6', boxShadow: active ? `0 0 0 3px ${cfg.accent}30` : 'none' }}
+                            />
+                            <span className="text-[9px] font-semibold truncate" style={{ color: done || active ? cfg.accent : '#B8BDB9' }}>{s}</span>
+                            {i < steps.length - 1 && (
+                              <div className="flex-1 h-px mx-0.5" style={{ background: i < cfg.step - 1 ? cfg.accent : '#E8EAE6' }} />
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+
+                    {/* Details */}
+                    <div className="flex flex-wrap gap-x-4 gap-y-1 px-4 pb-3 text-xs text-[#77817C]">
+                      {liveBooking.proposed_date && (
+                        <span className="flex items-center gap-1">
+                          <CalendarDays size={11} style={{ color: cfg.accent }} />
+                          {new Date(liveBooking.proposed_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                          {liveBooking.proposed_time && ` · ${liveBooking.proposed_time}`}
+                        </span>
+                      )}
+                      {liveBooking.duration_hours && (
+                        <span className="flex items-center gap-1"><Clock size={11} style={{ color: cfg.accent }} />{liveBooking.duration_hours}h</span>
+                      )}
+                      {liveBooking.agreed_rate != null && (
+                        <span className="flex items-center gap-1"><IndianRupee size={11} style={{ color: cfg.accent }} />{Number(liveBooking.agreed_rate).toLocaleString('en-IN')}</span>
+                      )}
+                      <span className="ml-auto text-[10px] font-semibold" style={{ color: cfg.accent }}>View →</span>
+                    </div>
+
+                    {liveBooking.companion_response_note && (
+                      <div className="mx-3 mb-3 px-3 py-2 rounded-xl bg-white/60 text-xs text-[#77817C] italic">
+                        "{liveBooking.companion_response_note}"
+                      </div>
                     )}
                   </div>
 
-                  {/* Step tracker */}
-                  <div className="flex items-center px-4 pb-2.5 gap-1.5">
-                    {steps.map((s, i) => {
-                      const done = i < cfg.step
-                      const active = i === cfg.step - 1
-                      return (
-                        <div key={s} className="flex items-center gap-1.5 flex-1 min-w-0">
-                          <div
-                            className="w-2 h-2 rounded-full shrink-0 transition-all"
-                            style={{ background: done || active ? cfg.accent : '#E8EAE6', boxShadow: active ? `0 0 0 3px ${cfg.accent}30` : 'none' }}
-                          />
-                          <span className="text-[9px] font-semibold truncate" style={{ color: done || active ? cfg.accent : '#B8BDB9' }}>{s}</span>
-                          {i < steps.length - 1 && (
-                            <div className="flex-1 h-px mx-0.5" style={{ background: i < cfg.step - 1 ? cfg.accent : '#E8EAE6' }} />
-                          )}
-                        </div>
-                      )
-                    })}
-                  </div>
+                  {/* ACTION STRIP — stopPropagation so clicks don't navigate */}
 
-                  {/* Details row */}
-                  <div className="flex flex-wrap gap-x-4 gap-y-1 px-4 pb-3 text-xs text-[#77817C]">
-                    {liveBooking.proposed_date && (
-                      <span className="flex items-center gap-1">
-                        <CalendarDays size={11} style={{ color: cfg.accent }} />
-                        {new Date(liveBooking.proposed_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
-                        {liveBooking.proposed_time && ` · ${liveBooking.proposed_time}`}
-                      </span>
-                    )}
-                    {liveBooking.duration_hours && (
-                      <span className="flex items-center gap-1"><Clock size={11} style={{ color: cfg.accent }} />{liveBooking.duration_hours}h</span>
-                    )}
-                    {liveBooking.agreed_rate != null && (
-                      <span className="flex items-center gap-1"><IndianRupee size={11} style={{ color: cfg.accent }} />{Number(liveBooking.agreed_rate).toLocaleString('en-IN')}</span>
-                    )}
-                    <span className="ml-auto font-semibold" style={{ color: cfg.accent }}>View →</span>
-                  </div>
+                  {/* Companion: Accept / Decline when pending */}
+                  {userBookingRole === 'companion' && st === 'pending' && (
+                    <div className="flex gap-2 px-3 pb-3 pt-1 border-t" style={{ borderColor: cfg.border }} onClick={e => e.stopPropagation()}>
+                      <button
+                        onClick={() => bookingActionMutation.mutate('declined')}
+                        disabled={bookingActionMutation.isPending}
+                        className="flex-1 py-2.5 rounded-xl border-2 text-sm font-semibold text-[#D76D6D] border-[#F5B8B8] bg-white active:scale-95 transition-all disabled:opacity-50"
+                      >
+                        ✕ Decline
+                      </button>
+                      <button
+                        onClick={() => bookingActionMutation.mutate('accepted')}
+                        disabled={bookingActionMutation.isPending}
+                        className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white active:scale-95 transition-all disabled:opacity-50"
+                        style={{ background: 'linear-gradient(135deg, #236B63, #4D9274)' }}
+                      >
+                        ✓ Accept
+                      </button>
+                    </div>
+                  )}
 
-                  {liveBooking.companion_response_note && (
-                    <div className="mx-3 mb-3 px-3 py-2 rounded-xl bg-white/60 text-xs text-[#77817C] italic">
-                      "{liveBooking.companion_response_note}"
+                  {/* Both: Mark as Done when accepted and date has passed */}
+                  {st === 'accepted' && isPastDate && (
+                    <div className="px-3 pb-3 pt-1 border-t" style={{ borderColor: cfg.border }} onClick={e => e.stopPropagation()}>
+                      <button
+                        onClick={() => bookingActionMutation.mutate('completed')}
+                        disabled={bookingActionMutation.isPending}
+                        className="w-full py-2.5 rounded-xl text-sm font-semibold text-white active:scale-95 transition-all disabled:opacity-50"
+                        style={{ background: 'linear-gradient(135deg, #236B63, #4D9274)' }}
+                      >
+                        {bookingActionMutation.isPending ? 'Updating…' : '✓ Mark as Done'}
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Requester: Cancel when accepted and date hasn't passed */}
+                  {userBookingRole === 'requester' && st === 'accepted' && !isPastDate && (
+                    <div className="px-3 pb-3 pt-1 border-t" style={{ borderColor: cfg.border }} onClick={e => e.stopPropagation()}>
+                      <button
+                        onClick={() => bookingActionMutation.mutate('cancelled')}
+                        disabled={bookingActionMutation.isPending}
+                        className="w-full py-2.5 rounded-xl border-2 text-sm font-semibold text-[#D76D6D] border-[#F5B8B8] bg-white active:scale-95 transition-all disabled:opacity-50"
+                      >
+                        {bookingActionMutation.isPending ? 'Cancelling…' : 'Cancel Booking'}
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Requester: Rate experience when completed and not yet rated */}
+                  {userBookingRole === 'requester' && st === 'completed' && !liveBooking.rating && (
+                    <div className="px-3 pb-3 pt-1 border-t" style={{ borderColor: cfg.border }} onClick={e => e.stopPropagation()}>
+                      <button
+                        onClick={() => setShowRating(true)}
+                        className="w-full py-2.5 rounded-xl text-sm font-semibold text-white active:scale-95 transition-all"
+                        style={{ background: 'linear-gradient(135deg, #D9A45B, #E8C47A)' }}
+                      >
+                        ⭐ Rate Your Experience
+                      </button>
                     </div>
                   )}
                 </div>
               )
             })()}
-          </motion.button>
+          </motion.div>
         )}
       </AnimatePresence>
 
@@ -890,6 +1013,60 @@ export default function ChatPage() {
           </motion.button>
         </div>
       </div>
+
+      {/* Rate experience bottom sheet */}
+      <BottomSheet
+        open={showRating}
+        onClose={() => setShowRating(false)}
+        title="Rate Your Experience"
+      >
+        <div className="pt-2 space-y-5">
+          <p className="text-sm text-[#77817C] text-center">
+            How was your experience with <span className="font-semibold text-[#24332F]">{otherUser?.display_name}</span>?
+          </p>
+
+          {/* Star picker */}
+          <div className="flex justify-center gap-3">
+            {[1, 2, 3, 4, 5].map(star => (
+              <button
+                key={star}
+                onClick={() => setRatingValue(star)}
+                className="transition-transform active:scale-90"
+              >
+                <Star
+                  size={40}
+                  className={star <= ratingValue ? 'text-[#D9A45B]' : 'text-[#E8EAE6]'}
+                  fill={star <= ratingValue ? '#D9A45B' : 'none'}
+                  strokeWidth={1.5}
+                />
+              </button>
+            ))}
+          </div>
+
+          {ratingValue > 0 && (
+            <p className="text-center text-xs font-semibold text-[#D9A45B]">
+              {['', 'Poor', 'Fair', 'Good', 'Great', 'Excellent!'][ratingValue]}
+            </p>
+          )}
+
+          <textarea
+            value={ratingText}
+            onChange={e => setRatingText(e.target.value)}
+            placeholder="Share your experience (optional)…"
+            rows={3}
+            className="w-full border-[1.5px] border-[#E8EAE6] rounded-2xl px-4 py-3 text-sm text-[#24332F] placeholder:text-[#A1AAA5] focus:outline-none focus:border-[#236B63] resize-none"
+          />
+
+          <button
+            onClick={() => rateMutation.mutate()}
+            disabled={!ratingValue || rateMutation.isPending}
+            className="w-full py-3.5 rounded-2xl text-sm font-bold text-white disabled:opacity-40 transition-all active:scale-95"
+            style={{ background: 'linear-gradient(135deg, #236B63, #4D9274)' }}
+          >
+            {rateMutation.isPending ? 'Submitting…' : 'Submit Review'}
+          </button>
+        </div>
+      </BottomSheet>
     </div>
   )
 }

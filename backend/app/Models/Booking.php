@@ -16,6 +16,7 @@ class Booking extends Model
         'requester_id', 'companion_id', 'service_id',
         'proposed_date', 'proposed_time', 'status', 'notes',
         'agreed_rate', 'duration_hours', 'location_notes', 'companion_response_note',
+        'rating', 'review_text', 'completed_at',
     ];
 
     protected function casts(): array
@@ -23,6 +24,7 @@ class Booking extends Model
         return [
             'proposed_date' => 'date',
             'agreed_rate' => 'decimal:2',
+            'completed_at' => 'datetime',
         ];
     }
 
