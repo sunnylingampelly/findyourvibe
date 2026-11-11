@@ -16,13 +16,17 @@ class UserProfilePhoto extends Model
         return $this->belongsTo(User::class);
     }
 
-    // Always regenerate from path so legacy full-URL records (with old ports)
-    // are served correctly via the current APP_URL.
+    // Return root-relative path so the browser resolves it against the page
+    // origin — works through the Vite proxy in dev and nginx in production.
     public function getUrlAttribute(): ?string
     {
         if (!$this->path) {
-            return $this->attributes['url'] ?? null;
+            $raw = $this->attributes['url'] ?? null;
+            if ($raw && str_starts_with($raw, 'http') && preg_match('/\/storage\/(.+)$/', $raw, $m)) {
+                return '/storage/' . $m[1];
+            }
+            return $raw;
         }
-        return url('storage/' . $this->path);
+        return '/storage/' . $this->path;
     }
 }

@@ -18,7 +18,9 @@ class NotificationService
             'name' => $actor->name,
             'display_name' => $profile?->display_name ?? $actor->name,
             'photo_url' => $photoPath
-                ? (str_starts_with($photoPath, 'http') ? $photoPath : url('storage/' . $photoPath))
+                ? (str_starts_with($photoPath, 'http')
+                    ? (preg_match('/\/storage\/(.+)$/', $photoPath, $m) ? '/storage/' . $m[1] : $photoPath)
+                    : '/storage/' . $photoPath)
                 : null,
         ];
 

@@ -22,7 +22,7 @@ class MessageResource extends JsonResource
             'attachments' => $this->whenLoaded('attachments', fn() =>
                 $this->attachments->map(fn($a) => [
                     'id' => $a->id,
-                    'url' => url('storage/' . $a->file_path),
+                    'url' => '/storage/' . $a->file_path,
                     'original_name' => $a->original_name,
                     'mime_type' => $a->mime_type,
                 ])

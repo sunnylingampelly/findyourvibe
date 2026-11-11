@@ -30,7 +30,7 @@ class ProfilePhotosController extends Controller
 
         Storage::disk('public')->makeDirectory('profile-photos');
         $path = $request->file('photo')->store('profile-photos', 'public');
-        $url = Storage::disk('public')->url($path);
+        $url = '/storage/' . $path;
 
         $isPrimary = $user->profilePhotos()->count() === 0;
         $sortOrder = $user->profilePhotos()->max('sort_order') + 1;

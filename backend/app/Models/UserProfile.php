@@ -50,17 +50,14 @@ class UserProfile extends Model
         if (!$this->profile_photo) {
             return null;
         }
-        // Extract the storage-relative path and regenerate with current APP_URL.
-        // Handles legacy records that stored full URLs (possibly with a different
-        // port or host, e.g. http://localhost:8001/storage/profile-photos/xxx.gif).
         $raw = $this->profile_photo;
+        // Legacy records stored full URLs — extract the relative part.
         if (str_starts_with($raw, 'http')) {
-            // Pull out everything after "/storage/"
             if (preg_match('/\/storage\/(.+)$/', $raw, $m)) {
-                return url('storage/' . $m[1]);
+                return '/storage/' . $m[1];
             }
-            return $raw; // unknown format — return as-is
+            return $raw;
         }
-        return url('storage/' . $raw);
+        return '/storage/' . $raw;
     }
 }
