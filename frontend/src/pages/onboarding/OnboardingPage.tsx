@@ -2,17 +2,18 @@ import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, ArrowRight, Camera, Check, Trash2, Star } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Camera, Check, Trash2, Star, MapPin } from 'lucide-react'
 import { profileApi } from '../../api/profile'
 import { discoverApi } from '../../api/discover'
 import { useToast } from '../../components/ui/Toast'
 import Button from '../../components/ui/Button'
 import Input from '../../components/ui/Input'
 import { GenderPicker, DobPicker } from '../../components/ui/FormPickers'
+import { PlacesAutocomplete } from '../../components/ui/PlacesAutocomplete'
 import { useAuthStore } from '../../stores/authStore'
 import type { Interest, Language, Service } from '../../types'
 
-const TOTAL_STEPS = 7
+const TOTAL_STEPS = 8
 
 interface ProfilePhoto { id: number; url: string; is_primary: boolean; sort_order: number }
 
@@ -27,6 +28,7 @@ export default function OnboardingPage() {
     display_name: '',
     date_of_birth: '',
     gender: '',
+    location: '',      // city/area string from Google Places
     bio: '',
     introduction: '',
     interest_ids: [] as string[],
@@ -44,8 +46,8 @@ export default function OnboardingPage() {
   const languages: Language[] = languagesData?.data?.data ?? []
   const services: Service[] = servicesData?.data?.data ?? []
 
-  // Map frontend step → backend onboarding step (photos handled client-side only)
-  const backendStep = step >= 3 ? step - 1 : step
+  // Map frontend step → backend onboarding step (photos + location handled separately)
+  const backendStep = step >= 4 ? step - 2 : step >= 3 ? step - 1 : step
 
   const save = useMutation({
     mutationFn: (data: Record<string, unknown>) => profileApi.updateOnboarding({ ...data, step: backendStep }),
@@ -105,11 +107,19 @@ export default function OnboardingPage() {
   }
 
   const next = async () => {
-    if (step === 1 && form.date_of_birth && !isDobValid(form.date_of_birth)) {
-      toast('You must be at least 18 years old to join.', 'error')
-      return
+    if (step === 1) {
+      if (form.date_of_birth && !isDobValid(form.date_of_birth)) {
+        toast('You must be at least 18 years old to join.', 'error')
+        return
+      }
     }
     if (step === 2) {
+      // Location step — mandatory
+      if (!form.location.trim()) { toast('Please select your city or area', 'error'); return }
+      setStep(s => s + 1)
+      return
+    }
+    if (step === 3) {
       // Photo step — just advance (photos already uploaded via API)
       if (photos.length < 2) { toast('Please upload at least 2 photos', 'error'); return }
       setStep(s => s + 1)
@@ -148,6 +158,7 @@ export default function OnboardingPage() {
       if (!form.display_name.trim()) return true
       if (form.date_of_birth && !isDobValid(form.date_of_birth)) return true
     }
+    if (step === 2 && !form.location.trim()) return true
     return false
   }
 
@@ -193,8 +204,41 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          {/* Step 2: Photos */}
+          {/* Step 2: Location */}
           {step === 2 && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="font-manrope font-bold text-2xl text-[#24332F] mb-1">Your Location</h2>
+                <p className="text-[#77817C] text-sm">Help companions and users find you. This will appear on your profile.</p>
+              </div>
+
+              <div className="bg-[#E8F0EA] rounded-2xl p-4 flex items-start gap-3">
+                <MapPin size={18} className="text-[#236B63] mt-0.5 shrink-0" />
+                <p className="text-sm text-[#24332F] leading-relaxed">
+                  Your city or area is shown publicly so people know where you're based. It helps match you with nearby companions and experiences.
+                </p>
+              </div>
+
+              <PlacesAutocomplete
+                value={form.location}
+                onChange={v => update('location', v)}
+                placeholder="Search your city, district or area…"
+                label="City / Area"
+                required
+                showLocateButton
+              />
+
+              {form.location && (
+                <div className="flex items-center gap-2 text-sm text-[#236B63] font-medium">
+                  <Check size={16} className="text-[#236B63]" />
+                  <span>{form.location}</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Step 3: Photos */}
+          {step === 3 && (
             <div className="space-y-4">
               <div>
                 <h2 className="font-manrope font-bold text-2xl text-[#24332F] mb-1">Your Photos</h2>
@@ -255,8 +299,8 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          {/* Step 3: About You */}
-          {step === 3 && (
+          {/* Step 4: About You */}
+          {step === 4 && (
             <div className="space-y-5">
               <div>
                 <h2 className="font-manrope font-bold text-2xl text-[#24332F] mb-1">About You</h2>
@@ -273,8 +317,8 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          {/* Step 4: Interests */}
-          {step === 4 && (
+          {/* Step 5: Interests */}
+          {step === 5 && (
             <div className="space-y-4">
               <div>
                 <h2 className="font-manrope font-bold text-2xl text-[#24332F] mb-1">Your Interests</h2>
@@ -292,8 +336,8 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          {/* Step 5: Languages */}
-          {step === 5 && (
+          {/* Step 6: Languages */}
+          {step === 6 && (
             <div className="space-y-4">
               <div>
                 <h2 className="font-manrope font-bold text-2xl text-[#24332F] mb-1">Languages</h2>
@@ -310,8 +354,8 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          {/* Step 6: Experience preferences */}
-          {step === 6 && (
+          {/* Step 7: Experience preferences */}
+          {step === 7 && (
             <div className="space-y-4">
               <div>
                 <h2 className="font-manrope font-bold text-2xl text-[#24332F] mb-1">Experience Preferences</h2>
@@ -333,8 +377,8 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          {/* Step 7: Review & Complete */}
-          {step === 7 && (
+          {/* Step 8: Review & Complete */}
+          {step === 8 && (
             <div className="space-y-6">
               <div>
                 <h2 className="font-manrope font-bold text-2xl text-[#24332F] mb-1">Almost done!</h2>
@@ -387,9 +431,11 @@ export default function OnboardingPage() {
           onClick={next}
           disabled={isNextDisabled()}
         >
-          {step === TOTAL_STEPS ? '🎉 Complete Setup' : (
+          {step === TOTAL_STEPS ? '🎉 Complete Setup' : step === 2 ? (
+              <span className="flex items-center gap-2">Set My Location <ArrowRight size={18} /></span>
+            ) : (
             <span className="flex items-center gap-2">Continue <ArrowRight size={18} /></span>
-          )}
+          ))}
         </Button>
       </div>
     </div>

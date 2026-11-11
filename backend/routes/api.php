@@ -96,6 +96,7 @@ Route::prefix('v1')->group(function () {
         Route::post('conversations', [ConversationController::class, 'store']);
         Route::get('conversations/{id}/messages', [MessageController::class, 'index']);
         Route::post('conversations/{id}/messages', [MessageController::class, 'store']);
+        Route::delete('conversations/{conversationId}/messages/{messageId}', [MessageController::class, 'destroy']);
         Route::post('messages/{id}/read', [MessageController::class, 'markRead']);
 
         // Companion

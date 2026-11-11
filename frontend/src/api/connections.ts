@@ -15,4 +15,6 @@ export const connectionsApi = {
   sendMessage: (conversationId: string, body: string) =>
     api.post(`/conversations/${conversationId}/messages`, { body }),
   markRead: (messageId: string) => api.post(`/messages/${messageId}/read`),
+  deleteMessage: (conversationId: string, messageId: string) =>
+    api.delete(`/conversations/${conversationId}/messages/${messageId}`),
 }

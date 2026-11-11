@@ -3,7 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   ArrowLeft, Send, Smile, Info, CalendarDays, MapPin,
-  Clock, IndianRupee, Check, CheckCheck, CornerUpLeft, Copy, ChevronDown, X,
+  Clock, IndianRupee, Check, CheckCheck, CornerUpLeft, Copy, ChevronDown, X, Trash2,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { connectionsApi } from '../../api/connections'
@@ -328,6 +328,23 @@ export default function ChatPage() {
     })
   }
 
+  const deleteMutation = useMutation({
+    mutationFn: (msgId: string) => connectionsApi.deleteMessage(id!, msgId),
+    onSuccess: (_, msgId) => {
+      qc.setQueryData(['messages', id], (old: { data: { data: Message[] } } | undefined) => {
+        if (!old) return old
+        return {
+          ...old,
+          data: {
+            ...old.data,
+            data: old.data.data.map(m => m.id === msgId ? { ...m, deleted: true, body: null } : m),
+          },
+        }
+      })
+      setContextMenu(null)
+    },
+  })
+
   const copyMessage = (body: string) => {
     navigator.clipboard.writeText(body).catch(() => {})
     setContextMenu(null)
@@ -537,9 +554,9 @@ export default function ChatPage() {
                             className={cn(
                               'px-4 py-2.5 text-sm leading-relaxed transition-opacity select-none',
                               isOptimistic ? 'opacity-70' : 'opacity-100',
-                              isMe
-                                ? 'text-white shadow-sm'
-                                : 'bg-white text-[#24332F] shadow-sm',
+                              msg.deleted
+                                ? (isMe ? 'text-white/50 italic' : 'bg-white text-[#A1AAA5] italic shadow-sm')
+                                : isMe ? 'text-white shadow-sm' : 'bg-white text-[#24332F] shadow-sm',
                               isMe && isFirstInChain && isLastInChain ? 'rounded-[18px]' :
                               isMe && isFirstInChain ? 'rounded-[18px] rounded-br-[5px]' :
                               isMe && isLastInChain ? 'rounded-[18px] rounded-tr-[5px]' :
@@ -549,10 +566,14 @@ export default function ChatPage() {
                               !isMe && isLastInChain ? 'rounded-[18px] rounded-tl-[5px]' :
                               'rounded-[18px] rounded-l-[5px]'
                             )}
-                            style={isMe ? { background: 'linear-gradient(135deg, #236B63 0%, #1D5A54 100%)' } : {}}
-                            onDoubleClick={() => setReplyTo(msg)}
+                            style={isMe ? {
+                              background: msg.deleted
+                                ? 'rgba(35,107,99,0.4)'
+                                : 'linear-gradient(135deg, #236B63 0%, #1D5A54 100%)'
+                            } : {}}
+                            onDoubleClick={() => !msg.deleted && setReplyTo(msg)}
                           >
-                            {msg.body}
+                            {msg.deleted ? '🚫 This message was deleted' : msg.body}
                           </div>
 
                           {/* Reaction */}
@@ -680,20 +701,31 @@ export default function ChatPage() {
 
               {/* Actions */}
               <div className="py-2">
-                <button
-                  onClick={() => replyToMessage(contextMenu.msg)}
-                  className="w-full flex items-center gap-3 px-5 py-3.5 hover:bg-[#F9F7F3] transition-colors"
-                >
-                  <CornerUpLeft size={18} className="text-[#236B63]" />
-                  <span className="text-sm font-medium text-[#24332F]">Reply</span>
-                </button>
-                {contextMenu.msg.body && (
+                {!contextMenu.msg.deleted && (
+                  <button
+                    onClick={() => replyToMessage(contextMenu.msg)}
+                    className="w-full flex items-center gap-3 px-5 py-3.5 hover:bg-[#F9F7F3] transition-colors"
+                  >
+                    <CornerUpLeft size={18} className="text-[#236B63]" />
+                    <span className="text-sm font-medium text-[#24332F]">Reply</span>
+                  </button>
+                )}
+                {!contextMenu.msg.deleted && contextMenu.msg.body && (
                   <button
                     onClick={() => copyMessage(contextMenu.msg.body!)}
                     className="w-full flex items-center gap-3 px-5 py-3.5 hover:bg-[#F9F7F3] transition-colors"
                   >
                     <Copy size={18} className="text-[#236B63]" />
                     <span className="text-sm font-medium text-[#24332F]">Copy text</span>
+                  </button>
+                )}
+                {contextMenu.msg.sender.id === user?.id && !contextMenu.msg.deleted && !contextMenu.msg.id.startsWith('opt-') && (
+                  <button
+                    onClick={() => deleteMutation.mutate(contextMenu.msg.id)}
+                    className="w-full flex items-center gap-3 px-5 py-3.5 hover:bg-red-50 transition-colors"
+                  >
+                    <Trash2 size={18} className="text-red-500" />
+                    <span className="text-sm font-medium text-red-500">Delete message</span>
                   </button>
                 )}
               </div>
@@ -779,35 +811,21 @@ export default function ChatPage() {
               onFocus={() => setShowEmoji(false)}
               placeholder="Message…"
               rows={1}
-              className="w-full bg-transparent text-sm text-[#24332F] placeholder:text-[#A1AAA5] focus:outline-none resize-none leading-relaxed"
-              style={{ minHeight: '20px', maxHeight: '120px' }}
+              className="w-full bg-transparent text-sm text-[#24332F] placeholder:text-[#A1AAA5] outline-none resize-none leading-relaxed"
+              style={{ minHeight: '20px', maxHeight: '120px', WebkitTapHighlightColor: 'transparent' }}
             />
           </div>
 
-          <AnimatePresence mode="wait">
-            {text.trim() ? (
-              <motion.button
-                key="send"
-                initial={{ scale: 0.5, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.5, opacity: 0 }}
-                transition={{ type: 'spring', stiffness: 500, damping: 25 }}
-                onClick={handleSend}
-                className="w-10 h-10 rounded-full flex items-center justify-center text-white shrink-0 shadow-md active:scale-90 transition-transform"
-                style={{ background: 'linear-gradient(135deg, #236B63 0%, #1D5A54 100%)' }}
-              >
-                <Send size={17} />
-              </motion.button>
-            ) : (
-              <motion.div
-                key="placeholder"
-                initial={{ scale: 0.5, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.5, opacity: 0 }}
-                className="w-10 h-10 shrink-0"
-              />
-            )}
-          </AnimatePresence>
+          <motion.button
+            onClick={handleSend}
+            animate={{ scale: text.trim() ? 1 : 0.85, opacity: text.trim() ? 1 : 0 }}
+            transition={{ type: 'spring', stiffness: 500, damping: 28 }}
+            disabled={!text.trim()}
+            className="w-10 h-10 rounded-full flex items-center justify-center text-white shrink-0 shadow-md active:scale-90 transition-transform"
+            style={{ background: 'linear-gradient(135deg, #236B63 0%, #1D5A54 100%)' }}
+          >
+            <Send size={17} />
+          </motion.button>
         </div>
       </div>
     </div>

@@ -25,6 +25,7 @@ class MessageController extends Controller
         }
 
         $messages = $conversation->messages()
+            ->withTrashed()
             ->with(['sender.profile', 'attachments'])
             ->paginate(50);
 
@@ -80,6 +81,27 @@ class MessageController extends Controller
             'success' => true,
             'data' => new MessageResource($message),
         ], 201);
+    }
+
+    public function destroy(Request $request, string $conversationId, string $messageId): JsonResponse
+    {
+        $userId = $request->user()->id;
+        $conversation = Conversation::findOrFail($conversationId);
+        $connection = Connection::findOrFail($conversation->connection_id);
+
+        if ($connection->user_one_id !== $userId && $connection->user_two_id !== $userId) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
+        $message = Message::where('conversation_id', $conversationId)->findOrFail($messageId);
+
+        if ($message->sender_id !== $userId) {
+            return response()->json(['success' => false, 'message' => 'You can only delete your own messages.'], 403);
+        }
+
+        $message->delete();
+
+        return response()->json(['success' => true]);
     }
 
     public function markRead(Request $request, string $id): JsonResponse

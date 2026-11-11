@@ -121,7 +121,8 @@ export interface Message {
   id: string
   conversation_id: string
   sender: PublicProfile
-  body?: string
+  body?: string | null
+  deleted?: boolean
   type: 'text' | 'image'
   read_at?: string | null
   created_at: string

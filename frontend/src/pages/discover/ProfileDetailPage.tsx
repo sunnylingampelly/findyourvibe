@@ -11,8 +11,7 @@ import { useToast } from '../../components/ui/Toast'
 import { Skeleton } from '../../components/ui/Skeleton'
 import Button from '../../components/ui/Button'
 import BottomSheet from '../../components/ui/BottomSheet'
-import { PlacesAutocomplete, staticMapUrl } from '../../components/ui/PlacesAutocomplete'
-import { useGeolocation } from '../../hooks/useGeolocation'
+import { staticMapUrl } from '../../components/ui/PlacesAutocomplete'
 import { getInitials } from '../../lib/utils'
 import type { PublicProfile, Service } from '../../types'
 
@@ -47,19 +46,7 @@ export default function ProfileDetailPage() {
   const [bookTime, setBookTime] = useState('')
   const [bookDuration, setBookDuration] = useState('2')
   const [bookNotes, setBookNotes] = useState('')
-  const [bookLocation, setBookLocation] = useState('')
-
-  const { getLocation } = useGeolocation()
-
-  // Auto-fill location when booking sheet opens
-  useEffect(() => {
-    if (showBook && !bookLocation) {
-      getLocation()
-        .then(r => setBookLocation(r.label))
-        .catch(() => { /* user denied — that's fine */ })
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showBook])
+  const bookLocation = [profile?.city?.name, profile?.country?.name].filter(Boolean).join(', ')
 
   const { data, isLoading } = useQuery({
     queryKey: ['profile', id],
@@ -620,22 +607,26 @@ export default function ProfileDetailPage() {
             </select>
           </div>
 
-          <div>
-            <label className="text-xs font-semibold text-[#A1AAA5] uppercase tracking-wide mb-1 block">Preferred Location / Meet Point</label>
-            <PlacesAutocomplete
-              value={bookLocation}
-              onChange={setBookLocation}
-              placeholder="Search venue, café, landmark…"
-              className="w-full border-[1.5px] border-[#E8EAE6] rounded-xl py-2.5 text-sm text-[#24332F] placeholder:text-[#A1AAA5] focus:outline-none focus:border-[#236B63]"
-            />
-          </div>
+          {/* Companion's location — not user-selectable */}
+          {bookLocation && (
+            <div className="bg-[#F4F9F7] border border-[#C8DDD2] rounded-xl px-4 py-3 flex items-center gap-2.5">
+              <MapPin size={15} className="text-[#236B63] shrink-0" />
+              <div>
+                <p className="text-[10px] font-semibold text-[#A1AAA5] uppercase tracking-wide">Companion's location</p>
+                <p className="text-sm font-medium text-[#24332F]">{bookLocation}</p>
+              </div>
+            </div>
+          )}
+          <p className="text-xs text-[#77817C] -mt-1 ml-0.5">
+            The companion operates from their location. You'll arrange the exact meeting spot over chat.
+          </p>
 
           <div>
-            <label className="text-xs font-semibold text-[#A1AAA5] uppercase tracking-wide mb-1 block">Message to companion</label>
+            <label className="text-xs font-semibold text-[#A1AAA5] uppercase tracking-wide mb-1 block">Your message</label>
             <textarea
               value={bookNotes}
               onChange={e => setBookNotes(e.target.value)}
-              placeholder="Tell them what you're looking for..."
+              placeholder="Tell them what you're looking for, any preferences..."
               rows={3}
               className="w-full border-[1.5px] border-[#E8EAE6] rounded-2xl px-4 py-3 text-sm text-[#24332F] placeholder:text-[#A1AAA5] focus:outline-none focus:border-[#236B63] resize-none"
             />
