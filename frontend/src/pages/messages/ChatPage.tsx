@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Send, Smile, MoreVertical, Info, CalendarDays, MapPin, Clock, IndianRupee } from 'lucide-react'
@@ -33,11 +33,8 @@ function groupMessages(messages: Message[]) {
   messages.forEach(msg => {
     const date = formatDate(msg.created_at)
     const last = groups[groups.length - 1]
-    if (last && last.date === date) {
-      last.messages.push(msg)
-    } else {
-      groups.push({ date, messages: [msg] })
-    }
+    if (last && last.date === date) last.messages.push(msg)
+    else groups.push({ date, messages: [msg] })
   })
   return groups
 }
@@ -58,22 +55,40 @@ export default function ChatPage() {
   const bookingDetails = (routeLocation.state as any)?.bookingDetails ?? null
   const [text, setText] = useState('')
   const [showEmoji, setShowEmoji] = useState(false)
+  // Optimistic messages kept separately so polls don't wipe them before server confirms
+  const [optimistic, setOptimistic] = useState<Message[]>([])
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const emojiRef = useRef<HTMLDivElement>(null)
+  // Synchronous guard — prevents double-send before React re-renders isPending
+  const sendingRef = useRef(false)
 
   const { data: msgsData, isLoading } = useQuery({
     queryKey: ['messages', id],
     queryFn: () => connectionsApi.getMessages(id!),
     enabled: !!id,
+    refetchInterval: 3000,          // Polling fallback when WebSocket is unavailable
+    refetchIntervalInBackground: false,
   })
 
   const { data: convsData } = useQuery({
     queryKey: ['conversations'],
     queryFn: () => connectionsApi.getConversations(),
+    refetchInterval: 10000,
+    refetchIntervalInBackground: false,
   })
 
-  const messages: Message[] = msgsData?.data?.data ?? []
+  const serverMessages: Message[] = msgsData?.data?.data ?? []
+
+  // Merge server messages with optimistic ones not yet confirmed by the server
+  const messages = useMemo(() => {
+    const serverIds = new Set(serverMessages.map(m => m.id))
+    const pending = optimistic.filter(m => !serverIds.has(m.id))
+    return [...serverMessages, ...pending].sort(
+      (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    )
+  }, [serverMessages, optimistic])
+
   const conversations = convsData?.data?.data ?? []
   const conv = conversations.find((c: { id: string }) => c.id === id)
 
@@ -81,6 +96,7 @@ export default function ChatPage() {
     ?? (messages.length > 0
         ? messages.find((m: Message) => m.sender.id !== user?.id)?.sender
         : undefined)
+
   const groups = groupMessages(messages)
 
   // Close emoji panel when clicking outside
@@ -94,6 +110,7 @@ export default function ChatPage() {
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
+  // Real-time WebSocket listener (Reverb)
   useEffect(() => {
     if (!id) return
     const channel = echo.private(`conversation.${id}`)
@@ -112,20 +129,48 @@ export default function ChatPage() {
   }, [id, qc])
 
   const send = useMutation({
-    mutationFn: () => connectionsApi.sendMessage(id!, text.trim()),
-    onSuccess: (res) => {
-      setText('')
-      if (inputRef.current) inputRef.current.style.height = 'auto'
+    mutationFn: (body: string) => connectionsApi.sendMessage(id!, body),
+    onMutate: (body: string) => {
+      const tempId = `opt-${Date.now()}`
+      const optimisticMsg: Message = {
+        id: tempId,
+        conversation_id: id!,
+        sender_id: user!.id,
+        sender: {
+          id: user!.id,
+          display_name: user?.name ?? '',
+          profile_photo_url: (user as { profile?: { profile_photo_url?: string } })?.profile?.profile_photo_url ?? null,
+        } as Message['sender'],
+        body,
+        type: 'text',
+        read_at: null,
+        created_at: new Date().toISOString(),
+        attachments: [],
+      }
+      setOptimistic(prev => [...prev, optimisticMsg])
+      return { tempId }
+    },
+    onSuccess: (res, _, ctx) => {
+      sendingRef.current = false
       const newMsg = res?.data?.data
+      if (ctx?.tempId) {
+        setOptimistic(prev => prev.filter(m => m.id !== ctx.tempId))
+      }
       if (newMsg) {
+        // Merge real message into cache (dedup in case Echo already added it)
         qc.setQueryData(['messages', id], (old: { data: { data: Message[] } } | undefined) => {
           if (!old) return old
-          // Dedup: WebSocket broadcast may have already added this message
           if (old.data.data.find(m => m.id === newMsg.id)) return old
           return { ...old, data: { ...old.data, data: [...old.data.data, newMsg] } }
         })
       }
       qc.invalidateQueries({ queryKey: ['conversations'] })
+    },
+    onError: (_, __, ctx) => {
+      sendingRef.current = false
+      if (ctx?.tempId) {
+        setOptimistic(prev => prev.filter(m => m.id !== ctx.tempId))
+      }
     },
   })
 
@@ -134,8 +179,12 @@ export default function ChatPage() {
   }, [messages.length])
 
   const handleSend = () => {
-    if (!text.trim() || send.isPending) return
-    send.mutate()
+    const body = text.trim()
+    if (!body || sendingRef.current) return
+    sendingRef.current = true
+    setText('')
+    if (inputRef.current) inputRef.current.style.height = 'auto'
+    send.mutate(body)
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -152,10 +201,7 @@ export default function ChatPage() {
 
   const insertEmoji = (emoji: string) => {
     const ta = inputRef.current
-    if (!ta) {
-      setText(t => t + emoji)
-      return
-    }
+    if (!ta) { setText(t => t + emoji); return }
     const start = ta.selectionStart ?? text.length
     const end = ta.selectionEnd ?? text.length
     const next = text.slice(0, start) + emoji + text.slice(end)
@@ -207,7 +253,7 @@ export default function ChatPage() {
         </button>
       </div>
 
-      {/* Booking context card — shown when navigated from a booking action */}
+      {/* Booking context card */}
       <AnimatePresence>
         {bookingDetails && (
           <motion.div
@@ -282,7 +328,6 @@ export default function ChatPage() {
         ) : (
           groups.map(group => (
             <div key={group.date}>
-              {/* Date separator */}
               <div className="flex items-center gap-3 mb-4">
                 <div className="flex-1 h-px bg-[#E8EAE6]" />
                 <span className="text-[10px] font-semibold text-[#A1AAA5] uppercase tracking-wider px-2 py-1 bg-[#F5F3EF] rounded-full border border-[#E8EAE6]">
@@ -294,6 +339,7 @@ export default function ChatPage() {
               <div className="space-y-1">
                 {group.messages.map((msg, msgIdx) => {
                   const isMe = msg.sender.id === user?.id
+                  const isOptimistic = msg.id.startsWith('opt-')
                   const prevMsg = group.messages[msgIdx - 1]
                   const nextMsg = group.messages[msgIdx + 1]
                   const isFirstInChain = !prevMsg || prevMsg.sender.id !== msg.sender.id
@@ -321,7 +367,8 @@ export default function ChatPage() {
                       <div className={cn('flex flex-col max-w-[75%]', isMe ? 'items-end' : 'items-start')}>
                         <div
                           className={cn(
-                            'px-4 py-2.5 text-sm leading-relaxed',
+                            'px-4 py-2.5 text-sm leading-relaxed transition-opacity',
+                            isOptimistic ? 'opacity-70' : 'opacity-100',
                             isMe
                               ? 'bg-[#236B63] text-white shadow-sm'
                               : 'bg-white text-[#24332F] border border-[#E8EAE6] shadow-sm',
@@ -339,7 +386,9 @@ export default function ChatPage() {
                         </div>
 
                         {showTimestamp && (
-                          <span className="text-[9px] text-[#A1AAA5] mt-1 px-1">{timeAgo(msg.created_at)}</span>
+                          <span className="text-[9px] text-[#A1AAA5] mt-1 px-1">
+                            {isOptimistic ? 'Sending…' : timeAgo(msg.created_at)}
+                          </span>
                         )}
                       </div>
                     </div>
@@ -354,7 +403,6 @@ export default function ChatPage() {
 
       {/* Input bar */}
       <div className="shrink-0 bg-white border-t border-[#E8EAE6] pb-safe shadow-[0_-1px_8px_rgba(0,0,0,0.04)]">
-        {/* Emoji panel */}
         <AnimatePresence>
           {showEmoji && (
             <motion.div
@@ -415,8 +463,7 @@ export default function ChatPage() {
                 exit={{ scale: 0.5, opacity: 0 }}
                 transition={{ type: 'spring', stiffness: 500, damping: 25 }}
                 onClick={handleSend}
-                disabled={send.isPending}
-                className="w-10 h-10 bg-[#236B63] rounded-full flex items-center justify-center text-white shrink-0 shadow-md active:scale-90 transition-transform disabled:opacity-70"
+                className="w-10 h-10 bg-[#236B63] rounded-full flex items-center justify-center text-white shrink-0 shadow-md active:scale-90 transition-transform"
               >
                 <Send size={17} />
               </motion.button>
