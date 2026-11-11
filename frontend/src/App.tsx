@@ -44,7 +44,13 @@ import ServicesPage from './pages/admin/ServicesPage'
 import SettingsPage from './pages/admin/SettingsPage'
 
 const qc = new QueryClient({
-  defaultOptions: { queries: { retry: 1, staleTime: 30000 } },
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      staleTime: 0,        // always refetch on mount — prevents stale data across navigations
+      refetchOnWindowFocus: true,
+    },
+  },
 })
 
 function RequireAuth({ children }: { children: React.ReactNode }) {

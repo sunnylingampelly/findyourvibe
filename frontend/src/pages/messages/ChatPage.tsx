@@ -539,7 +539,7 @@ export default function ChatPage() {
                               isOptimistic ? 'opacity-70' : 'opacity-100',
                               isMe
                                 ? 'text-white shadow-sm'
-                                : 'bg-white text-[#24332F] border border-[#E8EAE6] shadow-sm',
+                                : 'bg-white text-[#24332F] shadow-sm',
                               isMe && isFirstInChain && isLastInChain ? 'rounded-[18px]' :
                               isMe && isFirstInChain ? 'rounded-[18px] rounded-br-[5px]' :
                               isMe && isLastInChain ? 'rounded-[18px] rounded-tr-[5px]' :

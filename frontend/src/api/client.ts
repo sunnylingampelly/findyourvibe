@@ -3,7 +3,7 @@ import { useAuthStore } from '../stores/authStore'
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL ?? '/api/v1',
-  headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+  headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'Cache-Control': 'no-cache' },
   withCredentials: true,
 })
 
