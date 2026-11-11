@@ -36,8 +36,10 @@ class ConnectionRequestController extends Controller
 
         $connectionRequest = $this->connectionService->sendRequest($sender, $receiver, $validated['message'] ?? null);
 
-        $senderName = $sender->profile?->display_name ?? $sender->name;
-        NotificationService::send($receiver, $sender, 'connection_request', "{$senderName} sent you a connection request");
+        try {
+            $senderName = $sender->profile?->display_name ?? $sender->name;
+            NotificationService::send($receiver, $sender, 'connection_request', "{$senderName} sent you a connection request");
+        } catch (\Throwable) { /* notification failure must not block the request */ }
 
         return response()->json([
             'success' => true,
@@ -82,8 +84,10 @@ class ConnectionRequestController extends Controller
 
         $connection = $this->connectionService->acceptRequest($connectionRequest);
 
-        $acceptorName = $request->user()->profile?->display_name ?? $request->user()->name;
-        NotificationService::send($connectionRequest->sender, $request->user(), 'connection_accepted', "{$acceptorName} accepted your connection request");
+        try {
+            $acceptorName = $request->user()->profile?->display_name ?? $request->user()->name;
+            NotificationService::send($connectionRequest->sender, $request->user(), 'connection_accepted', "{$acceptorName} accepted your connection request");
+        } catch (\Throwable) { /* notification failure must not block the response */ }
 
         return response()->json([
             'success' => true,

@@ -36,10 +36,10 @@ export default function SavedProfilesPage() {
             <h3 className="font-manrope font-semibold text-[#24332F] mb-1">No saved profiles</h3>
             <p className="text-sm text-[#A1AAA5]">Save profiles you like to find them easily later</p>
           </div>
-        ) : saved.map((item: { id: string; saved_user: PublicProfile }, i: number) => (
+        ) : saved.map((item: { id: string; user: PublicProfile }, i: number) => (
           <motion.div key={item.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
             <ProfileCard
-              profile={item.saved_user}
+              profile={item.user}
               onSave={() => unsave.mutate(item.id)}
               saved
             />

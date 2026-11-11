@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Bell, Search, Star, MapPin, CheckCircle2, Download, Share, X, Zap, Wifi } from 'lucide-react'
+import { Bell, Search, Star, MapPin, CheckCircle2, Download, Share, X, Zap, Wifi, Bookmark } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { discoverApi } from '../../api/discover'
 import { notificationsApi } from '../../api/notifications'
@@ -179,7 +179,7 @@ export default function DiscoverPage() {
   })
 
   const savedIds = new Set<string>(
-    savedData?.data?.data?.map((s: { saved_user: { id: string } }) => s.saved_user?.id) ?? []
+    savedData?.data?.data?.map((s: { user: { id: string } }) => s.user?.id) ?? []
   )
 
   const hour = new Date().getHours()
@@ -195,7 +195,7 @@ export default function DiscoverPage() {
   const handleSave = async (profile: PublicProfile) => {
     try {
       if (savedIds.has(profile.id)) {
-        const saved = savedData?.data?.data?.find((s: { saved_user: { id: string }; id: string }) => s.saved_user?.id === profile.id)
+        const saved = savedData?.data?.data?.find((s: { user: { id: string }; id: string }) => s.user?.id === profile.id)
         if (saved) await discoverApi.unsaveProfile(saved.id)
       } else {
         await discoverApi.saveProfile(profile.id)
@@ -236,6 +236,12 @@ export default function DiscoverPage() {
                   Install App
                 </button>
               )}
+              <Link
+                to="/saved"
+                className="w-10 h-10 bg-white rounded-2xl border border-[#E8EAE6] flex items-center justify-center shadow-sm"
+              >
+                <Bookmark size={18} className="text-[#24332F]" />
+              </Link>
               <Link
                 to="/notifications"
                 className="relative w-10 h-10 bg-white rounded-2xl border border-[#E8EAE6] flex items-center justify-center shadow-sm"

@@ -40,13 +40,11 @@ export default function ProfileDetailPage() {
   const [showBook, setShowBook] = useState(false)
   const [bookingService, setBookingService] = useState<Service | null>(null)
   const [connectMessage, setConnectMessage] = useState('')
-  const [saved, setSaved] = useState(false)
   const [tab, setTab] = useState<Tab>('about')
   const [bookDate, setBookDate] = useState('')
   const [bookTime, setBookTime] = useState('')
   const [bookDuration, setBookDuration] = useState('2')
   const [bookNotes, setBookNotes] = useState('')
-  const bookLocation = [profile?.city?.name, profile?.country?.name].filter(Boolean).join(', ')
 
   const { data, isLoading } = useQuery({
     queryKey: ['profile', id],
@@ -78,6 +76,18 @@ export default function ProfileDetailPage() {
 
   const profile: PublicProfile | undefined = data?.data?.data
 
+  // bookLocation derived AFTER profile is available
+  const bookLocation = [profile?.city?.name, profile?.country?.name].filter(Boolean).join(', ')
+
+  // Saved profiles — derive save state from query (never stale local boolean)
+  const { data: savedData } = useQuery({
+    queryKey: ['saved-profiles'],
+    queryFn: () => discoverApi.getSavedProfiles(),
+  })
+  const savedRecord: { id: string } | undefined =
+    savedData?.data?.data?.find((s: { id: string; user: { id: string } }) => s.user?.id === id)
+  const isSaved = !!savedRecord
+
   const connectMutation = useMutation({
     mutationFn: () => connectionsApi.sendRequest(id!, connectMessage),
     onSuccess: () => {
@@ -106,42 +116,24 @@ export default function ProfileDetailPage() {
       setShowBook(false)
       qc.invalidateQueries({ queryKey: ['bookings'] })
 
-      const bookingState = {
-        bookingDetails: {
-          service: bookingService,
-          date: bookDate,
-          time: bookTime,
-          duration: bookDuration,
-          location: bookLocation,
-          notes: bookNotes,
-          companionName: profile?.display_name,
-        },
-      }
-
       try {
-        // 1. Find existing conversation
         const convsRes = await connectionsApi.getConversations()
         const convs: Array<{ id: string; other_user?: { id: string } }> = convsRes.data?.data ?? []
         const existingConv = convs.find(c => c.other_user?.id === id)
 
         if (existingConv) {
-          navigate(`/messages/${existingConv.id}`, { state: bookingState })
+          navigate(`/messages/${existingConv.id}`)
           return
         }
 
-        // 2. No conversation yet — create one using the connection
         if (myConnection) {
           const newConvRes = await connectionsApi.createConversation(myConnection.id)
           const convId = newConvRes.data?.data?.id
           qc.invalidateQueries({ queryKey: ['conversations'] })
-          if (convId) {
-            navigate(`/messages/${convId}`, { state: bookingState })
-            return
-          }
+          if (convId) { navigate(`/messages/${convId}`); return }
         }
 
-        // Fallback
-        toast('Booking sent! 🎉 Start chatting to coordinate details', 'success')
+        toast('Booking sent! 🎉 Chat to coordinate details', 'success')
         navigate('/messages')
       } catch {
         toast('Booking sent! 🎉', 'success')
@@ -153,12 +145,17 @@ export default function ProfileDetailPage() {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      if (!saved) await discoverApi.saveProfile(id!)
+      if (isSaved && savedRecord) {
+        await discoverApi.unsaveProfile(savedRecord.id)
+      } else {
+        await discoverApi.saveProfile(id!)
+      }
     },
     onSuccess: () => {
-      setSaved(s => !s)
-      toast(saved ? 'Removed from saved' : 'Profile saved!', 'success')
+      qc.invalidateQueries({ queryKey: ['saved-profiles'] })
+      toast(isSaved ? 'Removed from saved' : 'Profile saved! 🔖', 'success')
     },
+    onError: () => toast('Could not update saved', 'error'),
   })
 
   if (isLoading || !profile) {
@@ -207,9 +204,9 @@ export default function ProfileDetailPage() {
           <div className="flex gap-2">
             <button
               onClick={() => saveMutation.mutate()}
-              className={`w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-md border ${saved ? 'bg-[#236B63] border-[#236B63] text-white' : 'bg-black/35 border-white/10 text-white'}`}
+              className={`w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-md border ${isSaved ? 'bg-[#236B63] border-[#236B63] text-white' : 'bg-black/35 border-white/10 text-white'}`}
             >
-              <Bookmark size={18} fill={saved ? 'white' : 'none'} />
+              <Bookmark size={18} fill={isSaved ? 'white' : 'none'} />
             </button>
             <button
               onClick={() => setShowReport(true)}
@@ -456,10 +453,10 @@ export default function ProfileDetailPage() {
           <button
             onClick={() => saveMutation.mutate()}
             className={`w-12 h-12 rounded-2xl border flex items-center justify-center shrink-0 transition-colors ${
-              saved ? 'bg-[#E8F0EA] border-[#C8DDD2] text-[#236B63]' : 'bg-white border-[#E8EAE6] text-[#A1AAA5]'
+              isSaved ? 'bg-[#E8F0EA] border-[#C8DDD2] text-[#236B63]' : 'bg-white border-[#E8EAE6] text-[#A1AAA5]'
             }`}
           >
-            <Heart size={20} fill={saved ? '#236B63' : 'none'} />
+            <Heart size={20} fill={isSaved ? '#236B63' : 'none'} />
           </button>
           {connState === 'connected' && (
             <Button

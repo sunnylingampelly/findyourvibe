@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
-import { useParams, useNavigate, useLocation } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   ArrowLeft, Send, Smile, Info, CalendarDays, MapPin,
@@ -7,11 +7,12 @@ import {
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { connectionsApi } from '../../api/connections'
+import { bookingsApi } from '../../api/bookings'
 import Avatar from '../../components/ui/Avatar'
 import { useAuthStore } from '../../stores/authStore'
 import { cn } from '../../lib/utils'
 import echo from '../../lib/echo'
-import type { Message } from '../../types'
+import type { Message, Booking } from '../../types'
 
 const EMOJI_LIST = [
   '😀','😂','🥰','😍','🤩','😎','🥳','🤔','😅','😭',
@@ -79,12 +80,8 @@ function ReadReceipt({ msg, isOptimistic }: { msg: Message; isOptimistic: boolea
 export default function ChatPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const routeLocation = useLocation()
   const { user } = useAuthStore()
   const qc = useQueryClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const bookingDetails = (routeLocation.state as any)?.bookingDetails ?? null
-
   const [text, setText] = useState('')
   const [showEmoji, setShowEmoji] = useState(false)
   const [optimistic, setOptimistic] = useState<Message[]>([])
@@ -139,6 +136,21 @@ export default function ChatPage() {
   const conv = conversations.find((c: { id: string }) => c.id === id)
   const otherUser = conv?.other_user
     ?? (messages.find((m: Message) => m.sender.id !== user?.id)?.sender)
+
+  // Live bookings for this conversation's companion
+  const { data: bookingsData } = useQuery({
+    queryKey: ['bookings', 'requester', otherUser?.id],
+    queryFn: () => bookingsApi.getMyBookings('requester'),
+    enabled: !!otherUser?.id,
+    refetchInterval: 15000,
+    refetchIntervalInBackground: false,
+  })
+
+  const liveBooking: Booking | null = useMemo(() => {
+    if (!otherUser?.id) return null
+    const all: Booking[] = bookingsData?.data?.data ?? []
+    return all.find(b => b.companion?.id === otherUser.id && !['cancelled', 'completed'].includes(b.status)) ?? null
+  }, [bookingsData, otherUser?.id])
 
   const groups = groupMessages(messages)
 
@@ -375,7 +387,7 @@ export default function ChatPage() {
 
         {otherUser ? (
           <button
-            onClick={() => navigate(`/profile/${otherUser.id}`)}
+            onClick={() => navigate(`/profiles/${otherUser.id}`)}
             className="flex items-center gap-3 flex-1 min-w-0 text-left"
           >
             <div className="relative shrink-0">
@@ -404,43 +416,92 @@ export default function ChatPage() {
         </button>
       </div>
 
-      {/* Booking context card */}
+      {/* Live booking status banner — Swiggy/Zomato style */}
       <AnimatePresence>
-        {bookingDetails && (
-          <motion.div
-            initial={{ opacity: 0, y: -8 }}
+        {liveBooking && (
+          <motion.button
+            initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            className="shrink-0 mx-4 mt-3"
+            exit={{ opacity: 0, y: -10 }}
+            onClick={() => navigate('/bookings')}
+            className="shrink-0 mx-3 mt-2 text-left w-[calc(100%-24px)]"
           >
-            <div className="bg-[#E8F0EA] border border-[#C8DDD2] rounded-2xl p-3.5">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-lg">{SERVICE_ICONS[bookingDetails.service?.slug] ?? '✨'}</span>
-                <div className="flex-1">
-                  <p className="text-xs font-bold text-[#236B63] uppercase tracking-wide">Booking Request Sent</p>
-                  <p className="font-manrope font-semibold text-[#24332F] text-sm">{bookingDetails.service?.name}</p>
+            {(() => {
+              const st = liveBooking.status
+              const cfg = {
+                pending:  { bg: '#FFF8EE', border: '#F5D99A', accent: '#D9A45B', label: 'Awaiting Response', step: 1 },
+                accepted: { bg: '#E8F0EA', border: '#C8DDD2', accent: '#236B63', label: 'Booking Confirmed ✓', step: 2 },
+                declined: { bg: '#FFF0EE', border: '#F5B8B8', accent: '#D76D6D', label: 'Booking Declined',   step: 2 },
+              }[st] ?? { bg: '#F4F6F8', border: '#E8EAE6', accent: '#A1AAA5', label: st, step: 0 }
+              const steps = ['Requested', 'Waiting', st === 'accepted' ? 'Confirmed' : st === 'declined' ? 'Declined' : 'Pending']
+
+              return (
+                <div
+                  className="rounded-2xl overflow-hidden border"
+                  style={{ background: cfg.bg, borderColor: cfg.border }}
+                >
+                  {/* Top strip */}
+                  <div className="flex items-center gap-2.5 px-4 pt-3 pb-2">
+                    <span className="text-xl shrink-0">{SERVICE_ICONS[liveBooking.service?.slug ?? ''] ?? '✨'}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: cfg.accent }}>{cfg.label}</p>
+                      <p className="font-manrope font-semibold text-[#24332F] text-sm truncate">{liveBooking.service?.name}</p>
+                    </div>
+                    {st === 'pending' && (
+                      <span className="relative flex h-2 w-2 shrink-0">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: cfg.accent }} />
+                        <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: cfg.accent }} />
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Step tracker */}
+                  <div className="flex items-center px-4 pb-2.5 gap-1.5">
+                    {steps.map((s, i) => {
+                      const done = i < cfg.step
+                      const active = i === cfg.step - 1
+                      return (
+                        <div key={s} className="flex items-center gap-1.5 flex-1 min-w-0">
+                          <div
+                            className="w-2 h-2 rounded-full shrink-0 transition-all"
+                            style={{ background: done || active ? cfg.accent : '#E8EAE6', boxShadow: active ? `0 0 0 3px ${cfg.accent}30` : 'none' }}
+                          />
+                          <span className="text-[9px] font-semibold truncate" style={{ color: done || active ? cfg.accent : '#B8BDB9' }}>{s}</span>
+                          {i < steps.length - 1 && (
+                            <div className="flex-1 h-px mx-0.5" style={{ background: i < cfg.step - 1 ? cfg.accent : '#E8EAE6' }} />
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+
+                  {/* Details row */}
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 px-4 pb-3 text-xs text-[#77817C]">
+                    {liveBooking.proposed_date && (
+                      <span className="flex items-center gap-1">
+                        <CalendarDays size={11} style={{ color: cfg.accent }} />
+                        {new Date(liveBooking.proposed_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                        {liveBooking.proposed_time && ` · ${liveBooking.proposed_time}`}
+                      </span>
+                    )}
+                    {liveBooking.duration_hours && (
+                      <span className="flex items-center gap-1"><Clock size={11} style={{ color: cfg.accent }} />{liveBooking.duration_hours}h</span>
+                    )}
+                    {liveBooking.agreed_rate != null && (
+                      <span className="flex items-center gap-1"><IndianRupee size={11} style={{ color: cfg.accent }} />{Number(liveBooking.agreed_rate).toLocaleString('en-IN')}</span>
+                    )}
+                    <span className="ml-auto font-semibold" style={{ color: cfg.accent }}>View →</span>
+                  </div>
+
+                  {liveBooking.companion_response_note && (
+                    <div className="mx-3 mb-3 px-3 py-2 rounded-xl bg-white/60 text-xs text-[#77817C] italic">
+                      "{liveBooking.companion_response_note}"
+                    </div>
+                  )}
                 </div>
-              </div>
-              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-[#77817C]">
-                {bookingDetails.date && (
-                  <span className="flex items-center gap-1">
-                    <CalendarDays size={11} className="text-[#236B63]" />
-                    {new Date(bookingDetails.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })} at {bookingDetails.time}
-                  </span>
-                )}
-                {bookingDetails.duration && (
-                  <span className="flex items-center gap-1"><Clock size={11} className="text-[#236B63]" />{bookingDetails.duration}h</span>
-                )}
-                {bookingDetails.service?.price_per_session != null && (
-                  <span className="flex items-center gap-1"><IndianRupee size={11} className="text-[#236B63]" />{Number(bookingDetails.service.price_per_session).toLocaleString('en-IN')}</span>
-                )}
-                {bookingDetails.location && (
-                  <span className="flex items-center gap-1"><MapPin size={11} className="text-[#236B63]" />{bookingDetails.location}</span>
-                )}
-              </div>
-              <p className="text-[10px] text-[#A1AAA5] mt-2">Waiting for them to accept · Coordinate details here</p>
-            </div>
-          </motion.div>
+              )
+            })()}
+          </motion.button>
         )}
       </AnimatePresence>
 
