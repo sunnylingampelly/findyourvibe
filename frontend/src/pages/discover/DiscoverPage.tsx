@@ -1,10 +1,12 @@
-import { useState, useRef } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useState, useRef, useEffect } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Bell, Search, Star, MapPin, CheckCircle2, Download, Share, X, Zap, Wifi } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { discoverApi } from '../../api/discover'
+import { notificationsApi } from '../../api/notifications'
 import { useAuthStore } from '../../stores/authStore'
+import echo from '../../lib/echo'
 import AppShell from '../../components/layout/AppShell'
 import { useToast } from '../../components/ui/Toast'
 import { normalizeProfile, getInitials } from '../../lib/utils'
@@ -122,6 +124,7 @@ function SkeletonGrid() {
 export default function DiscoverPage() {
   const { user } = useAuthStore()
   const { toast } = useToast()
+  const qc = useQueryClient()
   const [selectedService, setSelectedService] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [searchInput, setSearchInput] = useState('')
@@ -129,6 +132,23 @@ export default function DiscoverPage() {
   const { canInstall, hasNativePrompt, isIOS, triggerNativePrompt } = usePWAInstall()
   const [showInstallSheet, setShowInstallSheet] = useState(false)
   const [installing, setInstalling] = useState(false)
+
+  const { data: unreadData } = useQuery({
+    queryKey: ['notifications-unread'],
+    queryFn: () => notificationsApi.unreadCount(),
+    refetchInterval: 30000,
+    staleTime: 20000,
+  })
+  const unreadCount = unreadData?.data?.data?.count ?? 0
+
+  useEffect(() => {
+    if (!user?.id) return
+    const channel = echo.private(`App.Models.User.${user.id}`)
+    channel.listen('.NotificationCreated', () => {
+      qc.invalidateQueries({ queryKey: ['notifications-unread'] })
+    })
+    return () => { channel.stopListening('.NotificationCreated') }
+  }, [user?.id, qc])
 
   const handleInstallClick = async () => {
     if (hasNativePrompt) {
@@ -221,7 +241,11 @@ export default function DiscoverPage() {
                 className="relative w-10 h-10 bg-white rounded-2xl border border-[#E8EAE6] flex items-center justify-center shadow-sm"
               >
                 <Bell size={18} className="text-[#24332F]" />
-                <span className="absolute top-2 right-2 w-2 h-2 bg-[#D76D6D] rounded-full border border-white" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[16px] h-4 bg-[#D76D6D] text-white text-[8px] font-bold rounded-full flex items-center justify-center px-1 border border-white leading-none">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
               </Link>
             </div>
           </div>

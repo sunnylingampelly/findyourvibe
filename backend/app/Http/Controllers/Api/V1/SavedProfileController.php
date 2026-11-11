@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\UserResource;
 use App\Models\SavedProfile;
+use App\Models\User;
+use App\Services\NotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -50,6 +52,12 @@ class SavedProfileController extends Controller
             'user_id' => $request->user()->id,
             'saved_user_id' => $validated['saved_user_id'],
         ]);
+
+        $savedUser = User::find($validated['saved_user_id']);
+        if ($savedUser) {
+            $saverName = $request->user()->profile?->display_name ?? $request->user()->name;
+            NotificationService::send($savedUser, $request->user(), 'profile_saved', "{$saverName} saved your profile");
+        }
 
         return response()->json([
             'success' => true,

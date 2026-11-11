@@ -7,6 +7,7 @@ use App\Http\Resources\ConnectionRequestResource;
 use App\Models\ConnectionRequest;
 use App\Models\User;
 use App\Services\ConnectionService;
+use App\Services\NotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -34,6 +35,9 @@ class ConnectionRequestController extends Controller
         }
 
         $connectionRequest = $this->connectionService->sendRequest($sender, $receiver, $validated['message'] ?? null);
+
+        $senderName = $sender->profile?->display_name ?? $sender->name;
+        NotificationService::send($receiver, $sender, 'connection_request', "{$senderName} sent you a connection request");
 
         return response()->json([
             'success' => true,
@@ -77,6 +81,9 @@ class ConnectionRequestController extends Controller
             ->findOrFail($id);
 
         $connection = $this->connectionService->acceptRequest($connectionRequest);
+
+        $acceptorName = $request->user()->profile?->display_name ?? $request->user()->name;
+        NotificationService::send($connectionRequest->sender, $request->user(), 'connection_accepted', "{$acceptorName} accepted your connection request");
 
         return response()->json([
             'success' => true,
