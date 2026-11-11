@@ -18,12 +18,37 @@ import echo from '../../lib/echo'
 import type { Message, Booking } from '../../types'
 
 const EMOJI_LIST = [
-  '😀','😂','🥰','😍','🤩','😎','🥳','🤔','😅','😭',
-  '😤','😢','🤣','😊','🙏','❤️','🔥','👍','👏','💯',
-  '🎉','🫶','😘','🤗','😴','🤯','🫡','😇','🤭','🫂',
-  '💪','✨','🌟','💫','🎊','😆','🥹','😋','😏','🤝',
-  '👋','🙌','💕','💖','💙','🌈','🍀','🌸','🫠','😌',
-  '🎵','🎶','🌺','🌻','🌙','⭐','🌊','🏖️','🎭','🎪',
+  // Faces & emotions
+  '😀','😁','😂','🤣','😃','😄','😅','😆','😊','😇',
+  '🥰','😍','🤩','😘','😗','🥹','😙','😚','😋','😛',
+  '😝','😜','🤪','🤨','🧐','🤓','😎','🥸','🤯','😏',
+  '😒','😞','😔','😟','😕','🙁','☹️','😣','😖','😫',
+  '😩','🥺','😢','😭','😤','😠','😡','🤬','🤯','😳',
+  '🥵','🥶','😱','😨','😰','😥','😓','🫣','🤗','🫡',
+  '🤔','🫠','🤭','🫢','🤫','😶','😑','😬','🙄','😯',
+  '😦','😧','😮','😲','🥱','😴','🤤','😪','😵','🤐',
+  '🥴','🤢','🤮','🤧','😷','🤒','🤕','🤑','😈','👿',
+  // Hand gestures
+  '👍','👎','👊','✊','🤛','🤜','👏','🙌','👐','🤲',
+  '🤝','🙏','✍️','💅','🤳','💪','🦾','👋','🤚','✋',
+  '🖖','🤟','🤘','🤙','👈','👉','👆','👇','☝️','👌',
+  '🤌','🤏','✌️','🤞','🫰','🖐️','🫵','🫶','❤️‍🔥','💋',
+  // Hearts & love
+  '❤️','🧡','💛','💚','💙','💜','🤍','🖤','🩷','🩵',
+  '💕','💞','💓','💗','💖','💘','💝','💟','❣️','💔',
+  // People & activities
+  '🎉','🎊','🥳','🎈','🎁','🎀','🏆','🥇','🎯','⚽',
+  '🏀','🎮','🎲','🎸','🎵','🎶','🎤','🎧','📸','📱',
+  // Nature
+  '🌸','🌺','🌻','🌹','🌷','🌼','🌱','🌿','🍀','🍁',
+  '🌊','🌈','⭐','🌟','✨','💫','🌙','☀️','🌤️','⛅',
+  '🦋','🐝','🌸','🦄','🐬','🦁','🐼','🦊','🐧','🦅',
+  // Food & drink
+  '🍕','🍔','🍟','🌮','🍜','🍣','🍩','🍰','🎂','🍫',
+  '☕','🧋','🍵','🥤','🍺','🥂','🍾','🍓','🍉','🍇',
+  // Objects & misc
+  '🔥','💯','💥','❗','❓','💬','👀','🫀','🧠','💡',
+  '🎭','🌀','🔮','💎','🏅','🎪','🎠','🎡','🎢','🌴',
 ]
 
 const QUICK_REACTIONS = ['❤️', '😂', '😮', '😢', '👍', '🔥']
@@ -574,7 +599,14 @@ export default function ChatPage() {
   }
 
   const addReaction = (msgId: string, emoji: string) => {
-    setReactions(prev => prev[msgId] === emoji ? { ...prev, [msgId]: '' } : { ...prev, [msgId]: emoji })
+    setReactions(prev => {
+      if (prev[msgId] === emoji) {
+        const next = { ...prev }
+        delete next[msgId]
+        return next
+      }
+      return { ...prev, [msgId]: emoji }
+    })
     setContextMenu(null)
   }
 
@@ -941,9 +973,9 @@ export default function ChatPage() {
                           {/* Reaction */}
                           {msgReaction && (
                             <button
-                              onClick={() => addReaction(msg.id, msgReaction)}
+                              onClick={() => setContextMenu({ msg })}
                               className={cn(
-                                'text-sm px-2 py-0.5 rounded-full border bg-white shadow-sm -mt-1',
+                                'text-sm px-2 py-0.5 rounded-full border bg-white shadow-sm -mt-1 active:scale-90 transition-transform',
                                 isMe ? 'mr-1' : 'ml-1',
                                 'border-[#E8EAE6]'
                               )}
@@ -1097,7 +1129,7 @@ export default function ChatPage() {
               transition={{ duration: 0.18 }}
               className="border-b border-[#E8EAE6] overflow-hidden"
             >
-              <div className="px-4 py-3 grid gap-1" style={{ gridTemplateColumns: 'repeat(10, 1fr)' }}>
+              <div className="px-3 py-3 grid gap-0.5 overflow-y-auto" style={{ gridTemplateColumns: 'repeat(10, 1fr)', maxHeight: 220 }}>
                 {EMOJI_LIST.map(emoji => (
                   <button
                     key={emoji}
