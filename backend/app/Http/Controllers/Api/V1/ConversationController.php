@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\ConversationResource;
 use App\Models\Connection;
 use App\Models\Conversation;
+use App\Models\Message;
+use App\Models\MessageAttachment;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -32,6 +34,23 @@ class ConversationController extends Controller
             'success' => true,
             'data' => ConversationResource::collection($conversations),
         ]);
+    }
+
+    public function clearMessages(Request $request, string $id): JsonResponse
+    {
+        $userId = $request->user()->id;
+        $conversation = Conversation::findOrFail($id);
+        $connection = Connection::findOrFail($conversation->connection_id);
+
+        if ($connection->user_one_id !== $userId && $connection->user_two_id !== $userId) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
+        $messageIds = Message::withTrashed()->where('conversation_id', $id)->pluck('id');
+        MessageAttachment::whereIn('message_id', $messageIds)->delete();
+        Message::withTrashed()->where('conversation_id', $id)->forceDelete();
+
+        return response()->json(['success' => true]);
     }
 
     public function store(Request $request): JsonResponse

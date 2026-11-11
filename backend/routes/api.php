@@ -94,6 +94,7 @@ Route::prefix('v1')->group(function () {
         // Messaging
         Route::get('conversations', [ConversationController::class, 'index']);
         Route::post('conversations', [ConversationController::class, 'store']);
+        Route::delete('conversations/{id}/messages', [ConversationController::class, 'clearMessages']);
         Route::get('conversations/{id}/messages', [MessageController::class, 'index']);
         Route::post('conversations/{id}/messages', [MessageController::class, 'store']);
         Route::delete('conversations/{conversationId}/messages/{messageId}', [MessageController::class, 'destroy']);

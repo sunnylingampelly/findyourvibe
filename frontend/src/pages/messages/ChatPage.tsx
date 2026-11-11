@@ -161,6 +161,8 @@ export default function ChatPage() {
   const [showRating, setShowRating] = useState(false)
   const [ratingValue, setRatingValue] = useState(0)
   const [ratingText, setRatingText] = useState('')
+  const [showChatOptions, setShowChatOptions] = useState(false)
+  const [confirmClear, setConfirmClear] = useState(false)
 
   const [isRecording, setIsRecording] = useState(false)
   const [recordingTime, setRecordingTime] = useState(0)
@@ -544,6 +546,22 @@ export default function ChatPage() {
     onError: () => toast('Could not submit review', 'error'),
   })
 
+  const clearMutation = useMutation({
+    mutationFn: () => connectionsApi.clearConversation(id!),
+    onSuccess: () => {
+      qc.setQueryData(['messages', id], (old: { data: { data: Message[] } } | undefined) => {
+        if (!old) return old
+        return { ...old, data: { ...old.data, data: [] } }
+      })
+      setOptimistic([])
+      qc.invalidateQueries({ queryKey: ['conversations'] })
+      setShowChatOptions(false)
+      setConfirmClear(false)
+      toast('Chat cleared', 'success')
+    },
+    onError: () => toast('Could not clear chat, try again', 'error'),
+  })
+
   const copyMessage = (body: string) => {
     navigator.clipboard.writeText(body).catch(() => {})
     setContextMenu(null)
@@ -598,7 +616,10 @@ export default function ChatPage() {
           </div>
         )}
 
-        <button className="w-9 h-9 flex items-center justify-center rounded-xl active:bg-white/10 transition-colors">
+        <button
+          onClick={() => { setShowChatOptions(true); setConfirmClear(false) }}
+          className="w-9 h-9 flex items-center justify-center rounded-xl active:bg-white/10 transition-colors"
+        >
           <Info size={18} className="text-white/80" />
         </button>
       </div>
@@ -1231,6 +1252,53 @@ export default function ChatPage() {
           </AnimatePresence>
         </div>
       </div>
+
+      {/* Chat options sheet */}
+      <BottomSheet
+        open={showChatOptions}
+        onClose={() => { setShowChatOptions(false); setConfirmClear(false) }}
+        title="Chat Options"
+      >
+        <div className="pt-1 pb-2">
+          {!confirmClear ? (
+            <button
+              onClick={() => setConfirmClear(true)}
+              className="w-full flex items-center gap-3 px-2 py-4 rounded-2xl hover:bg-red-50 active:bg-red-50 transition-colors"
+            >
+              <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+                <Trash2 size={18} className="text-red-500" />
+              </div>
+              <div className="text-left">
+                <p className="text-sm font-semibold text-red-500">Clear Chat</p>
+                <p className="text-xs text-[#A1AAA5] mt-0.5">Delete all messages for everyone</p>
+              </div>
+            </button>
+          ) : (
+            <div className="space-y-4 px-1">
+              <div className="bg-red-50 rounded-2xl p-4 text-center">
+                <p className="text-sm font-semibold text-[#24332F]">Clear all messages?</p>
+                <p className="text-xs text-[#77817C] mt-1">This permanently deletes every message in this chat for both people. This cannot be undone.</p>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setConfirmClear(false)}
+                  className="flex-1 py-3 rounded-2xl border-2 border-[#E8EAE6] text-sm font-semibold text-[#77817C] active:scale-95 transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => clearMutation.mutate()}
+                  disabled={clearMutation.isPending}
+                  className="flex-1 py-3 rounded-2xl text-sm font-semibold text-white active:scale-95 transition-all disabled:opacity-50"
+                  style={{ background: 'linear-gradient(135deg, #D76D6D, #C45555)' }}
+                >
+                  {clearMutation.isPending ? 'Clearing…' : 'Clear Chat'}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </BottomSheet>
 
       {/* Rate experience bottom sheet */}
       <BottomSheet

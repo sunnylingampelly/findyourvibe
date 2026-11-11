@@ -19,4 +19,6 @@ export const connectionsApi = {
     api.delete(`/conversations/${conversationId}/messages/${messageId}`),
   sendAttachment: (conversationId: string, form: FormData) =>
     api.post(`/conversations/${conversationId}/messages`, form),
+  clearConversation: (conversationId: string) =>
+    api.delete(`/conversations/${conversationId}/messages`),
 }
