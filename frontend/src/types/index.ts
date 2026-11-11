@@ -120,11 +120,13 @@ export interface Conversation {
 export interface Message {
   id: string
   conversation_id: string
+  sender_id?: string
   sender: PublicProfile
   body?: string
   type: 'text' | 'image'
   read_at?: string | null
   created_at: string
+  attachments?: Array<{ id: number; url: string; original_name: string; mime_type: string }>
 }
 
 export interface Notification {

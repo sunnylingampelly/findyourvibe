@@ -1,7 +1,10 @@
-import { useState, useRef, useEffect, useMemo } from 'react'
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Send, Smile, MoreVertical, Info, CalendarDays, MapPin, Clock, IndianRupee } from 'lucide-react'
+import {
+  ArrowLeft, Send, Smile, Info, CalendarDays, MapPin,
+  Clock, IndianRupee, Check, CheckCheck, CornerUpLeft, Copy, ChevronDown, X,
+} from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { connectionsApi } from '../../api/connections'
 import Avatar from '../../components/ui/Avatar'
@@ -16,7 +19,16 @@ const EMOJI_LIST = [
   '🎉','🫶','😘','🤗','😴','🤯','🫡','😇','🤭','🫂',
   '💪','✨','🌟','💫','🎊','😆','🥹','😋','😏','🤝',
   '👋','🙌','💕','💖','💙','🌈','🍀','🌸','🫠','😌',
+  '🎵','🎶','🌺','🌻','🌙','⭐','🌊','🏖️','🎭','🎪',
 ]
+
+const QUICK_REACTIONS = ['❤️', '😂', '😮', '😢', '👍', '🔥']
+
+const SERVICE_ICONS: Record<string, string> = {
+  'movie-companion': '🎬', 'coffee-buddy': '☕', 'event-companion': '🎭',
+  'travel-buddy': '✈️', 'shopping-companion': '🛍️', 'food-explorer': '🍜',
+  'city-explorer': '🗺️', 'weekend-companion': '🌅', 'adventure-companion': '🏔️', 'gaming-buddy': '🎮',
+}
 
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr)
@@ -39,10 +51,29 @@ function groupMessages(messages: Message[]) {
   return groups
 }
 
-const SERVICE_ICONS: Record<string, string> = {
-  'movie-companion': '🎬', 'coffee-buddy': '☕', 'event-companion': '🎭',
-  'travel-buddy': '✈️', 'shopping-companion': '🛍️', 'food-explorer': '🍜',
-  'city-explorer': '🗺️', 'weekend-companion': '🌅', 'adventure-companion': '🏔️', 'gaming-buddy': '🎮',
+function formatTime(dateStr: string): string {
+  return new Date(dateStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })
+}
+
+function TypingDots() {
+  return (
+    <div className="flex items-center gap-1 px-4 py-3 bg-white rounded-[18px] rounded-bl-[6px] border border-[#E8EAE6] shadow-sm w-fit">
+      {[0, 1, 2].map(i => (
+        <motion.div
+          key={i}
+          className="w-2 h-2 rounded-full bg-[#A1AAA5]"
+          animate={{ y: [0, -4, 0] }}
+          transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.15, ease: 'easeInOut' }}
+        />
+      ))}
+    </div>
+  )
+}
+
+function ReadReceipt({ msg, isOptimistic }: { msg: Message; isOptimistic: boolean }) {
+  if (isOptimistic) return <Check size={12} className="text-white/50" />
+  if (msg.read_at) return <CheckCheck size={12} className="text-[#A8E6CF]" />
+  return <CheckCheck size={12} className="text-white/60" />
 }
 
 export default function ChatPage() {
@@ -53,21 +84,35 @@ export default function ChatPage() {
   const qc = useQueryClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const bookingDetails = (routeLocation.state as any)?.bookingDetails ?? null
+
   const [text, setText] = useState('')
   const [showEmoji, setShowEmoji] = useState(false)
-  // Optimistic messages kept separately so polls don't wipe them before server confirms
   const [optimistic, setOptimistic] = useState<Message[]>([])
+  const [replyTo, setReplyTo] = useState<Message | null>(null)
+  const [contextMenu, setContextMenu] = useState<{ msg: Message } | null>(null)
+  const [reactions, setReactions] = useState<Record<string, string>>({})
+  const [otherTyping, setOtherTyping] = useState(false)
+  const [showScrollBtn, setShowScrollBtn] = useState(false)
+
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const emojiRef = useRef<HTMLDivElement>(null)
-  // Synchronous guard — prevents double-send before React re-renders isPending
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const contextMenuRef = useRef<HTMLDivElement>(null)
   const sendingRef = useRef(false)
+  const typingTimeout = useRef<ReturnType<typeof setTimeout>>()
+  const lastWhisperTime = useRef(0)
+  const isNearBottom = useRef(true)
+  const longPressTimer = useRef<ReturnType<typeof setTimeout>>()
+  const swipeState = useRef({ startX: 0, startY: 0, msgId: '' as string, dx: 0 })
+  const [swipeDx, setSwipeDx] = useState<Record<string, number>>({})
+  const messagesRef = useRef<Message[]>([])
 
   const { data: msgsData, isLoading } = useQuery({
     queryKey: ['messages', id],
     queryFn: () => connectionsApi.getMessages(id!),
     enabled: !!id,
-    refetchInterval: 3000,          // Polling fallback when WebSocket is unavailable
+    refetchInterval: 3000,
     refetchIntervalInBackground: false,
   })
 
@@ -80,7 +125,6 @@ export default function ChatPage() {
 
   const serverMessages: Message[] = msgsData?.data?.data ?? []
 
-  // Merge server messages with optimistic ones not yet confirmed by the server
   const messages = useMemo(() => {
     const serverIds = new Set(serverMessages.map(m => m.id))
     const pending = optimistic.filter(m => !serverIds.has(m.id))
@@ -89,28 +133,37 @@ export default function ChatPage() {
     )
   }, [serverMessages, optimistic])
 
+  useEffect(() => { messagesRef.current = messages }, [messages])
+
   const conversations = convsData?.data?.data ?? []
   const conv = conversations.find((c: { id: string }) => c.id === id)
-
   const otherUser = conv?.other_user
-    ?? (messages.length > 0
-        ? messages.find((m: Message) => m.sender.id !== user?.id)?.sender
-        : undefined)
+    ?? (messages.find((m: Message) => m.sender.id !== user?.id)?.sender)
 
   const groups = groupMessages(messages)
 
-  // Close emoji panel when clicking outside
+  // Smart auto-scroll: only when already near bottom
   useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (emojiRef.current && !emojiRef.current.contains(e.target as Node)) {
-        setShowEmoji(false)
-      }
+    if (isNearBottom.current) {
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
     }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
+  }, [messages.length])
+
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current
+    if (!el) return
+    const dist = el.scrollHeight - el.scrollTop - el.clientHeight
+    isNearBottom.current = dist < 80
+    setShowScrollBtn(dist > 150)
   }, [])
 
-  // Real-time WebSocket listener (Reverb)
+  const scrollToBottom = () => {
+    isNearBottom.current = true
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    setShowScrollBtn(false)
+  }
+
+  // Echo: messages + typing whisper
   useEffect(() => {
     if (!id) return
     const channel = echo.private(`conversation.${id}`)
@@ -122,11 +175,83 @@ export default function ChatPage() {
       })
       qc.invalidateQueries({ queryKey: ['conversations'] })
     })
+    channel.listenForWhisper('typing', () => {
+      setOtherTyping(true)
+      clearTimeout(typingTimeout.current)
+      typingTimeout.current = setTimeout(() => setOtherTyping(false), 2500)
+    })
     return () => {
       channel.stopListening('.MessageSent')
       echo.leave(`conversation.${id}`)
+      clearTimeout(typingTimeout.current)
     }
   }, [id, qc])
+
+  // Whisper typing (throttled)
+  const whisperTyping = useCallback(() => {
+    const now = Date.now()
+    if (now - lastWhisperTime.current > 800) {
+      lastWhisperTime.current = now
+      try { echo.private(`conversation.${id}`).whisper('typing', {}) } catch { /* ignore */ }
+    }
+  }, [id])
+
+  // Close emoji when clicking outside
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (emojiRef.current && !emojiRef.current.contains(e.target as Node)) {
+        setShowEmoji(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  // Close context menu on outside tap
+  useEffect(() => {
+    if (!contextMenu) return
+    const handler = (e: MouseEvent | TouchEvent) => {
+      if (contextMenuRef.current && !contextMenuRef.current.contains(e.target as Node)) {
+        setContextMenu(null)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    document.addEventListener('touchstart', handler)
+    return () => {
+      document.removeEventListener('mousedown', handler)
+      document.removeEventListener('touchstart', handler)
+    }
+  }, [contextMenu])
+
+  // Message touch handlers for swipe-to-reply + long press
+  const handleMsgTouchStart = useCallback((e: React.TouchEvent, msg: Message) => {
+    swipeState.current = { startX: e.touches[0].clientX, startY: e.touches[0].clientY, msgId: msg.id, dx: 0 }
+    longPressTimer.current = setTimeout(() => {
+      setContextMenu({ msg })
+    }, 480)
+  }, [])
+
+  const handleMsgTouchMove = useCallback((e: React.TouchEvent) => {
+    clearTimeout(longPressTimer.current)
+    const { startX, startY, msgId } = swipeState.current
+    const dx = e.touches[0].clientX - startX
+    const dy = Math.abs(e.touches[0].clientY - startY)
+    if (dx > 8 && dy < dx * 0.6) {
+      swipeState.current.dx = dx
+      setSwipeDx(prev => ({ ...prev, [msgId]: Math.min(dx * 0.4, 60) }))
+    }
+  }, [])
+
+  const handleMsgTouchEnd = useCallback(() => {
+    clearTimeout(longPressTimer.current)
+    const { msgId, dx } = swipeState.current
+    if (msgId && dx > 55) {
+      const msg = messagesRef.current.find(m => m.id === msgId)
+      if (msg) { setReplyTo(msg); setTimeout(() => inputRef.current?.focus(), 50) }
+    }
+    if (msgId) setSwipeDx(prev => ({ ...prev, [msgId]: 0 }))
+    swipeState.current = { startX: 0, startY: 0, msgId: '', dx: 0 }
+  }, [])
 
   const send = useMutation({
     mutationFn: (body: string) => connectionsApi.sendMessage(id!, body),
@@ -153,11 +278,8 @@ export default function ChatPage() {
     onSuccess: (res, _, ctx) => {
       sendingRef.current = false
       const newMsg = res?.data?.data
-      if (ctx?.tempId) {
-        setOptimistic(prev => prev.filter(m => m.id !== ctx.tempId))
-      }
+      if (ctx?.tempId) setOptimistic(prev => prev.filter(m => m.id !== ctx.tempId))
       if (newMsg) {
-        // Merge real message into cache (dedup in case Echo already added it)
         qc.setQueryData(['messages', id], (old: { data: { data: Message[] } } | undefined) => {
           if (!old) return old
           if (old.data.data.find(m => m.id === newMsg.id)) return old
@@ -168,30 +290,24 @@ export default function ChatPage() {
     },
     onError: (_, __, ctx) => {
       sendingRef.current = false
-      if (ctx?.tempId) {
-        setOptimistic(prev => prev.filter(m => m.id !== ctx.tempId))
-      }
+      if (ctx?.tempId) setOptimistic(prev => prev.filter(m => m.id !== ctx.tempId))
     },
   })
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages.length])
 
   const handleSend = () => {
     const body = text.trim()
     if (!body || sendingRef.current) return
     sendingRef.current = true
     setText('')
+    setReplyTo(null)
     if (inputRef.current) inputRef.current.style.height = 'auto'
+    isNearBottom.current = true
     send.mutate(body)
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleSend()
-    }
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() }
+    if (e.key === 'Escape') setReplyTo(null)
   }
 
   const autoResize = (el: HTMLTextAreaElement) => {
@@ -213,8 +329,25 @@ export default function ChatPage() {
     })
   }
 
+  const copyMessage = (body: string) => {
+    navigator.clipboard.writeText(body).catch(() => {})
+    setContextMenu(null)
+  }
+
+  const replyToMessage = (msg: Message) => {
+    setReplyTo(msg)
+    setContextMenu(null)
+    setTimeout(() => inputRef.current?.focus(), 50)
+  }
+
+  const addReaction = (msgId: string, emoji: string) => {
+    setReactions(prev => prev[msgId] === emoji ? { ...prev, [msgId]: '' } : { ...prev, [msgId]: emoji })
+    setContextMenu(null)
+  }
+
   return (
-    <div className="app-container flex flex-col h-dvh" style={{ background: 'linear-gradient(180deg, #EFF6F4 0%, #F5F3EF 100%)' }}>
+    <div className="app-container flex flex-col h-dvh" style={{ background: 'linear-gradient(180deg, #EDF5F2 0%, #F4F2EE 100%)' }}>
+
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3 pt-safe bg-white/95 backdrop-blur-md border-b border-[#E8EAE6] shrink-0 shadow-sm">
         <button
@@ -229,10 +362,15 @@ export default function ChatPage() {
             onClick={() => navigate(`/profile/${otherUser.id}`)}
             className="flex items-center gap-3 flex-1 min-w-0 text-left"
           >
-            <Avatar src={otherUser.profile_photo_url} name={otherUser.display_name} size="sm" online />
+            <div className="relative shrink-0">
+              <Avatar src={otherUser.profile_photo_url} name={otherUser.display_name} size="sm" />
+              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-[#4D9274] rounded-full border-2 border-white" />
+            </div>
             <div className="min-w-0">
               <h2 className="font-manrope font-bold text-[#24332F] text-sm truncate">{otherUser.display_name}</h2>
-              <p className="text-xs text-[#4D9274] font-medium">Active now</p>
+              <p className="text-xs text-[#4D9274] font-medium">
+                {otherTyping ? 'typing…' : 'Active now'}
+              </p>
             </div>
           </button>
         ) : (
@@ -247,9 +385,6 @@ export default function ChatPage() {
 
         <button className="w-9 h-9 flex items-center justify-center rounded-xl text-[#A1AAA5] hover:bg-[#F4F1EA] transition-colors">
           <Info size={18} />
-        </button>
-        <button className="w-9 h-9 flex items-center justify-center rounded-xl text-[#A1AAA5] hover:bg-[#F4F1EA] transition-colors">
-          <MoreVertical size={18} />
         </button>
       </div>
 
@@ -272,7 +407,10 @@ export default function ChatPage() {
               </div>
               <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-[#77817C]">
                 {bookingDetails.date && (
-                  <span className="flex items-center gap-1"><CalendarDays size={11} className="text-[#236B63]" />{new Date(bookingDetails.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })} at {bookingDetails.time}</span>
+                  <span className="flex items-center gap-1">
+                    <CalendarDays size={11} className="text-[#236B63]" />
+                    {new Date(bookingDetails.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })} at {bookingDetails.time}
+                  </span>
                 )}
                 {bookingDetails.duration && (
                   <span className="flex items-center gap-1"><Clock size={11} className="text-[#236B63]" />{bookingDetails.duration}h</span>
@@ -291,13 +429,18 @@ export default function ChatPage() {
       </AnimatePresence>
 
       {/* Messages area */}
-      <div className="flex-1 overflow-y-auto px-4 py-5 space-y-5" style={{ scrollbarWidth: 'none' }}>
+      <div
+        ref={scrollRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto px-4 py-5"
+        style={{ scrollbarWidth: 'none' }}
+      >
         {isLoading ? (
           <div className="flex flex-col gap-3 pt-6">
             {[72, 48, 88, 56].map((w, i) => (
               <div key={i} className={`flex gap-2 items-end ${i % 2 === 0 ? 'justify-start' : 'justify-end'}`}>
                 {i % 2 === 0 && <div className="w-7 h-7 skeleton rounded-full shrink-0" />}
-                <div className={`skeleton h-9 rounded-[18px]`} style={{ width: `${w}%`, maxWidth: 260 }} />
+                <div className="skeleton h-10 rounded-[18px]" style={{ width: `${w}%`, maxWidth: 260 }} />
               </div>
             ))}
           </div>
@@ -307,18 +450,18 @@ export default function ChatPage() {
             animate={{ opacity: 1, y: 0 }}
             className="flex flex-col items-center justify-center h-full py-20 text-center"
           >
-            <div className="relative mb-4">
-              <Avatar src={otherUser?.profile_photo_url} name={otherUser?.display_name ?? '?'} size="xl" className="shadow-lg" />
+            <div className="relative mb-5">
+              <Avatar src={otherUser?.profile_photo_url} name={otherUser?.display_name ?? '?'} size="xl" className="shadow-lg ring-4 ring-white" />
               <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-[#4D9274] rounded-full flex items-center justify-center border-2 border-white text-sm">👋</div>
             </div>
             <h3 className="font-manrope font-bold text-[#24332F] mb-1 text-base">{otherUser?.display_name ?? 'Your connection'}</h3>
             <p className="text-sm text-[#A1AAA5] max-w-[200px] leading-relaxed">Say hello and start the conversation!</p>
-            <div className="flex gap-2 mt-4 flex-wrap justify-center">
-              {['👋 Say hi!', '😊 Hello!', '🎉 Hey there!'].map(q => (
+            <div className="flex gap-2 mt-5 flex-wrap justify-center">
+              {['👋 Say hi!', '😊 Hello!', '🎉 Hey there!', '☕ Coffee?'].map(q => (
                 <button
                   key={q}
                   onClick={() => { setText(q); inputRef.current?.focus() }}
-                  className="text-xs px-3 py-1.5 rounded-full bg-white border border-[#E8EAE6] text-[#77817C] hover:border-[#236B63] hover:text-[#236B63] transition-colors"
+                  className="text-xs px-3.5 py-1.5 rounded-full bg-white border border-[#E8EAE6] text-[#77817C] hover:border-[#236B63] hover:text-[#236B63] transition-colors shadow-sm"
                 >
                   {q}
                 </button>
@@ -326,95 +469,255 @@ export default function ChatPage() {
             </div>
           </motion.div>
         ) : (
-          groups.map(group => (
-            <div key={group.date}>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="flex-1 h-px bg-[#E8EAE6]" />
-                <span className="text-[10px] font-semibold text-[#A1AAA5] uppercase tracking-wider px-2 py-1 bg-[#F5F3EF] rounded-full border border-[#E8EAE6]">
-                  {group.date}
-                </span>
-                <div className="flex-1 h-px bg-[#E8EAE6]" />
-              </div>
+          <div className="space-y-5">
+            {groups.map(group => (
+              <div key={group.date}>
+                {/* Date divider */}
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="flex-1 h-px bg-[#E0E5E2]" />
+                  <span className="text-[10px] font-semibold text-[#9BAAA4] uppercase tracking-wider px-2.5 py-1 bg-white/80 rounded-full border border-[#E8EAE6] shadow-sm">
+                    {group.date}
+                  </span>
+                  <div className="flex-1 h-px bg-[#E0E5E2]" />
+                </div>
 
-              <div className="space-y-1">
-                {group.messages.map((msg, msgIdx) => {
-                  const isMe = msg.sender.id === user?.id
-                  const isOptimistic = msg.id.startsWith('opt-')
-                  const prevMsg = group.messages[msgIdx - 1]
-                  const nextMsg = group.messages[msgIdx + 1]
-                  const isFirstInChain = !prevMsg || prevMsg.sender.id !== msg.sender.id
-                  const isLastInChain = !nextMsg || nextMsg.sender.id !== msg.sender.id
-                  const showAvatar = !isMe && isLastInChain
-                  const showTimestamp = isLastInChain
+                <div className="space-y-0.5">
+                  {group.messages.map((msg, msgIdx) => {
+                    const isMe = msg.sender.id === user?.id
+                    const isOptimistic = msg.id.startsWith('opt-')
+                    const prevMsg = group.messages[msgIdx - 1]
+                    const nextMsg = group.messages[msgIdx + 1]
+                    const isFirstInChain = !prevMsg || prevMsg.sender.id !== msg.sender.id
+                    const isLastInChain = !nextMsg || nextMsg.sender.id !== msg.sender.id
+                    const showAvatar = !isMe && isLastInChain
+                    const dx = swipeDx[msg.id] ?? 0
+                    const msgReaction = reactions[msg.id]
 
-                  return (
-                    <div
-                      key={msg.id}
-                      className={cn(
-                        'flex gap-2 items-end',
-                        isMe ? 'justify-end' : 'justify-start',
-                        isFirstInChain ? 'mt-3' : 'mt-0.5'
-                      )}
-                    >
-                      {!isMe && (
-                        <div className="w-7 shrink-0">
-                          {showAvatar && (
-                            <Avatar src={msg.sender.profile_photo_url} name={msg.sender.display_name} size="xs" />
-                          )}
-                        </div>
-                      )}
-
-                      <div className={cn('flex flex-col max-w-[75%]', isMe ? 'items-end' : 'items-start')}>
-                        <div
-                          className={cn(
-                            'px-4 py-2.5 text-sm leading-relaxed transition-opacity',
-                            isOptimistic ? 'opacity-70' : 'opacity-100',
-                            isMe
-                              ? 'bg-[#236B63] text-white shadow-sm'
-                              : 'bg-white text-[#24332F] border border-[#E8EAE6] shadow-sm',
-                            isMe && isFirstInChain && isLastInChain ? 'rounded-[18px]' :
-                            isMe && isFirstInChain ? 'rounded-[18px] rounded-br-[6px]' :
-                            isMe && isLastInChain ? 'rounded-[18px] rounded-tr-[6px]' :
-                            isMe ? 'rounded-[18px] rounded-r-[6px]' :
-                            !isMe && isFirstInChain && isLastInChain ? 'rounded-[18px]' :
-                            !isMe && isFirstInChain ? 'rounded-[18px] rounded-bl-[6px]' :
-                            !isMe && isLastInChain ? 'rounded-[18px] rounded-tl-[6px]' :
-                            'rounded-[18px] rounded-l-[6px]'
-                          )}
-                        >
-                          {msg.body}
-                        </div>
-
-                        {showTimestamp && (
-                          <span className="text-[9px] text-[#A1AAA5] mt-1 px-1">
-                            {isOptimistic ? 'Sending…' : timeAgo(msg.created_at)}
-                          </span>
+                    return (
+                      <motion.div
+                        key={msg.id}
+                        initial={{ opacity: 0, y: 10, scale: 0.96 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        transition={{ duration: 0.2, ease: 'easeOut' }}
+                        className={cn(
+                          'flex gap-2 items-end group',
+                          isMe ? 'justify-end' : 'justify-start',
+                          isFirstInChain ? 'mt-3' : 'mt-0.5'
                         )}
-                      </div>
-                    </div>
-                  )
-                })}
+                        onTouchStart={e => handleMsgTouchStart(e, msg)}
+                        onTouchMove={handleMsgTouchMove}
+                        onTouchEnd={handleMsgTouchEnd}
+                      >
+                        {/* Other user avatar placeholder */}
+                        {!isMe && (
+                          <div className="w-7 shrink-0 self-end mb-1">
+                            {showAvatar && (
+                              <Avatar src={msg.sender.profile_photo_url} name={msg.sender.display_name} size="xs" />
+                            )}
+                          </div>
+                        )}
+
+                        {/* Reply arrow indicator (swipe) */}
+                        {dx > 0 && (
+                          <div
+                            className="flex items-center justify-center shrink-0 self-center"
+                            style={{ opacity: Math.min(dx / 55, 1) }}
+                          >
+                            <div className="w-7 h-7 rounded-full bg-[#E8F0EA] flex items-center justify-center">
+                              <CornerUpLeft size={14} className="text-[#236B63]" />
+                            </div>
+                          </div>
+                        )}
+
+                        <div
+                          className={cn('flex flex-col max-w-[75%]', isMe ? 'items-end' : 'items-start')}
+                          style={{ transform: `translateX(${isMe ? -dx : dx}px)`, transition: dx === 0 ? 'transform 0.25s ease' : 'none' }}
+                        >
+                          {/* Bubble */}
+                          <div
+                            className={cn(
+                              'px-4 py-2.5 text-sm leading-relaxed transition-opacity select-none',
+                              isOptimistic ? 'opacity-70' : 'opacity-100',
+                              isMe
+                                ? 'text-white shadow-sm'
+                                : 'bg-white text-[#24332F] border border-[#E8EAE6] shadow-sm',
+                              isMe && isFirstInChain && isLastInChain ? 'rounded-[18px]' :
+                              isMe && isFirstInChain ? 'rounded-[18px] rounded-br-[5px]' :
+                              isMe && isLastInChain ? 'rounded-[18px] rounded-tr-[5px]' :
+                              isMe ? 'rounded-[18px] rounded-r-[5px]' :
+                              !isMe && isFirstInChain && isLastInChain ? 'rounded-[18px]' :
+                              !isMe && isFirstInChain ? 'rounded-[18px] rounded-bl-[5px]' :
+                              !isMe && isLastInChain ? 'rounded-[18px] rounded-tl-[5px]' :
+                              'rounded-[18px] rounded-l-[5px]'
+                            )}
+                            style={isMe ? { background: 'linear-gradient(135deg, #236B63 0%, #1D5A54 100%)' } : {}}
+                            onDoubleClick={() => setReplyTo(msg)}
+                          >
+                            {msg.body}
+                          </div>
+
+                          {/* Reaction */}
+                          {msgReaction && (
+                            <button
+                              onClick={() => addReaction(msg.id, msgReaction)}
+                              className={cn(
+                                'text-sm px-2 py-0.5 rounded-full border bg-white shadow-sm -mt-1',
+                                isMe ? 'mr-1' : 'ml-1',
+                                'border-[#E8EAE6]'
+                              )}
+                            >
+                              {msgReaction}
+                            </button>
+                          )}
+
+                          {/* Timestamp + read receipt */}
+                          {isLastInChain && (
+                            <div className={cn('flex items-center gap-1 mt-1 px-1', isMe ? 'flex-row-reverse' : 'flex-row')}>
+                              <span className="text-[10px] text-[#A1AAA5]">
+                                {isOptimistic ? 'Sending…' : formatTime(msg.created_at)}
+                              </span>
+                              {isMe && <ReadReceipt msg={msg} isOptimistic={isOptimistic} />}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Desktop/tablet: quick action on hover */}
+                        <div className={cn(
+                          'hidden sm:flex items-center gap-1 self-center opacity-0 group-hover:opacity-100 transition-opacity',
+                          isMe ? 'order-first mr-1' : 'ml-1'
+                        )}>
+                          <button
+                            onClick={() => setContextMenu({ msg })}
+                            className="w-7 h-7 rounded-full bg-white border border-[#E8EAE6] shadow-sm flex items-center justify-center text-[#A1AAA5] hover:text-[#236B63] transition-colors text-xs"
+                          >
+                            ⋯
+                          </button>
+                        </div>
+                      </motion.div>
+                    )
+                  })}
+                </div>
               </div>
-            </div>
-          ))
+            ))}
+
+            {/* Typing indicator */}
+            <AnimatePresence>
+              {otherTyping && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 8 }}
+                  className="flex gap-2 items-end"
+                >
+                  <div className="w-7 shrink-0 self-end mb-1">
+                    <Avatar src={otherUser?.profile_photo_url} name={otherUser?.display_name ?? '?'} size="xs" />
+                  </div>
+                  <TypingDots />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         )}
-        <div ref={bottomRef} />
+        <div ref={bottomRef} className="h-2" />
       </div>
+
+      {/* Scroll to bottom button */}
+      <AnimatePresence>
+        {showScrollBtn && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            onClick={scrollToBottom}
+            className="absolute bottom-28 right-4 w-10 h-10 bg-white rounded-full shadow-lg border border-[#E8EAE6] flex items-center justify-center text-[#236B63] z-20"
+          >
+            <ChevronDown size={20} />
+          </motion.button>
+        )}
+      </AnimatePresence>
+
+      {/* Context menu (long press) */}
+      <AnimatePresence>
+        {contextMenu && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-end bg-black/20 backdrop-blur-[2px]"
+            onClick={() => setContextMenu(null)}
+          >
+            <motion.div
+              ref={contextMenuRef}
+              initial={{ y: 60, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 60, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+              className="w-full bg-white rounded-t-3xl shadow-2xl pb-safe"
+              onClick={e => e.stopPropagation()}
+            >
+              {/* Quick reactions */}
+              <div className="flex items-center justify-around px-6 py-4 border-b border-[#F0F0F0]">
+                {QUICK_REACTIONS.map(emoji => (
+                  <button
+                    key={emoji}
+                    onClick={() => addReaction(contextMenu.msg.id, emoji)}
+                    className={cn(
+                      'text-2xl w-11 h-11 rounded-full flex items-center justify-center transition-all active:scale-90',
+                      reactions[contextMenu.msg.id] === emoji
+                        ? 'bg-[#E8F0EA] scale-110'
+                        : 'hover:bg-[#F4F1EA]'
+                    )}
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+
+              {/* Quoted message preview */}
+              <div className="px-4 py-3 border-b border-[#F0F0F0]">
+                <p className="text-xs text-[#A1AAA5] mb-1 truncate">{contextMenu.msg.sender.display_name}</p>
+                <p className="text-sm text-[#24332F] line-clamp-2">{contextMenu.msg.body}</p>
+              </div>
+
+              {/* Actions */}
+              <div className="py-2">
+                <button
+                  onClick={() => replyToMessage(contextMenu.msg)}
+                  className="w-full flex items-center gap-3 px-5 py-3.5 hover:bg-[#F9F7F3] transition-colors"
+                >
+                  <CornerUpLeft size={18} className="text-[#236B63]" />
+                  <span className="text-sm font-medium text-[#24332F]">Reply</span>
+                </button>
+                {contextMenu.msg.body && (
+                  <button
+                    onClick={() => copyMessage(contextMenu.msg.body!)}
+                    className="w-full flex items-center gap-3 px-5 py-3.5 hover:bg-[#F9F7F3] transition-colors"
+                  >
+                    <Copy size={18} className="text-[#236B63]" />
+                    <span className="text-sm font-medium text-[#24332F]">Copy text</span>
+                  </button>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Input bar */}
       <div className="shrink-0 bg-white border-t border-[#E8EAE6] pb-safe shadow-[0_-1px_8px_rgba(0,0,0,0.04)]">
+        {/* Emoji picker */}
         <AnimatePresence>
           {showEmoji && (
             <motion.div
               ref={emojiRef}
               key="emoji-panel"
-              initial={{ opacity: 0, y: 8, scale: 0.97 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 8, scale: 0.97 }}
-              transition={{ duration: 0.15 }}
-              className="border-b border-[#E8EAE6] px-4 py-3"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.18 }}
+              className="border-b border-[#E8EAE6] overflow-hidden"
             >
-              <div className="grid gap-1" style={{ gridTemplateColumns: 'repeat(10, 1fr)' }}>
+              <div className="px-4 py-3 grid gap-1" style={{ gridTemplateColumns: 'repeat(10, 1fr)' }}>
                 {EMOJI_LIST.map(emoji => (
                   <button
                     key={emoji}
@@ -429,6 +732,34 @@ export default function ChatPage() {
           )}
         </AnimatePresence>
 
+        {/* Reply preview */}
+        <AnimatePresence>
+          {replyTo && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.15 }}
+              className="border-b border-[#E8EAE6] overflow-hidden"
+            >
+              <div className="flex items-center gap-2 px-4 py-2.5">
+                <div className="w-0.5 h-8 bg-[#236B63] rounded-full shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-[#236B63]">{replyTo.sender.display_name}</p>
+                  <p className="text-xs text-[#77817C] truncate">{replyTo.body}</p>
+                </div>
+                <button
+                  onClick={() => setReplyTo(null)}
+                  className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-[#F4F1EA] text-[#A1AAA5] shrink-0"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Input row */}
         <div className="flex items-end gap-2 px-3 py-2.5">
           <button
             onClick={() => setShowEmoji(s => !s)}
@@ -440,16 +771,16 @@ export default function ChatPage() {
             <Smile size={22} />
           </button>
 
-          <div className="flex-1 bg-[#F4F1EA] rounded-2xl px-4 py-2.5 flex items-end gap-2">
+          <div className="flex-1 bg-[#F4F1EA] rounded-2xl px-4 py-2.5">
             <textarea
               ref={inputRef}
               value={text}
-              onChange={e => { setText(e.target.value); autoResize(e.target) }}
+              onChange={e => { setText(e.target.value); autoResize(e.target); whisperTyping() }}
               onKeyDown={handleKeyDown}
               onFocus={() => setShowEmoji(false)}
               placeholder="Message…"
               rows={1}
-              className="flex-1 bg-transparent text-sm text-[#24332F] placeholder:text-[#A1AAA5] focus:outline-none resize-none leading-relaxed"
+              className="w-full bg-transparent text-sm text-[#24332F] placeholder:text-[#A1AAA5] focus:outline-none resize-none leading-relaxed"
               style={{ minHeight: '20px', maxHeight: '120px' }}
             />
           </div>
@@ -463,7 +794,8 @@ export default function ChatPage() {
                 exit={{ scale: 0.5, opacity: 0 }}
                 transition={{ type: 'spring', stiffness: 500, damping: 25 }}
                 onClick={handleSend}
-                className="w-10 h-10 bg-[#236B63] rounded-full flex items-center justify-center text-white shrink-0 shadow-md active:scale-90 transition-transform"
+                className="w-10 h-10 rounded-full flex items-center justify-center text-white shrink-0 shadow-md active:scale-90 transition-transform"
+                style={{ background: 'linear-gradient(135deg, #236B63 0%, #1D5A54 100%)' }}
               >
                 <Send size={17} />
               </motion.button>
