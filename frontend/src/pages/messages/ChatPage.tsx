@@ -978,18 +978,18 @@ export default function ChatPage() {
         </AnimatePresence>
 
         {/* Input row */}
-        <div className="flex items-end gap-2 px-3 py-2.5">
-          <button
-            onClick={() => setShowEmoji(s => !s)}
-            className={cn(
-              'w-10 h-10 flex items-center justify-center rounded-full transition-colors shrink-0',
-              showEmoji ? 'text-[#236B63] bg-[#E8F0EA]' : 'text-[#A1AAA5] hover:text-[#236B63] hover:bg-[#F4F1EA]'
-            )}
-          >
-            <Smile size={22} />
-          </button>
-
-          <div className="flex-1 bg-white rounded-full px-4 py-2.5 shadow-sm focus-within:outline-none focus-within:ring-0">
+        <div className="flex items-end gap-2 px-2 py-2">
+          {/* Input field with emoji icon inside */}
+          <div className="flex-1 flex items-end bg-white rounded-full shadow-sm px-3 py-2">
+            <button
+              onClick={() => setShowEmoji(s => !s)}
+              className={cn(
+                'w-8 h-7 flex items-center justify-center rounded-full transition-colors shrink-0 mr-1',
+                showEmoji ? 'text-[#236B63]' : 'text-[#A1AAA5]'
+              )}
+            >
+              <Smile size={20} />
+            </button>
             <textarea
               ref={inputRef}
               value={text}
@@ -998,7 +998,7 @@ export default function ChatPage() {
               onFocus={() => setShowEmoji(false)}
               placeholder="Message…"
               rows={1}
-              className="w-full bg-transparent text-sm text-[#24332F] placeholder:text-[#A1AAA5] outline-none ring-0 resize-none leading-relaxed"
+              className="flex-1 bg-transparent text-sm text-[#24332F] placeholder:text-[#A1AAA5] outline-none ring-0 resize-none leading-relaxed self-center"
               style={{ minHeight: '20px', maxHeight: '120px', WebkitTapHighlightColor: 'transparent' }}
             />
           </div>
