@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom'
-import { Compass, Layers, Users, MessageCircle, User, Heart } from 'lucide-react'
+import { Compass, Layers, MessageCircle, User, Heart } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { cn } from '../../lib/utils'
 import { connectionsApi } from '../../api/connections'

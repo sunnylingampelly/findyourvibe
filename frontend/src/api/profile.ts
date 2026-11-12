@@ -10,6 +10,31 @@ export const profileApi = {
   },
   report: (userId: string, category: string, reason: string) =>
     api.post('/reports', { reported_id: userId, category, reason }),
+
+  // Onboarding
+  updateOnboarding: (data: Record<string, unknown>) => api.put('/me/onboarding', data),
+
+  // Profile photos (gallery)
+  addPhoto: (file: File) => {
+    const fd = new FormData()
+    fd.append('photo', file)
+    return api.post('/me/photos', fd)
+  },
+  deletePhoto: (id: number) => api.delete(`/me/photos/${id}`),
+  setPrimaryPhoto: (id: number) => api.post(`/me/photos/${id}/primary`),
+
+  // Companion application
+  getCompanionApp: () => api.get('/companion/applications/me'),
+  startCompanionApp: (data: Record<string, unknown>) => api.post('/companion/applications', data),
+  updateCompanionApp: (data: Record<string, unknown>) => api.put('/companion/applications/me', data),
+  uploadCompanionDoc: (file: File, type: string) => {
+    const fd = new FormData()
+    fd.append('document', file)
+    fd.append('type', type)
+    return api.post('/companion/applications/me/documents', fd)
+  },
+
+  // Selfie & voice intro
   uploadSelfie: (file: File) => {
     const fd = new FormData()
     fd.append('selfie', file)
