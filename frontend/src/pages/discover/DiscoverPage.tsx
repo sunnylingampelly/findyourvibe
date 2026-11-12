@@ -132,6 +132,7 @@ function SkeletonGrid() {
 }
 
 export default function DiscoverPage() {
+  const navigate = useNavigate()
   const { user } = useAuthStore()
   const { toast } = useToast()
   const qc = useQueryClient()
