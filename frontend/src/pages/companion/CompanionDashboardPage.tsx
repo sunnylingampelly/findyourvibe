@@ -5,15 +5,18 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   CalendarDays, User, IndianRupee, CheckCircle2, Sparkles,
   Shield, MessageCircle, TrendingUp, ChevronRight, Info, PlusCircle,
-  BadgeCheck, Clock, Pencil
+  BadgeCheck, Clock, Pencil, Trash2, Package
 } from 'lucide-react'
 import { bookingsApi } from '../../api/bookings'
 import { profileApi } from '../../api/profile'
+import { packagesApi } from '../../api/packages'
 import { useAuthStore } from '../../stores/authStore'
 import { useToast } from '../../components/ui/Toast'
 import AppShell from '../../components/layout/AppShell'
 import PageHeader from '../../components/layout/PageHeader'
-import type { Service } from '../../types'
+import BottomSheet from '../../components/ui/BottomSheet'
+import Button from '../../components/ui/Button'
+import type { Service, ExperiencePackage } from '../../types'
 
 const SERVICE_ICONS: Record<string, string> = {
   'movie-companion': '🎬', 'coffee-buddy': '☕', 'event-companion': '🎭',
@@ -68,6 +71,61 @@ export default function CompanionDashboardPage() {
 
   const [pricing, setPricing] = useState<PricingRow[]>([])
   const [saved, setSaved] = useState(false)
+
+  // Package management
+  const [showPkgSheet, setShowPkgSheet] = useState(false)
+  const [editingPkg, setEditingPkg] = useState<ExperiencePackage | null>(null)
+  const [pkgTitle, setPkgTitle] = useState('')
+  const [pkgDesc, setPkgDesc] = useState('')
+  const [pkgPrice, setPkgPrice] = useState('')
+  const [pkgDuration, setPkgDuration] = useState('')
+  const [pkgLocationType, setPkgLocationType] = useState('')
+
+  const { data: pkgsRes, refetch: refetchPkgs } = useQuery({
+    queryKey: ['my-packages'],
+    queryFn: () => packagesApi.mine(),
+  })
+  const myPackages: ExperiencePackage[] = pkgsRes?.data?.data ?? []
+
+  const openPkgSheet = (pkg?: ExperiencePackage) => {
+    setEditingPkg(pkg ?? null)
+    setPkgTitle(pkg?.title ?? '')
+    setPkgDesc(pkg?.description ?? '')
+    setPkgPrice(pkg ? String(pkg.price) : '')
+    setPkgDuration(pkg?.duration_hours ? String(pkg.duration_hours) : '')
+    setPkgLocationType(pkg?.location_type ?? '')
+    setShowPkgSheet(true)
+  }
+
+  const savePkg = useMutation({
+    mutationFn: () => {
+      const payload = {
+        title: pkgTitle,
+        description: pkgDesc || undefined,
+        price: parseFloat(pkgPrice),
+        duration_hours: pkgDuration ? parseFloat(pkgDuration) : undefined,
+        location_type: pkgLocationType || undefined,
+      }
+      return editingPkg
+        ? packagesApi.update(editingPkg.id, payload)
+        : packagesApi.create(payload)
+    },
+    onSuccess: () => {
+      setShowPkgSheet(false)
+      refetchPkgs()
+      toast(editingPkg ? 'Package updated!' : 'Package created! ✨', 'success')
+    },
+    onError: (e: unknown) => {
+      const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message
+      toast(msg ?? 'Could not save package', 'error')
+    },
+  })
+
+  const deletePkg = useMutation({
+    mutationFn: (id: string) => packagesApi.remove(id),
+    onSuccess: () => { refetchPkgs(); toast('Package deleted', 'success') },
+    onError: () => toast('Could not delete package', 'error'),
+  })
 
   useEffect(() => {
     if (myServices.length > 0) {
@@ -308,6 +366,74 @@ export default function CompanionDashboardPage() {
             )}
           </div>
 
+          {/* Experience packages */}
+          <div>
+            <div className="flex items-center justify-between mb-2 px-1">
+              <p className="text-[11px] font-bold uppercase tracking-widest text-[#A1AAA5]">Experience Packages</p>
+              {myPackages.length < 5 && (
+                <button
+                  onClick={() => openPkgSheet()}
+                  className="flex items-center gap-1 text-xs text-[#236B63] font-semibold"
+                >
+                  <PlusCircle size={13} /> Add
+                </button>
+              )}
+            </div>
+
+            {myPackages.length === 0 ? (
+              <div className="bg-white rounded-2xl border-2 border-dashed border-[#D5E0D8] p-5 text-center">
+                <div className="w-12 h-12 bg-[#E8F0EA] rounded-2xl flex items-center justify-center mx-auto mb-3">
+                  <Package size={20} className="text-[#236B63]" />
+                </div>
+                <p className="font-manrope font-bold text-[#24332F] text-sm mb-1">No packages yet</p>
+                <p className="text-xs text-[#A1AAA5] leading-relaxed max-w-[220px] mx-auto mb-4">
+                  Create curated experience packages to let users book a full experience at a fixed price.
+                </p>
+                <button
+                  onClick={() => openPkgSheet()}
+                  className="inline-flex items-center gap-2 bg-[#236B63] text-white text-sm font-semibold px-5 py-2.5 rounded-2xl active:scale-95 transition-transform"
+                >
+                  <PlusCircle size={15} /> Create Package
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {myPackages.map(pkg => (
+                  <div key={pkg.id} className="bg-white rounded-2xl border border-[#E8EAE6] p-4 flex items-start gap-3">
+                    <div className="w-9 h-9 bg-[#E8F0EA] rounded-xl flex items-center justify-center shrink-0 mt-0.5">
+                      <Package size={16} className="text-[#236B63]" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-[#24332F] text-sm">{pkg.title}</p>
+                      {pkg.description && <p className="text-xs text-[#77817C] mt-0.5 leading-relaxed line-clamp-2">{pkg.description}</p>}
+                      <div className="flex flex-wrap gap-2 mt-1.5">
+                        <span className="text-xs font-bold text-[#236B63]">₹{Number(pkg.price).toLocaleString('en-IN')}</span>
+                        {pkg.duration_hours && <span className="text-xs text-[#A1AAA5]">{pkg.duration_hours}h</span>}
+                        {!pkg.is_active && <span className="text-[10px] font-bold bg-[#FFF5E6] text-[#D9A45B] px-2 py-0.5 rounded-full">Hidden</span>}
+                      </div>
+                    </div>
+                    <div className="flex gap-1 shrink-0">
+                      <button onClick={() => openPkgSheet(pkg)} className="w-8 h-8 rounded-xl bg-[#F4F9F7] flex items-center justify-center">
+                        <Pencil size={13} className="text-[#236B63]" />
+                      </button>
+                      <button onClick={() => deletePkg.mutate(pkg.id)} disabled={deletePkg.isPending} className="w-8 h-8 rounded-xl bg-[#FFF0EE] flex items-center justify-center disabled:opacity-50">
+                        <Trash2 size={13} className="text-[#D76D6D]" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                {myPackages.length < 5 && (
+                  <button
+                    onClick={() => openPkgSheet()}
+                    className="w-full py-3 border border-dashed border-[#C8DDD2] rounded-2xl text-sm text-[#236B63] font-semibold flex items-center justify-center gap-1.5"
+                  >
+                    <PlusCircle size={14} /> Add another package ({myPackages.length}/5)
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
           {/* What you get as a companion */}
           <div>
             <p className="text-[11px] font-bold uppercase tracking-widest text-[#A1AAA5] mb-3 px-1">What You Get as a Companion</p>
@@ -351,6 +477,77 @@ export default function CompanionDashboardPage() {
 
         </div>
       </div>
+      {/* Package create/edit sheet */}
+      <BottomSheet open={showPkgSheet} onClose={() => setShowPkgSheet(false)} title={editingPkg ? 'Edit Package' : 'New Experience Package'}>
+        <div className="space-y-4">
+          <div>
+            <label className="text-xs font-semibold text-[#A1AAA5] uppercase tracking-wide mb-1 block">Package Title *</label>
+            <input
+              value={pkgTitle}
+              onChange={e => setPkgTitle(e.target.value)}
+              placeholder="e.g. City Food Tour, Movie + Dinner"
+              className="w-full border-[1.5px] border-[#E8EAE6] rounded-xl px-3 py-2.5 text-sm text-[#24332F] placeholder:text-[#A1AAA5] focus:outline-none focus:border-[#236B63]"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-[#A1AAA5] uppercase tracking-wide mb-1 block">Description</label>
+            <textarea
+              value={pkgDesc}
+              onChange={e => setPkgDesc(e.target.value)}
+              rows={3}
+              placeholder="What's included? What makes this special?"
+              className="w-full border-[1.5px] border-[#E8EAE6] rounded-2xl px-3 py-2.5 text-sm text-[#24332F] placeholder:text-[#A1AAA5] focus:outline-none focus:border-[#236B63] resize-none"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-semibold text-[#A1AAA5] uppercase tracking-wide mb-1 block">Price (₹) *</label>
+              <input
+                type="number"
+                min="0"
+                value={pkgPrice}
+                onChange={e => setPkgPrice(e.target.value)}
+                placeholder="e.g. 1500"
+                className="w-full border-[1.5px] border-[#E8EAE6] rounded-xl px-3 py-2.5 text-sm text-[#24332F] focus:outline-none focus:border-[#236B63]"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-[#A1AAA5] uppercase tracking-wide mb-1 block">Duration (hours)</label>
+              <input
+                type="number"
+                min="0.5"
+                step="0.5"
+                value={pkgDuration}
+                onChange={e => setPkgDuration(e.target.value)}
+                placeholder="e.g. 3"
+                className="w-full border-[1.5px] border-[#E8EAE6] rounded-xl px-3 py-2.5 text-sm text-[#24332F] focus:outline-none focus:border-[#236B63]"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-[#A1AAA5] uppercase tracking-wide mb-1 block">Location type</label>
+            <select
+              value={pkgLocationType}
+              onChange={e => setPkgLocationType(e.target.value)}
+              className="w-full border-[1.5px] border-[#E8EAE6] rounded-xl px-3 py-2.5 text-sm text-[#24332F] focus:outline-none focus:border-[#236B63] bg-white"
+            >
+              <option value="">Not specified</option>
+              <option value="Indoor">Indoor</option>
+              <option value="Outdoor">Outdoor</option>
+              <option value="Both">Both</option>
+              <option value="Online">Online</option>
+            </select>
+          </div>
+          <Button
+            loading={savePkg.isPending}
+            disabled={!pkgTitle || !pkgPrice}
+            onClick={() => savePkg.mutate()}
+            className="w-full"
+          >
+            {editingPkg ? 'Save Changes' : 'Create Package ✨'}
+          </Button>
+        </div>
+      </BottomSheet>
     </AppShell>
   )
 }

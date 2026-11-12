@@ -7,12 +7,15 @@ export const bookingsApi = {
   createBooking: (data: {
     companion_id: string
     service_id: string | number
+    package_id?: string
     proposed_date: string
     proposed_time: string
     notes?: string
     duration_hours?: string
     location_notes?: string
     agreed_rate?: number
+    plus_one_name?: string
+    plus_one_phone?: string
   }) => api.post('/bookings', data),
 
   updateBooking: (id: string, status: 'accepted' | 'declined' | 'cancelled' | 'completed', companion_response_note?: string) =>

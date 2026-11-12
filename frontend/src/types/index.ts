@@ -66,6 +66,18 @@ export interface City { id: string; name: string; country_id: string }
 
 export type BookingStatus = 'pending' | 'accepted' | 'declined' | 'cancelled' | 'completed'
 
+export interface ExperiencePackage {
+  id: string
+  title: string
+  description?: string
+  price: number
+  currency: string
+  duration_hours?: number
+  location_type?: string
+  is_active: boolean
+  sort_order: number
+}
+
 export interface Booking {
   id: string
   status: BookingStatus
@@ -79,9 +91,12 @@ export interface Booking {
   rating?: number
   review_text?: string
   completed_at?: string
+  plus_one_name?: string
+  plus_one_phone?: string
   requester?: { id: string; display_name: string; profile_photo_url?: string }
   companion?: { id: string; display_name: string; profile_photo_url?: string }
   service?: { id: string; name: string; slug: string }
+  package?: { id: string; title: string; price: number; currency: string; duration_hours?: number }
   created_at: string
 }
 

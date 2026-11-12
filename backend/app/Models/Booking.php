@@ -13,9 +13,10 @@ class Booking extends Model
     use HasFactory, HasUlids, SoftDeletes;
 
     protected $fillable = [
-        'requester_id', 'companion_id', 'service_id',
+        'requester_id', 'companion_id', 'service_id', 'package_id',
         'proposed_date', 'proposed_time', 'status', 'notes',
         'agreed_rate', 'duration_hours', 'location_notes', 'companion_response_note',
+        'plus_one_name', 'plus_one_phone',
         'rating', 'review_text', 'completed_at',
     ];
 
@@ -41,5 +42,10 @@ class Booking extends Model
     public function service(): BelongsTo
     {
         return $this->belongsTo(Service::class);
+    }
+
+    public function package(): BelongsTo
+    {
+        return $this->belongsTo(ExperiencePackage::class, 'package_id');
     }
 }

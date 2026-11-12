@@ -8,13 +8,14 @@ import { connectionsApi } from '../../api/connections'
 import { profileApi } from '../../api/profile'
 import { bookingsApi } from '../../api/bookings'
 import { reviewsApi } from '../../api/reviews'
+import { packagesApi } from '../../api/packages'
 import { useToast } from '../../components/ui/Toast'
 import { Skeleton } from '../../components/ui/Skeleton'
 import Button from '../../components/ui/Button'
 import BottomSheet from '../../components/ui/BottomSheet'
 import { staticMapUrl } from '../../components/ui/PlacesAutocomplete'
 import { getInitials } from '../../lib/utils'
-import type { PublicProfile, Service, Review } from '../../types'
+import type { PublicProfile, Service, Review, ExperiencePackage } from '../../types'
 
 const SERVICE_ICONS: Record<string, string> = {
   'movie-companion': '🎬',
@@ -81,6 +82,9 @@ export default function ProfileDetailPage() {
   const [bookTime, setBookTime] = useState('')
   const [bookDuration, setBookDuration] = useState('2')
   const [bookNotes, setBookNotes] = useState('')
+  const [bookPlusOneName, setBookPlusOneName] = useState('')
+  const [bookPlusOnePhone, setBookPlusOnePhone] = useState('')
+  const [selectedPackage, setSelectedPackage] = useState<ExperiencePackage | null>(null)
 
   const { data, isLoading } = useQuery({
     queryKey: ['profile', id],
@@ -119,6 +123,13 @@ export default function ProfileDetailPage() {
   })
   const reviews: Review[] = reviewsData?.data?.data ?? []
 
+  const { data: packagesData } = useQuery({
+    queryKey: ['companion-packages', id],
+    queryFn: () => packagesApi.forCompanion(id!),
+    enabled: !!id,
+  })
+  const packages: ExperiencePackage[] = packagesData?.data?.data ?? []
+
   // bookLocation derived AFTER profile is available
   const bookLocation = [profile?.city?.name, profile?.country?.name].filter(Boolean).join(', ')
 
@@ -148,12 +159,15 @@ export default function ProfileDetailPage() {
     mutationFn: () => bookingsApi.createBooking({
       companion_id: id!,
       service_id: Number(bookingService!.id),
+      package_id: selectedPackage?.id,
       proposed_date: bookDate,
       proposed_time: bookTime,
-      duration_hours: bookDuration,
+      duration_hours: selectedPackage?.duration_hours ? String(selectedPackage.duration_hours) : bookDuration,
       notes: bookNotes,
       location_notes: bookLocation,
-      agreed_rate: bookingService?.price_per_session ?? undefined,
+      agreed_rate: selectedPackage?.price ?? bookingService?.price_per_session ?? undefined,
+      plus_one_name: bookPlusOneName || undefined,
+      plus_one_phone: bookPlusOnePhone || undefined,
     }),
     onSuccess: async () => {
       setShowBook(false)
@@ -445,6 +459,55 @@ export default function ProfileDetailPage() {
 
           {tab === 'services' && (
             <div className="space-y-3">
+              {/* Experience packages */}
+              {packages.length > 0 && (
+                <div className="mb-2">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-[#A1AAA5] mb-3 flex items-center gap-1.5">
+                    ✨ Experience Packages
+                  </p>
+                  <div className="space-y-3">
+                    {packages.map(pkg => (
+                      <div key={pkg.id} className="bg-gradient-to-br from-[#E8F0EA] to-[#F4F9F7] rounded-2xl p-4 border border-[#C8DDD2]">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-manrope font-semibold text-[#24332F] text-sm">{pkg.title}</p>
+                            {pkg.description && (
+                              <p className="text-[#77817C] text-xs mt-0.5 leading-relaxed">{pkg.description}</p>
+                            )}
+                            <div className="flex flex-wrap gap-2 mt-2">
+                              <span className="text-[#236B63] text-xs font-bold">
+                                {pkg.currency === 'INR' ? '₹' : pkg.currency}{Number(pkg.price).toLocaleString('en-IN')}
+                              </span>
+                              {pkg.duration_hours && (
+                                <span className="text-[#77817C] text-xs flex items-center gap-0.5">
+                                  <Clock size={10} /> {pkg.duration_hours}h
+                                </span>
+                              )}
+                              {pkg.location_type && (
+                                <span className="text-[#77817C] text-xs">{pkg.location_type}</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        {profile.companion_verification_status === 'approved' && myConnection && (
+                          <button
+                            onClick={() => {
+                              setSelectedPackage(pkg)
+                              setBookDuration(pkg.duration_hours ? String(pkg.duration_hours) : '2')
+                              setBookingService(profile.services?.[0] ?? null)
+                              setShowBook(true)
+                            }}
+                            className="mt-3 w-full py-2 rounded-xl bg-[#236B63] text-white text-sm font-semibold flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
+                          >
+                            <CalendarDays size={15} /> Book this package
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {!hasServices ? (
                 <p className="text-[#A1AAA5] text-sm text-center py-8">No services listed yet.</p>
               ) : (
@@ -476,7 +539,7 @@ export default function ProfileDetailPage() {
                       {profile.companion_verification_status === 'approved' && (
                         myConnection ? (
                           <button
-                            onClick={() => { setBookingService(s); setShowBook(true) }}
+                            onClick={() => { setBookingService(s); setSelectedPackage(null); setShowBook(true) }}
                             className="mt-3 w-full py-2 rounded-xl bg-[#E8F0EA] text-[#236B63] text-sm font-semibold flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
                           >
                             <CalendarDays size={15} /> Book this service
@@ -643,7 +706,7 @@ export default function ProfileDetailPage() {
       </BottomSheet>
 
       {/* Booking sheet */}
-      <BottomSheet open={showBook} onClose={() => setShowBook(false)} title={`Book ${bookingService?.name ?? 'Service'}`}>
+      <BottomSheet open={showBook} onClose={() => { setShowBook(false); setSelectedPackage(null); setBookPlusOneName(''); setBookPlusOnePhone('') }} title={selectedPackage ? `Book: ${selectedPackage.title}` : `Book ${bookingService?.name ?? 'Service'}`}>
         <div className="space-y-4">
           {bookingService && (
             <div className="bg-[#E8F0EA] rounded-2xl p-3 flex items-center gap-3">
@@ -720,6 +783,26 @@ export default function ProfileDetailPage() {
               rows={3}
               className="w-full border-[1.5px] border-[#E8EAE6] rounded-2xl px-4 py-3 text-sm text-[#24332F] placeholder:text-[#A1AAA5] focus:outline-none focus:border-[#236B63] resize-none"
             />
+          </div>
+
+          {/* Bring a friend */}
+          <div className="bg-[#FAF9F6] rounded-2xl p-4 border border-[#E8EAE6]">
+            <p className="text-xs font-semibold text-[#A1AAA5] uppercase tracking-wide mb-3">Bringing a friend? (optional)</p>
+            <div className="space-y-2.5">
+              <input
+                value={bookPlusOneName}
+                onChange={e => setBookPlusOneName(e.target.value)}
+                placeholder="Friend's name"
+                className="w-full border-[1.5px] border-[#E8EAE6] rounded-xl px-3 py-2.5 text-sm text-[#24332F] placeholder:text-[#A1AAA5] focus:outline-none focus:border-[#236B63]"
+              />
+              <input
+                value={bookPlusOnePhone}
+                onChange={e => setBookPlusOnePhone(e.target.value)}
+                placeholder="Friend's phone (optional)"
+                type="tel"
+                className="w-full border-[1.5px] border-[#E8EAE6] rounded-xl px-3 py-2.5 text-sm text-[#24332F] placeholder:text-[#A1AAA5] focus:outline-none focus:border-[#236B63]"
+              />
+            </div>
           </div>
 
           <p className="text-xs text-[#A1AAA5] leading-relaxed">

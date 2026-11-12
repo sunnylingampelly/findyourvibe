@@ -4,9 +4,11 @@ import { motion, useMotionValue, useTransform, useAnimation, AnimatePresence, ty
 import { X, Heart, Info, Bookmark, MapPin, Star, MessageCircle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { discoverApi } from '../../api/discover'
+import { useAuthStore } from '../../stores/authStore'
 import { useToast } from '../../components/ui/Toast'
 import AppShell from '../../components/layout/AppShell'
 import { getInitials } from '../../lib/utils'
+import { computeVibeScore, vibeScoreLabel } from '../../lib/vibeScore'
 import type { PublicProfile, Service } from '../../types'
 
 const SERVICE_ICONS: Record<string, string> = {
@@ -39,7 +41,7 @@ interface MatchData {
   icebreakers: string[]
 }
 
-function SwipeCard({ profile, onSwipe, isTop }: { profile: PublicProfile; onSwipe: (dir: 'left' | 'right') => void; isTop: boolean }) {
+function SwipeCard({ profile, onSwipe, isTop, vibeScore }: { profile: PublicProfile; onSwipe: (dir: 'left' | 'right') => void; isTop: boolean; vibeScore?: number }) {
   const navigate = useNavigate()
   const x = useMotionValue(0)
   const rotate = useTransform(x, [-200, 200], [-25, 25])
@@ -90,12 +92,13 @@ function SwipeCard({ profile, onSwipe, isTop }: { profile: PublicProfile; onSwip
           <span className="font-manrope font-extrabold text-4xl text-white">PASS</span>
         </div>
       </motion.div>
-      <CardContent profile={profile} onInfo={() => navigate(`/profiles/${profile.id}`)} />
+      <CardContent profile={profile} onInfo={() => navigate(`/profiles/${profile.id}`)} vibeScore={vibeScore} />
     </motion.div>
   )
 }
 
-function CardContent({ profile, onInfo }: { profile: PublicProfile; onInfo: () => void }) {
+function CardContent({ profile, onInfo, vibeScore }: { profile: PublicProfile; onInfo: () => void; vibeScore?: number }) {
+  const label = vibeScore != null ? vibeScoreLabel(vibeScore) : null
   return (
     <div className="w-full h-full relative bg-[#A8C5B5]">
       {profile.profile_photo_url ? (
@@ -116,12 +119,20 @@ function CardContent({ profile, onInfo }: { profile: PublicProfile; onInfo: () =
         <Info size={18} />
       </button>
 
-      {/* Verified badge */}
-      {profile.companion_verification_status === 'approved' && (
-        <div className="absolute top-4 left-4 bg-[#236B63] text-white text-xs font-bold px-3 py-1 rounded-full">
-          ✓ Verified
-        </div>
-      )}
+      {/* Top-left: verified OR vibe score */}
+      <div className="absolute top-4 left-4 flex flex-col gap-1.5">
+        {profile.companion_verification_status === 'approved' && (
+          <div className="bg-[#236B63] text-white text-xs font-bold px-3 py-1 rounded-full">
+            ✓ Verified
+          </div>
+        )}
+        {label && (
+          <div className="text-white text-xs font-bold px-3 py-1 rounded-full backdrop-blur-sm"
+            style={{ background: label.bg }}>
+            {label.emoji} {vibeScore}% Vibe
+          </div>
+        )}
+      </div>
 
       {/* Bottom info */}
       <div className="absolute bottom-0 left-0 right-0 p-5 pb-6">
@@ -161,10 +172,15 @@ function CardContent({ profile, onInfo }: { profile: PublicProfile; onInfo: () =
 export default function SwipePage() {
   const { toast } = useToast()
   const navigate = useNavigate()
+  const { user } = useAuthStore()
   const [index, setIndex] = useState(0)
   const [matchData, setMatchData] = useState<MatchData | null>(null)
   const [selectedService, setSelectedService] = useState<string | null>(null)
   const swipedRef = useRef(new Set<string>())
+
+  const myInterestIds = (user?.interests ?? []).map(i => String(i.id))
+  const myLanguageIds = (user?.languages ?? []).map(l => String(l.id))
+  const myServiceIds = (user?.services ?? []).map(s => String(s.id))
 
   const { data: servicesData } = useQuery({
     queryKey: ['services'],
@@ -340,6 +356,12 @@ export default function SwipePage() {
                 profile={profile}
                 onSwipe={handleSwipe}
                 isTop={i === arr.length - 1}
+                vibeScore={i === arr.length - 1 ? computeVibeScore(
+                  myInterestIds, myLanguageIds, myServiceIds,
+                  (profile.interests ?? []).map(x => String(x.id)),
+                  (profile.languages ?? []).map(x => String(x.id)),
+                  (profile.services ?? []).map(x => String(x.id)),
+                ) : undefined}
               />
             ))
           )}

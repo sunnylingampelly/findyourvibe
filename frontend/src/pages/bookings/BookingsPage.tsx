@@ -215,6 +215,17 @@ export default function BookingsPage() {
                         )}
                       </div>
 
+                      {booking.package && (
+                        <div className="mt-2 flex items-center gap-1.5 text-xs text-[#236B63] bg-[#E8F0EA] rounded-xl px-3 py-2 font-semibold">
+                          ✨ {booking.package.title}
+                          {booking.package.duration_hours && ` · ${booking.package.duration_hours}h`}
+                        </div>
+                      )}
+                      {booking.plus_one_name && (
+                        <div className="mt-2 flex items-center gap-1.5 text-xs text-[#77817C] bg-[#FAF9F6] rounded-xl px-3 py-2">
+                          👥 Bringing {booking.plus_one_name}{booking.plus_one_phone ? ` (${booking.plus_one_phone})` : ''}
+                        </div>
+                      )}
                       {booking.notes && (
                         <p className="mt-2 text-xs text-[#77817C] italic bg-[#FAF9F6] rounded-xl px-3 py-2 leading-relaxed">
                           "{booking.notes}"

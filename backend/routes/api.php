@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\OnboardingController;
 use App\Http\Controllers\Api\V1\ProfileController;
 use App\Http\Controllers\Api\V1\ReportController;
+use App\Http\Controllers\Api\V1\ExperiencePackageController;
 use App\Http\Controllers\Api\V1\ReviewController;
 use App\Http\Controllers\Api\V1\SafeMeetController;
 use App\Http\Controllers\Api\V1\SavedProfileController;
@@ -131,6 +132,13 @@ Route::prefix('v1')->group(function () {
         // Voice intro
         Route::post('me/voice-intro', [ProfileController::class, 'uploadVoiceIntro']);
         Route::delete('me/voice-intro', [ProfileController::class, 'deleteVoiceIntro']);
+
+        // Experience packages
+        Route::get('companions/{id}/packages', [ExperiencePackageController::class, 'index']);
+        Route::get('me/packages', [ExperiencePackageController::class, 'mine']);
+        Route::post('me/packages', [ExperiencePackageController::class, 'store']);
+        Route::put('me/packages/{id}', [ExperiencePackageController::class, 'update']);
+        Route::delete('me/packages/{id}', [ExperiencePackageController::class, 'destroy']);
 
         // Notifications
         Route::get('notifications', [NotificationController::class, 'index']);
