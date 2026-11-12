@@ -24,6 +24,13 @@ api.interceptors.response.use(
       localStorage.removeItem('fyv-auth')
       window.location.href = '/login'
     }
+    if (error.response?.status === 403) {
+      const msg: string = error.response?.data?.message ?? ''
+      if (msg.toLowerCase().includes('suspended')) {
+        useAuthStore.getState().setSuspended(msg)
+        window.location.href = '/suspended'
+      }
+    }
     return Promise.reject(error)
   }
 )

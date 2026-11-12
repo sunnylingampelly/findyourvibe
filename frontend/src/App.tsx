@@ -11,6 +11,7 @@ import WelcomePage from './pages/auth/WelcomePage'
 import LoginPage from './pages/auth/LoginPage'
 import RegisterPage from './pages/auth/RegisterPage'
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage'
+import AccountSuspendedPage from './pages/auth/AccountSuspendedPage'
 
 // Onboarding
 import OnboardingPage from './pages/onboarding/OnboardingPage'
@@ -55,8 +56,9 @@ const qc = new QueryClient({
 })
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuthStore()
+  const { isAuthenticated, isSuspended } = useAuthStore()
   if (!isAuthenticated()) return <Navigate to="/welcome" replace />
+  if (isSuspended) return <Navigate to="/suspended" replace />
   return <>{children}</>
 }
 
@@ -164,6 +166,9 @@ export default function App() {
             <Route path="/admin/reports" element={<RequireAdmin><ReportsPage /></RequireAdmin>} />
             <Route path="/admin/audit-logs" element={<RequireAdmin><AuditLogsPage /></RequireAdmin>} />
             <Route path="/admin/settings" element={<RequireAdmin><SettingsPage /></RequireAdmin>} />
+
+            {/* Suspended */}
+            <Route path="/suspended" element={<AccountSuspendedPage />} />
 
             {/* Fallback */}
             <Route path="*" element={<RootRedirect />} />
