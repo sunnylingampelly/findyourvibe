@@ -13,6 +13,7 @@ class StoryController extends Controller
     {
         $stories = CompanionStory::with(['user.profile'])
             ->active()
+            ->where('user_id', '!=', $request->user()->id)
             ->whereHas('user.profile', fn($q) => $q->where('companion_verification_status', 'approved'))
             ->orderByDesc('created_at')
             ->limit(20)

@@ -131,6 +131,70 @@ function SkeletonGrid() {
   )
 }
 
+interface Story { id: number; caption?: string; bg_color: string; user: { id: string; display_name: string; profile_photo_url?: string }; expires_at: string }
+
+function StoryViewer({ story, onClose, onViewProfile }: { story: Story; onClose: () => void; onViewProfile: () => void }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[300] flex flex-col"
+      style={{ background: story.bg_color }}
+      onClick={onClose}
+    >
+      {/* Top bar */}
+      <div className="flex items-center justify-between px-4 pt-safe pt-4 pb-3" onClick={e => e.stopPropagation()}>
+        {/* Progress bar */}
+        <div className="flex-1 h-0.5 bg-white/30 rounded-full mr-3">
+          <motion.div
+            className="h-full bg-white rounded-full"
+            initial={{ width: '0%' }}
+            animate={{ width: '100%' }}
+            transition={{ duration: 5, ease: 'linear' }}
+            onAnimationComplete={onClose}
+          />
+        </div>
+        <button onClick={onClose} className="w-9 h-9 flex items-center justify-center rounded-full bg-black/20 text-white shrink-0">
+          <X size={18} />
+        </button>
+      </div>
+
+      {/* User info */}
+      <div className="flex items-center gap-3 px-4 pb-4" onClick={e => e.stopPropagation()}>
+        <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shrink-0">
+          {story.user.profile_photo_url
+            ? <img src={story.user.profile_photo_url} alt={story.user.display_name} className="w-full h-full object-cover" />
+            : <div className="w-full h-full bg-white/30 flex items-center justify-center text-white font-bold">{story.user.display_name[0]}</div>
+          }
+        </div>
+        <p className="text-white font-semibold text-sm drop-shadow">{story.user.display_name}</p>
+      </div>
+
+      {/* Story caption — centre of screen */}
+      <div className="flex-1 flex items-center justify-center px-8">
+        {story.caption ? (
+          <p className="text-white text-2xl font-manrope font-bold text-center leading-snug drop-shadow-lg">
+            {story.caption}
+          </p>
+        ) : (
+          <p className="text-white/60 text-sm text-center">No caption</p>
+        )}
+      </div>
+
+      {/* View profile button */}
+      <div className="px-6 pb-10 pb-safe" onClick={e => e.stopPropagation()}>
+        <button
+          onClick={onViewProfile}
+          className="w-full py-3.5 rounded-2xl bg-white/20 backdrop-blur-sm border border-white/30 text-white font-semibold text-sm active:scale-95 transition-transform"
+        >
+          View Profile →
+        </button>
+      </div>
+    </motion.div>
+  )
+}
+
 export default function DiscoverPage() {
   const navigate = useNavigate()
   const { user } = useAuthStore()
@@ -139,6 +203,7 @@ export default function DiscoverPage() {
   const [selectedService, setSelectedService] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [searchInput, setSearchInput] = useState('')
+  const [viewingStory, setViewingStory] = useState<Story | null>(null)
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const { canInstall, hasNativePrompt, isIOS, triggerNativePrompt } = usePWAInstall()
   const [showInstallSheet, setShowInstallSheet] = useState(false)
@@ -197,7 +262,6 @@ export default function DiscoverPage() {
     staleTime: 2 * 60_000,
     refetchInterval: 5 * 60_000,
   })
-  interface Story { id: number; caption?: string; bg_color: string; user: { id: string; display_name: string; profile_photo_url?: string }; expires_at: string }
   const stories: Story[] = storiesData?.data?.data ?? []
 
   const { data: savedData, refetch: refetchSaved } = useQuery({
@@ -356,7 +420,7 @@ export default function DiscoverPage() {
                       key={story.id}
                       whileTap={{ scale: 0.93 }}
                       className="shrink-0 flex flex-col items-center gap-1.5 cursor-pointer"
-                      onClick={() => navigate(`/profiles/${story.user.id}`)}
+                      onClick={() => setViewingStory(story)}
                     >
                       <div
                         className="w-16 h-16 rounded-2xl flex items-center justify-center relative overflow-hidden border-2 border-transparent"
@@ -444,6 +508,17 @@ export default function DiscoverPage() {
           </div>
         )}
       </div>
+
+      {/* Story viewer overlay */}
+      <AnimatePresence>
+        {viewingStory && (
+          <StoryViewer
+            story={viewingStory}
+            onClose={() => setViewingStory(null)}
+            onViewProfile={() => { setViewingStory(null); navigate(`/profiles/${viewingStory.user.id}`) }}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Install PWA bottom sheet */}
       <AnimatePresence>
