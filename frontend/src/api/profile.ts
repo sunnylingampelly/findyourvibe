@@ -30,7 +30,7 @@ export const profileApi = {
   uploadCompanionDoc: (file: File, type: string) => {
     const fd = new FormData()
     fd.append('document', file)
-    fd.append('type', type)
+    fd.append('document_type', type)
     return api.post('/companion/applications/me/documents', fd)
   },
 
