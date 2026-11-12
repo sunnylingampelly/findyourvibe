@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Services\DiscoveryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class DiscoverController extends Controller
 {
@@ -45,6 +46,31 @@ class DiscoverController extends Controller
         return response()->json([
             'success' => true,
             'data' => new UserResource($user),
+        ]);
+    }
+
+    public function trending(Request $request): JsonResponse
+    {
+        $blockedIds = $request->user()->blockedUsers()->pluck('blocked_id')->toArray();
+        $blockedByIds = \Illuminate\Support\Facades\DB::table('user_blocks')
+            ->where('blocked_id', $request->user()->id)
+            ->pluck('blocker_id')
+            ->toArray();
+        $excludeIds = array_unique(array_merge($blockedIds, $blockedByIds, [$request->user()->id]));
+
+        $profiles = User::with(['profile.country', 'profile.city', 'interests', 'languages', 'services'])
+            ->active()
+            ->whereNotIn('id', $excludeIds)
+            ->whereHas('profile', fn($q) => $q->where('companion_verification_status', 'approved'))
+            ->whereHas('profile', fn($q) => $q->where('avg_rating', '>=', 4)->where('rating_count', '>=', 1))
+            ->orderByRaw('(SELECT avg_rating FROM user_profiles WHERE user_profiles.user_id = users.id) DESC')
+            ->orderByRaw('(SELECT rating_count FROM user_profiles WHERE user_profiles.user_id = users.id) DESC')
+            ->limit(10)
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => UserResource::collection($profiles),
         ]);
     }
 

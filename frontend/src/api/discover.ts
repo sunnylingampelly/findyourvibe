@@ -2,6 +2,10 @@ import api from './client'
 
 export const discoverApi = {
   getProfiles: (params?: Record<string, unknown>) => api.get('/discover', { params }),
+  getTrending: () => api.get('/discover/trending'),
+  getStories: () => api.get('/stories'),
+  postStory: (caption: string, bg_color: string) => api.post('/stories', { caption, bg_color }),
+  deleteMyStory: () => api.delete('/stories/mine'),
   getProfile: (id: string) => api.get(`/profiles/${id}`),
   recordView: (id: string) => api.post(`/profiles/${id}/view`),
   swipe: (swiped_id: string, direction: 'left' | 'right') => api.post('/swipes', { swiped_id, direction }),

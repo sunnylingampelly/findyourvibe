@@ -130,14 +130,18 @@ export default function MessagesPage() {
             ))}
           </div>
         ) : sorted.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
-            <div className="w-16 h-16 bg-[#E8F0EA] rounded-2xl flex items-center justify-center mb-4">
-              <MessageCircle size={28} className="text-[#236B63]" />
+          <div className="flex flex-col items-center justify-center py-20 px-8 text-center">
+            <div className="w-20 h-20 bg-gradient-to-br from-[#E8F0EA] to-[#C8DDD2] rounded-3xl flex items-center justify-center mb-5 shadow-sm">
+              <MessageCircle size={30} className="text-[#236B63]" />
             </div>
-            <h3 className="font-manrope font-bold text-[#24332F] mb-2">No messages yet</h3>
-            <p className="text-sm text-[#A1AAA5] leading-relaxed max-w-[220px]">
-              Accept a connection request to start chatting
-            </p>
+            <h3 className="font-manrope font-bold text-[#24332F] text-lg mb-2">No conversations yet</h3>
+            <p className="text-[#A1AAA5] text-sm leading-relaxed mb-6">Connect with companions to start chatting</p>
+            <button
+              onClick={() => navigate('/discover')}
+              className="px-6 py-3 bg-[#236B63] text-white rounded-2xl text-sm font-semibold font-manrope active:scale-95 transition-transform"
+            >
+              Browse Companions
+            </button>
           </div>
         ) : (
           <div>

@@ -342,11 +342,26 @@ export default function SwipePage() {
         {/* Card stack */}
         <div className="relative flex-1 w-[86%] max-w-sm mx-auto">
           {remaining.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-center px-6">
-              <div className="text-6xl mb-4">🌟</div>
-              <h3 className="font-manrope font-semibold text-[#24332F] mb-2">You've seen everyone!</h3>
-              <p className="text-[#77817C] text-sm mb-6">Check back later for new companions in your area.</p>
-              <button onClick={() => { setIndex(0); refetch() }} className="text-[#236B63] font-semibold text-sm">Refresh</button>
+            <div className="h-full flex flex-col items-center justify-center text-center px-8">
+              <div className="w-20 h-20 bg-gradient-to-br from-[#E8F0EA] to-[#C8DDD2] rounded-3xl flex items-center justify-center mb-5 shadow-sm">
+                <span className="text-3xl">🎉</span>
+              </div>
+              <h3 className="font-manrope font-bold text-[#24332F] text-lg mb-2">You've seen everyone!</h3>
+              <p className="text-[#A1AAA5] text-sm leading-relaxed mb-6">Check back tomorrow for new companions near you</p>
+              <div className="flex flex-col gap-3 w-full max-w-[200px]">
+                <button
+                  onClick={() => navigate('/discover')}
+                  className="px-6 py-3 bg-[#236B63] text-white rounded-2xl text-sm font-semibold font-manrope active:scale-95 transition-transform"
+                >
+                  Browse Discover
+                </button>
+                <button
+                  onClick={() => { setIndex(0); refetch() }}
+                  className="px-6 py-3 bg-white border border-[#E8EAE6] text-[#77817C] rounded-2xl text-sm font-semibold font-manrope active:scale-95 transition-transform"
+                >
+                  Refresh
+                </button>
+              </div>
             </div>
           ) : (
             /* Render back-to-front: last in DOM = visually on top */

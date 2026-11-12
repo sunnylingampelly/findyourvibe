@@ -45,6 +45,8 @@ class ProfileController extends Controller
             'prompt_2_a' => ['sometimes', 'nullable', 'string', 'max:500'],
             'prompt_3_q' => ['sometimes', 'nullable', 'string', 'max:200'],
             'prompt_3_a' => ['sometimes', 'nullable', 'string', 'max:500'],
+            'specialty_tags' => ['sometimes', 'nullable', 'array'],
+            'specialty_tags.*' => ['string', 'max:50'],
         ]);
 
         $user = $request->user();
@@ -56,6 +58,7 @@ class ProfileController extends Controller
         $profileData = array_intersect_key($validated, array_flip([
             'display_name', 'date_of_birth', 'gender', 'bio', 'introduction', 'country_id', 'city_id',
             'prompt_1_q', 'prompt_1_a', 'prompt_2_q', 'prompt_2_a', 'prompt_3_q', 'prompt_3_a',
+            'specialty_tags',
         ]));
 
         if (!empty($profileData)) {

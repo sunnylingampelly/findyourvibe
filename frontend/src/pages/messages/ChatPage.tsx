@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   ArrowLeft, Send, Smile, Info, CalendarDays,
@@ -208,7 +208,9 @@ export default function ChatPage() {
   const { user } = useAuthStore()
   const { toast } = useToast()
   const qc = useQueryClient()
-  const [text, setText] = useState('')
+  const [searchParams] = useSearchParams()
+  const prefill = searchParams.get('prefill') ?? ''
+  const [text, setText] = useState(prefill)
   const [showEmoji, setShowEmoji] = useState(false)
   const [optimistic, setOptimistic] = useState<Message[]>([])
   const [replyTo, setReplyTo] = useState<Message | null>(null)

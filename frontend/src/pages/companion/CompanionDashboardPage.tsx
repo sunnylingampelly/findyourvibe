@@ -10,6 +10,7 @@ import {
 import { bookingsApi } from '../../api/bookings'
 import { profileApi } from '../../api/profile'
 import { packagesApi } from '../../api/packages'
+import { discoverApi } from '../../api/discover'
 import { useAuthStore } from '../../stores/authStore'
 import { useToast } from '../../components/ui/Toast'
 import AppShell from '../../components/layout/AppShell'
@@ -73,6 +74,65 @@ export default function CompanionDashboardPage() {
 
   const [pricing, setPricing] = useState<PricingRow[]>([])
   const [saved, setSaved] = useState(false)
+
+  // Stories
+  const [showStorySheet, setShowStorySheet] = useState(false)
+  const [storyCaption, setStoryCaption] = useState('')
+  const [storyColor, setStoryColor] = useState('#236B63')
+  const STORY_COLORS = ['#236B63', '#1A4A6B', '#4A1A3A', '#3D1A4A', '#4A3D1A', '#1A3D4A']
+
+  const { data: myStoryRes, refetch: refetchStory } = useQuery({
+    queryKey: ['my-story'],
+    queryFn: () => discoverApi.getStories(),
+    select: (d) => {
+      const stories = d?.data?.data ?? []
+      return stories.find((s: { user: { id: string } }) => s.user.id === user?.id) ?? null
+    },
+  })
+
+  const postStory = useMutation({
+    mutationFn: () => discoverApi.postStory(storyCaption, storyColor),
+    onSuccess: () => { setShowStorySheet(false); refetchStory(); toast('Story posted for 24 hours! ✨', 'success') },
+    onError: () => toast('Could not post story', 'error'),
+  })
+
+  const deleteStory = useMutation({
+    mutationFn: () => discoverApi.deleteMyStory(),
+    onSuccess: () => { refetchStory(); toast('Story removed', 'success') },
+    onError: () => toast('Could not remove story', 'error'),
+  })
+
+  // Availability
+  const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+  interface AvailSlot { day_of_week: number; start_time: string; end_time: string; is_active: boolean }
+  const DEFAULT_SLOT = { start_time: '10:00', end_time: '20:00', is_active: false }
+  const [availSlots, setAvailSlots] = useState<AvailSlot[]>(
+    Array.from({ length: 7 }, (_, i) => ({ day_of_week: i, ...DEFAULT_SLOT }))
+  )
+  const [availSaved, setAvailSaved] = useState(false)
+
+  const { data: availRes } = useQuery({
+    queryKey: ['my-availability'],
+    queryFn: () => profileApi.getMyAvailability(),
+  })
+
+  useEffect(() => {
+    const slots: AvailSlot[] = availRes?.data?.data ?? []
+    if (slots.length > 0) {
+      setAvailSlots(Array.from({ length: 7 }, (_, i) => {
+        const existing = slots.find((s: AvailSlot) => s.day_of_week === i)
+        return existing
+          ? { day_of_week: i, start_time: existing.start_time.slice(0, 5), end_time: existing.end_time.slice(0, 5), is_active: existing.is_active }
+          : { day_of_week: i, ...DEFAULT_SLOT }
+      }))
+    }
+  }, [availRes])
+
+  const saveAvailability = useMutation({
+    mutationFn: () => profileApi.updateMyAvailability(availSlots),
+    onSuccess: () => { setAvailSaved(true); setTimeout(() => setAvailSaved(false), 2000) },
+    onError: () => toast('Could not save availability', 'error'),
+  })
 
   // Package management
   const [showPkgSheet, setShowPkgSheet] = useState(false)
@@ -264,6 +324,52 @@ export default function CompanionDashboardPage() {
               </div>
               <p className="font-semibold text-[#24332F] text-xs text-center leading-tight">My Profile</p>
             </button>
+          </div>
+
+          {/* ── Moment of the day ───────────────────────────────── */}
+          <div>
+            <div className="flex items-center justify-between mb-2.5 px-1">
+              <SectionLabel>Moment of the Day</SectionLabel>
+              {myStoryRes && (
+                <button
+                  onClick={() => deleteStory.mutate()}
+                  disabled={deleteStory.isPending}
+                  className="text-xs text-[#D76D6D] font-semibold disabled:opacity-50"
+                >
+                  Remove
+                </button>
+              )}
+            </div>
+
+            {myStoryRes ? (
+              <div
+                className="rounded-2xl p-4 flex items-center gap-3 shadow-sm"
+                style={{ background: (myStoryRes as unknown as { bg_color: string }).bg_color }}
+              >
+                <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+                  <span className="text-xl">✨</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white font-semibold text-sm truncate">
+                    {(myStoryRes as unknown as { caption?: string }).caption ?? 'Your story is live'}
+                  </p>
+                  <p className="text-white/60 text-xs mt-0.5">Visible for 24 hours on Discover</p>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowStorySheet(true)}
+                className="w-full border-2 border-dashed border-[#C8DDD2] rounded-2xl p-5 flex items-center gap-3 active:scale-98 transition-transform"
+              >
+                <div className="w-10 h-10 bg-[#E8F0EA] rounded-xl flex items-center justify-center shrink-0">
+                  <PlusCircle size={18} className="text-[#236B63]" />
+                </div>
+                <div className="text-left">
+                  <p className="font-semibold text-[#24332F] text-sm">Post a moment</p>
+                  <p className="text-xs text-[#A1AAA5]">Share what you're up to — shows on Discover for 24h</p>
+                </div>
+              </button>
+            )}
           </div>
 
           {/* ── Service Pricing ─────────────────────────────────── */}
@@ -466,6 +572,70 @@ export default function CompanionDashboardPage() {
             )}
           </div>
 
+          {/* ── Availability ────────────────────────────────────── */}
+          <div>
+            <SectionLabel>My Availability</SectionLabel>
+            <div className="bg-white rounded-2xl border border-[#E8EAE6] overflow-hidden shadow-sm">
+              <div className="flex items-start gap-2.5 px-4 py-3 bg-[#F4F9F7] border-b border-[#E8EAE6]">
+                <Info size={14} className="text-[#236B63] mt-0.5 shrink-0" />
+                <p className="text-xs text-[#4D7A6E] leading-relaxed">
+                  Set your open hours. Users will see "Available today" on your profile.
+                </p>
+              </div>
+              <div className="divide-y divide-[#F4F5F4]">
+                {availSlots.map((slot, i) => (
+                  <div key={i} className="px-4 py-3 flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setAvailSlots(prev => prev.map((s, ii) => ii === i ? { ...s, is_active: !s.is_active } : s))}
+                      className={`w-11 h-6 rounded-full relative transition-colors shrink-0 ${slot.is_active ? 'bg-[#236B63]' : 'bg-[#E8EAE6]'}`}
+                    >
+                      <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all ${slot.is_active ? 'left-[22px]' : 'left-0.5'}`} />
+                    </button>
+                    <span className={`text-xs font-bold w-7 shrink-0 ${slot.is_active ? 'text-[#24332F]' : 'text-[#A1AAA5]'}`}>
+                      {DAY_NAMES[slot.day_of_week]}
+                    </span>
+                    {slot.is_active && (
+                      <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                        <input
+                          type="time"
+                          value={slot.start_time}
+                          onChange={e => setAvailSlots(prev => prev.map((s, ii) => ii === i ? { ...s, start_time: e.target.value } : s))}
+                          className="flex-1 min-w-0 border border-[#E8EAE6] rounded-lg px-2 py-1 text-xs text-[#24332F] focus:outline-none focus:border-[#236B63]"
+                        />
+                        <span className="text-[10px] text-[#A1AAA5]">–</span>
+                        <input
+                          type="time"
+                          value={slot.end_time}
+                          onChange={e => setAvailSlots(prev => prev.map((s, ii) => ii === i ? { ...s, end_time: e.target.value } : s))}
+                          className="flex-1 min-w-0 border border-[#E8EAE6] rounded-lg px-2 py-1 text-xs text-[#24332F] focus:outline-none focus:border-[#236B63]"
+                        />
+                      </div>
+                    )}
+                    {!slot.is_active && <span className="text-xs text-[#C8CCC9] flex-1">Off</span>}
+                  </div>
+                ))}
+              </div>
+              <div className="px-4 pb-4 pt-3 border-t border-[#F4F5F4]">
+                <button
+                  onClick={() => saveAvailability.mutate()}
+                  disabled={saveAvailability.isPending || availSaved}
+                  className={`w-full py-3.5 rounded-2xl font-semibold text-sm flex items-center justify-center gap-2 transition-all disabled:opacity-70 ${
+                    availSaved ? 'bg-[#4D9274] text-white' : 'bg-[#194E49] text-white active:scale-[0.98]'
+                  }`}
+                >
+                  {availSaved ? (
+                    <><CheckCircle2 size={16} /> Availability saved!</>
+                  ) : saveAvailability.isPending ? (
+                    <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Saving…</>
+                  ) : (
+                    <><CalendarDays size={15} /> Save Availability</>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+
           {/* ── View profile row ─────────────────────────────────── */}
           <button
             onClick={() => navigate('/profile')}
@@ -554,6 +724,48 @@ export default function CompanionDashboardPage() {
             className="w-full"
           >
             {editingPkg ? 'Save Changes' : 'Create Package ✨'}
+          </Button>
+        </div>
+      </BottomSheet>
+      {/* Story posting sheet */}
+      <BottomSheet open={showStorySheet} onClose={() => setShowStorySheet(false)} title="Post a Moment">
+        <div className="space-y-4">
+          <p className="text-xs text-[#77817C] leading-relaxed">
+            Share what you're up to today — this appears on the Discover page for 24 hours.
+          </p>
+          <div>
+            <label className="text-xs font-semibold text-[#A1AAA5] uppercase tracking-wide mb-1 block">Your moment *</label>
+            <textarea
+              value={storyCaption}
+              onChange={e => setStoryCaption(e.target.value)}
+              rows={3}
+              maxLength={200}
+              placeholder="e.g. Exploring the old city today! DM me if you want to join 🌆"
+              className="w-full border-[1.5px] border-[#E8EAE6] rounded-2xl px-4 py-3 text-sm text-[#24332F] placeholder:text-[#A1AAA5] focus:outline-none focus:border-[#236B63] resize-none"
+            />
+            <p className="text-right text-[10px] text-[#A1AAA5] mt-1">{storyCaption.length}/200</p>
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-[#A1AAA5] uppercase tracking-wide mb-2 block">Card colour</label>
+            <div className="flex gap-2">
+              {STORY_COLORS.map(color => (
+                <button
+                  key={color}
+                  type="button"
+                  onClick={() => setStoryColor(color)}
+                  className={`w-9 h-9 rounded-xl transition-all ${storyColor === color ? 'ring-2 ring-offset-2 ring-[#236B63] scale-110' : ''}`}
+                  style={{ background: color }}
+                />
+              ))}
+            </div>
+          </div>
+          <Button
+            size="lg"
+            loading={postStory.isPending}
+            disabled={!storyCaption.trim()}
+            onClick={() => postStory.mutate()}
+          >
+            Post for 24 hours ✨
           </Button>
         </div>
       </BottomSheet>

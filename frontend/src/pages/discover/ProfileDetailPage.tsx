@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, MapPin, Star, Bookmark, Heart, Flag, MessageCircle, Languages, Clock, CheckCircle2, CalendarDays, IndianRupee, UserPlus, Lock, Send, Play, Pause, Mic } from 'lucide-react'
+import { ArrowLeft, MapPin, Star, Bookmark, Heart, Flag, MessageCircle, Languages, Clock, CheckCircle2, CalendarDays, IndianRupee, UserPlus, Lock, Send, Play, Pause, Mic, Share2, Zap } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { discoverApi } from '../../api/discover'
 import { connectionsApi } from '../../api/connections'
@@ -129,6 +129,13 @@ export default function ProfileDetailPage() {
     enabled: !!id,
   })
   const packages: ExperiencePackage[] = packagesData?.data?.data ?? []
+
+  const { data: availData } = useQuery({
+    queryKey: ['profile-availability', id],
+    queryFn: () => profileApi.getProfileAvailability(id!),
+    enabled: !!id,
+  })
+  const availInfo = availData?.data?.data as { is_available_now: boolean; today_slot?: { start_time: string; end_time: string } } | undefined
 
   // bookLocation derived AFTER profile is available
   const bookLocation = [profile?.city?.name, profile?.country?.name].filter(Boolean).join(', ')
@@ -274,6 +281,19 @@ export default function ProfileDetailPage() {
               <Bookmark size={18} fill={isSaved ? 'white' : 'none'} />
             </button>
             <button
+              onClick={() => {
+                const url = window.location.href
+                if (navigator.share) {
+                  navigator.share({ title: profile.display_name, text: `Check out ${profile.display_name} on FindYourVibe`, url }).catch(() => {})
+                } else {
+                  navigator.clipboard.writeText(url).then(() => toast('Link copied! 📋', 'success')).catch(() => {})
+                }
+              }}
+              className="w-10 h-10 bg-black/35 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/10"
+            >
+              <Share2 size={18} />
+            </button>
+            <button
               onClick={() => setShowReport(true)}
               className="w-10 h-10 bg-black/35 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/10"
             >
@@ -312,15 +332,35 @@ export default function ProfileDetailPage() {
                     🆔 ID Verified
                   </span>
                 )}
+                {profile.is_online && (
+                  <span className="flex items-center gap-1 text-[9px] font-bold bg-[#4ADE80]/20 backdrop-blur-sm text-[#4ADE80] px-2 py-0.5 rounded-full border border-[#4ADE80]/30 shrink-0">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#4ADE80]" />
+                    Active now
+                  </span>
+                )}
               </div>
               {profile.city && (
                 <p className="text-white/70 text-sm flex items-center gap-1">
                   <MapPin size={13} />
                   {profile.city.name}{profile.country ? `, ${profile.country.name}` : ''}
+                  {!profile.is_online && profile.last_active_at && (
+                    <span className="text-white/45 text-xs ml-1">· {profile.last_active_at}</span>
+                  )}
                 </p>
               )}
             </div>
           </div>
+
+          {/* Specialty tags */}
+          {profile.specialty_tags && profile.specialty_tags.length > 0 && (
+            <div className="flex gap-1.5 mt-2 flex-wrap">
+              {profile.specialty_tags.slice(0, 4).map(tag => (
+                <span key={tag} className="text-[9px] font-bold bg-white/10 backdrop-blur-sm text-white/80 px-2.5 py-0.5 rounded-full border border-white/10">
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
 
           {/* Interest tags on hero */}
           {profile.interests && profile.interests.length > 0 && (
@@ -402,6 +442,42 @@ export default function ProfileDetailPage() {
                 <div className="bg-white rounded-2xl p-4 border border-[#E8EAE6]">
                   <p className="text-[10px] font-bold uppercase tracking-widest text-[#A1AAA5] mb-2">About</p>
                   <p className="text-[#24332F] leading-relaxed text-[0.925rem]">{profile.bio}</p>
+                </div>
+              )}
+
+              {/* Availability banner */}
+              {availInfo?.today_slot && (
+                <div className={`rounded-2xl p-4 flex items-center gap-3 ${availInfo.is_available_now ? 'bg-[#E8F8F0] border border-[#A3DFBF]' : 'bg-[#F4F9F7] border border-[#C8DDD2]'}`}>
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${availInfo.is_available_now ? 'bg-[#4ADE80]/20' : 'bg-[#E8F0EA]'}`}>
+                    <CalendarDays size={18} className={availInfo.is_available_now ? 'text-[#16A34A]' : 'text-[#236B63]'} />
+                  </div>
+                  <div>
+                    <p className={`text-sm font-semibold font-manrope ${availInfo.is_available_now ? 'text-[#16A34A]' : 'text-[#24332F]'}`}>
+                      {availInfo.is_available_now ? 'Available now' : 'Available today'}
+                    </p>
+                    <p className="text-xs text-[#77817C]">
+                      {availInfo.today_slot.start_time.slice(0, 5)} – {availInfo.today_slot.end_time.slice(0, 5)}
+                    </p>
+                  </div>
+                  {availInfo.is_available_now && (
+                    <span className="ml-auto flex items-center gap-1 text-[10px] font-bold bg-[#4ADE80]/15 text-[#16A34A] px-2.5 py-1 rounded-full">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#4ADE80] animate-pulse" />
+                      LIVE
+                    </span>
+                  )}
+                </div>
+              )}
+
+              {profile.specialty_tags && profile.specialty_tags.length > 0 && (
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-[#A1AAA5] mb-3">What I'm great at</p>
+                  <div className="flex flex-wrap gap-2">
+                    {profile.specialty_tags.map(tag => (
+                      <span key={tag} className="px-3.5 py-1.5 bg-[#1A2822] text-white rounded-full text-xs font-semibold">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               )}
 
@@ -615,21 +691,44 @@ export default function ProfileDetailPage() {
             <Heart size={20} fill={isSaved ? '#236B63' : 'none'} />
           </button>
           {connState === 'connected' && (
-            <Button
-              className="flex-1 !h-12"
-              onClick={async () => {
-                try {
-                  const convsRes = await connectionsApi.getConversations()
-                  const convs: Array<{ id: string; other_user?: { id: string } }> = convsRes.data?.data ?? []
-                  const conv = convs.find(c => c.other_user?.id === id)
-                  if (conv) { navigate(`/messages/${conv.id}`); return }
-                  const newConv = await connectionsApi.createConversation(myConnection!.id)
-                  navigate(`/messages/${newConv.data?.data?.id}`)
-                } catch { navigate('/messages') }
-              }}
-            >
-              <MessageCircle size={18} /> Message {profile.display_name.split(' ')[0]}
-            </Button>
+            <>
+              <Button
+                className="flex-1 !h-12"
+                onClick={async () => {
+                  try {
+                    const convsRes = await connectionsApi.getConversations()
+                    const convs: Array<{ id: string; other_user?: { id: string } }> = convsRes.data?.data ?? []
+                    const conv = convs.find(c => c.other_user?.id === id)
+                    if (conv) { navigate(`/messages/${conv.id}`); return }
+                    const newConv = await connectionsApi.createConversation(myConnection!.id)
+                    navigate(`/messages/${newConv.data?.data?.id}`)
+                  } catch { navigate('/messages') }
+                }}
+              >
+                <MessageCircle size={18} /> Message {profile.display_name.split(' ')[0]}
+              </Button>
+              {profile.is_online && (
+                <button
+                  onClick={async () => {
+                    try {
+                      const convsRes = await connectionsApi.getConversations()
+                      const convs: Array<{ id: string; other_user?: { id: string } }> = convsRes.data?.data ?? []
+                      const conv = convs.find(c => c.other_user?.id === id)
+                      let convId = conv?.id
+                      if (!convId && myConnection) {
+                        const newConv = await connectionsApi.createConversation(myConnection.id)
+                        convId = newConv.data?.data?.id
+                      }
+                      if (convId) navigate(`/messages/${convId}?prefill=Hey+${encodeURIComponent(profile.display_name.split(' ')[0])}%2C+are+you+available+now%3F`)
+                    } catch { navigate('/messages') }
+                  }}
+                  className="w-12 h-12 rounded-2xl border border-[#4ADE80]/40 bg-[#4ADE80]/10 flex items-center justify-center text-[#4ADE80] active:scale-95 transition-transform shrink-0"
+                  title="Quick availability message"
+                >
+                  <Zap size={18} />
+                </button>
+              )}
+            </>
           )}
           {connState === 'pending' && (
             <div className="flex-1 h-12 rounded-2xl bg-[#FFF8EE] border border-[#F5D99A] flex items-center justify-center gap-2">

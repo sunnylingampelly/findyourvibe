@@ -58,6 +58,7 @@ export default function EditProfilePage() {
 
   const [selectedServiceIds, setSelectedServiceIds] = useState<Set<string>>(new Set())
   const [selfieFile, setSelfieFile] = useState<File | null>(null)
+  const [specialtyTags, setSpecialtyTags] = useState<string[]>([])
 
   // Voice intro
   const [isRecording, setIsRecording] = useState(false)
@@ -94,6 +95,7 @@ export default function EditProfilePage() {
         { q: user.profile.prompt_2_q ?? '', a: user.profile.prompt_2_a ?? '' },
         { q: user.profile.prompt_3_q ?? '', a: user.profile.prompt_3_a ?? '' },
       ])
+      setSpecialtyTags((user.profile as unknown as { specialty_tags?: string[] }).specialty_tags ?? [])
     }
   }, [user, reset])
 
@@ -131,6 +133,7 @@ export default function EditProfilePage() {
       profileApi.updateProfile({
         ...(formData as unknown as Record<string, unknown>),
         service_ids: Array.from(selectedServiceIds),
+        specialty_tags: specialtyTags,
         prompt_1_q: prompts[0].q || null,
         prompt_1_a: prompts[0].a || null,
         prompt_2_q: prompts[1].q || null,
@@ -518,6 +521,42 @@ export default function EditProfilePage() {
                   </div>
                 )}
               </>
+            )}
+          </div>
+
+          {/* Specialty tags */}
+          <div className="rounded-2xl border-[1.5px] border-[#E8EAE6] bg-white p-4 space-y-3">
+            <div>
+              <label className="block text-sm font-semibold text-[#24332F] font-manrope mb-0.5">Specialty Tags</label>
+              <p className="text-xs text-[#A1AAA5] leading-relaxed">Pick tags that describe your vibe — these show on your profile card.</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {[
+                'Great for first-timers', 'Night out expert', 'Foodie guide', 'Culture lover',
+                'Adventure seeker', 'City explorer', 'Chill & low-key', 'Great conversationalist',
+                'Pet-friendly', 'Kid-friendly', 'Multilingual', 'LGBTQ+ friendly',
+              ].map(tag => {
+                const selected = specialtyTags.includes(tag)
+                return (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => setSpecialtyTags(prev =>
+                      selected ? prev.filter(t => t !== tag) : prev.length < 5 ? [...prev, tag] : prev
+                    )}
+                    className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all active:scale-95 ${
+                      selected
+                        ? 'bg-[#236B63] border-[#236B63] text-white'
+                        : 'bg-white border-[#E8EAE6] text-[#77817C]'
+                    }`}
+                  >
+                    {tag}
+                  </button>
+                )
+              })}
+            </div>
+            {specialtyTags.length >= 5 && (
+              <p className="text-xs text-[#A1AAA5]">Maximum 5 tags selected</p>
             )}
           </div>
 

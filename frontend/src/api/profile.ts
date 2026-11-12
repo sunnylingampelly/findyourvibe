@@ -48,4 +48,10 @@ export const profileApi = {
   deleteVoiceIntro: () => api.delete('/me/voice-intro'),
   updatePrompts: (prompts: Record<string, string | null>) =>
     api.put('/me/profile', prompts),
+
+  // Availability
+  getMyAvailability: () => api.get('/me/availability'),
+  updateMyAvailability: (slots: Array<{ day_of_week: number; start_time: string; end_time: string; is_active: boolean }>) =>
+    api.put('/me/availability', { slots }),
+  getProfileAvailability: (userId: string) => api.get(`/profiles/${userId}/availability`),
 }

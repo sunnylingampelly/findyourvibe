@@ -16,6 +16,8 @@ use App\Http\Controllers\Api\V1\OnboardingController;
 use App\Http\Controllers\Api\V1\ProfileController;
 use App\Http\Controllers\Api\V1\ReportController;
 use App\Http\Controllers\Api\V1\ExperiencePackageController;
+use App\Http\Controllers\Api\V1\AvailabilityController;
+use App\Http\Controllers\Api\V1\StoryController;
 use App\Http\Controllers\Api\V1\GroupVibeController;
 use App\Http\Controllers\Api\V1\ReviewController;
 use App\Http\Controllers\Api\V1\SafeMeetController;
@@ -74,8 +76,19 @@ Route::prefix('v1')->group(function () {
 
         // Discovery
         Route::get('discover', [DiscoverController::class, 'index']);
+        Route::get('discover/trending', [DiscoverController::class, 'trending']);
         Route::get('profiles/{id}', [DiscoverController::class, 'show']);
+        Route::get('profiles/{id}/availability', [AvailabilityController::class, 'forProfile']);
         Route::post('profiles/{id}/view', [DiscoverController::class, 'recordView']);
+
+        // My availability (companion)
+        Route::get('me/availability', [AvailabilityController::class, 'mine']);
+        Route::put('me/availability', [AvailabilityController::class, 'update']);
+
+        // Stories
+        Route::get('stories', [StoryController::class, 'index']);
+        Route::post('stories', [StoryController::class, 'store']);
+        Route::delete('stories/mine', [StoryController::class, 'destroy']);
 
         // Swipes
         Route::post('swipes', [SwipeController::class, 'store']);

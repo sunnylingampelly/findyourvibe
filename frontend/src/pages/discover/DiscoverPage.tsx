@@ -56,13 +56,18 @@ function GridCard({ profile }: { profile: PublicProfile }) {
         </div>
       )}
 
-      {/* Rating */}
-      {profile.avg_rating && profile.avg_rating > 0 && (
-        <div className="absolute top-2.5 right-2.5 flex items-center gap-0.5 bg-black/40 backdrop-blur-sm px-2 py-0.5 rounded-full">
-          <Star size={9} className="text-[#D9A45B] fill-[#D9A45B]" />
-          <span className="text-white text-[10px] font-bold">{Number(profile.avg_rating).toFixed(1)}</span>
-        </div>
-      )}
+      {/* Online dot or Rating */}
+      <div className="absolute top-2.5 right-2.5 flex items-center gap-1">
+        {profile.is_online && (
+          <span className="w-2 h-2 rounded-full bg-[#4ADE80] border border-white shadow-sm" />
+        )}
+        {profile.avg_rating && profile.avg_rating > 0 && (
+          <div className="flex items-center gap-0.5 bg-black/40 backdrop-blur-sm px-2 py-0.5 rounded-full">
+            <Star size={9} className="text-[#D9A45B] fill-[#D9A45B]" />
+            <span className="text-white text-[10px] font-bold">{Number(profile.avg_rating).toFixed(1)}</span>
+          </div>
+        )}
+      </div>
 
       {/* Name + location */}
       <div className="absolute bottom-0 left-0 right-0 p-3">
@@ -72,6 +77,11 @@ function GridCard({ profile }: { profile: PublicProfile }) {
         {profile.city && (
           <p className="flex items-center gap-0.5 text-white/65 text-[10px] mt-0.5">
             <MapPin size={8} />{profile.city.name}
+          </p>
+        )}
+        {profile.specialty_tags && profile.specialty_tags.length > 0 && (
+          <p className="text-white/55 text-[9px] mt-0.5 truncate">
+            {profile.specialty_tags.slice(0, 2).join(' · ')}
           </p>
         )}
       </div>
@@ -172,6 +182,22 @@ export default function DiscoverPage() {
       search: search || undefined,
     }),
   })
+
+  const { data: trendingData } = useQuery({
+    queryKey: ['discover-trending'],
+    queryFn: () => discoverApi.getTrending(),
+    staleTime: 5 * 60_000,
+  })
+  const trendingProfiles: PublicProfile[] = (trendingData?.data?.data ?? []).map(normalizeProfile) as PublicProfile[]
+
+  const { data: storiesData } = useQuery({
+    queryKey: ['stories'],
+    queryFn: () => discoverApi.getStories(),
+    staleTime: 2 * 60_000,
+    refetchInterval: 5 * 60_000,
+  })
+  interface Story { id: number; caption?: string; bg_color: string; user: { id: string; display_name: string; profile_photo_url?: string }; expires_at: string }
+  const stories: Story[] = storiesData?.data?.data ?? []
 
   const { data: savedData, refetch: refetchSaved } = useQuery({
     queryKey: ['saved-profiles'],
@@ -320,6 +346,58 @@ export default function DiscoverPage() {
           </motion.div>
         ) : (
           <div className="pb-6">
+            {/* Stories strip */}
+            {!search && !selectedService && stories.length > 0 && (
+              <div className="mb-4">
+                <div className="flex gap-3 overflow-x-auto px-4 pb-2 scrollbar-hide">
+                  {stories.map(story => (
+                    <motion.div
+                      key={story.id}
+                      whileTap={{ scale: 0.93 }}
+                      className="shrink-0 flex flex-col items-center gap-1.5 cursor-pointer"
+                      onClick={() => navigate(`/profiles/${story.user.id}`)}
+                    >
+                      <div
+                        className="w-16 h-16 rounded-2xl flex items-center justify-center relative overflow-hidden border-2 border-transparent"
+                        style={{ background: story.bg_color }}
+                      >
+                        {story.user.profile_photo_url ? (
+                          <img src={story.user.profile_photo_url} alt={story.user.display_name} className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-white font-bold text-lg">{story.user.display_name[0]}</span>
+                        )}
+                        {/* Story ring */}
+                        <div className="absolute inset-0 rounded-[14px] border-2 border-[#236B63] pointer-events-none" />
+                      </div>
+                      <p className="text-[9px] font-semibold text-[#24332F] text-center w-16 truncate">
+                        {story.user.display_name.split(' ')[0]}
+                      </p>
+                      {story.caption && (
+                        <p className="text-[8px] text-[#A1AAA5] text-center w-16 truncate">{story.caption}</p>
+                      )}
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Trending companions */}
+            {!search && !selectedService && trendingProfiles.length > 0 && (
+              <div className="mb-5">
+                <div className="flex items-center justify-between px-4 mb-3">
+                  <div>
+                    <h2 className="font-manrope font-extrabold text-[#1A2822] text-base tracking-tight">🔥 Trending</h2>
+                    <p className="text-xs text-[#A1AAA5]">Most popular this week</p>
+                  </div>
+                </div>
+                <div className="flex gap-3 overflow-x-auto px-4 pb-1 scrollbar-hide">
+                  {trendingProfiles.map(p => (
+                    <FeaturedCard key={p.id} profile={p} />
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Top rated horizontal scroll */}
             {showFeatured && (
               <div className="mb-5">

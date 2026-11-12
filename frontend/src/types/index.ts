@@ -116,6 +116,9 @@ export interface PublicProfile {
   avg_rating?: number
   rating_count?: number
   identity_verified?: boolean
+  is_online?: boolean
+  last_active_at?: string
+  specialty_tags?: string[]
   prompt_1_q?: string
   prompt_1_a?: string
   prompt_2_q?: string

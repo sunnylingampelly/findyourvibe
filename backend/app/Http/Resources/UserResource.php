@@ -33,6 +33,7 @@ class UserResource extends JsonResource
             'prompt_3_q' => $profile?->prompt_3_q,
             'prompt_3_a' => $profile?->prompt_3_a,
             'voice_intro_url' => $profile?->voice_intro_url,
+            'specialty_tags' => $profile?->specialty_tags ?? [],
             'country' => $profile?->country ? ['id' => $profile->country->id, 'name' => $profile->country->name, 'code' => $profile->country->code, 'phone_code' => $profile->country->phone_code ?? ''] : null,
             'city' => $profile?->city ? ['id' => $profile->city->id, 'name' => $profile->city->name, 'country_id' => $profile->city->country_id] : null,
         ];
@@ -62,6 +63,7 @@ class UserResource extends JsonResource
             'languages' => LanguageResource::collection($this->whenLoaded('languages')),
             'services' => ServiceResource::collection($this->whenLoaded('services')),
             'last_active_at' => $this->last_active_at?->diffForHumans(),
+            'is_online' => $this->last_active_at && $this->last_active_at->diffInMinutes(now()) < 5,
             'account_status' => $this->account_status,
         ];
     }

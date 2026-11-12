@@ -166,10 +166,16 @@ export default function OnboardingPage() {
     <div className="app-container min-h-dvh bg-[#FAF9F6] flex flex-col">
       {/* Progress */}
       <div className="px-6 pt-safe pt-6 pb-4">
-        <div className="flex gap-1.5 mb-4">
-          {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
-            <div key={i} className={`flex-1 h-1 rounded-full transition-all duration-300 ${i < step ? 'bg-[#236B63]' : i === step - 1 ? 'bg-[#A8C5B5]' : 'bg-[#E8EAE6]'}`} />
-          ))}
+        <div className="mb-3">
+          <div className="h-1.5 bg-[#E8EAE6] rounded-full overflow-hidden">
+            <motion.div
+              className="h-full rounded-full"
+              style={{ background: 'linear-gradient(90deg, #194E49 0%, #4D9274 100%)' }}
+              initial={false}
+              animate={{ width: `${(step / TOTAL_STEPS) * 100}%` }}
+              transition={{ duration: 0.35, ease: 'easeOut' }}
+            />
+          </div>
         </div>
         <div className="flex items-center justify-between">
           <span className="text-xs text-[#A1AAA5] font-medium">Step {step} of {TOTAL_STEPS}</span>
