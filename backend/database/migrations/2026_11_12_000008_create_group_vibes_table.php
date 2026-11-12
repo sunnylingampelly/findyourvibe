@@ -10,7 +10,8 @@ return new class extends Migration
     {
         Schema::create('group_vibes', function (Blueprint $table) {
             $table->ulid('id')->primary();
-            $table->foreignId('host_id')->constrained('users')->cascadeOnDelete();
+            $table->string('host_id');
+            $table->foreign('host_id')->references('id')->on('users')->cascadeOnDelete();
             $table->string('title', 100);
             $table->text('description')->nullable();
             $table->string('activity', 100)->nullable();

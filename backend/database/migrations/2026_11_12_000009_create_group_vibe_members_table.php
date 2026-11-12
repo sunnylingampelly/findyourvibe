@@ -11,7 +11,8 @@ return new class extends Migration
         Schema::create('group_vibe_members', function (Blueprint $table) {
             $table->id();
             $table->ulid('group_vibe_id');
-            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->string('user_id');
+            $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();
             $table->enum('status', ['pending', 'accepted'])->default('accepted');
             $table->timestamp('joined_at')->useCurrent();
             $table->timestamps();
