@@ -1,18 +1,19 @@
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
-import { Heart, MapPin, ShieldCheck, Users, PlusCircle, CalendarDays, LogOut } from 'lucide-react'
+import { Heart, MapPin, ShieldCheck, Users, PlusCircle, CalendarDays, LogOut, Check, X, MessageCircle, UserCheck, Loader2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState } from 'react'
 import { vibesApi } from '../../api/vibes'
 import { groupVibesApi } from '../../api/groupVibes'
+import { connectionsApi } from '../../api/connections'
 import { discoverApi } from '../../api/discover'
 import { useToast } from '../../components/ui/Toast'
 import AppShell from '../../components/layout/AppShell'
 import Avatar from '../../components/ui/Avatar'
 import BottomSheet from '../../components/ui/BottomSheet'
 import Button from '../../components/ui/Button'
-import { getInitials } from '../../lib/utils'
-import type { GroupVibe } from '../../types'
+import { getInitials, timeAgo } from '../../lib/utils'
+import type { GroupVibe, ConnectionRequest, Connection } from '../../types'
 
 interface ViberProfile {
   swipe_id: string
@@ -32,7 +33,7 @@ interface MatchData {
   conversationId: string
 }
 
-type Tab = 'vibed' | 'groups'
+type Tab = 'vibed' | 'connect' | 'groups'
 
 // ── Create Group Vibe Sheet ───────────────────────────────────────────────────
 function CreateGroupSheet({ open, onClose, onCreated }: { open: boolean; onClose: () => void; onCreated: () => void }) {
@@ -266,6 +267,47 @@ export default function VibeInboxPage() {
   })
   const vibers: ViberProfile[] = vibedData?.data?.data?.data ?? []
 
+  // Connection requests & connections
+  const { data: receivedData, refetch: refetchReceived } = useQuery({
+    queryKey: ['connections-received'],
+    queryFn: () => connectionsApi.getReceived(),
+    enabled: tab === 'connect',
+  })
+  const { data: connectionsData, refetch: refetchConnections } = useQuery({
+    queryKey: ['connections'],
+    queryFn: () => connectionsApi.getConnections(),
+    enabled: tab === 'connect',
+  })
+
+  const received: ConnectionRequest[] = receivedData?.data?.data ?? []
+  const connections: Connection[] = connectionsData?.data?.data ?? []
+  const [openingConv, setOpeningConv] = useState<string | null>(null)
+  const [connectTab, setConnectTab] = useState<'requests' | 'connected'>('requests')
+
+  const acceptMutation = useMutation({
+    mutationFn: (id: string) => connectionsApi.accept(id),
+    onSuccess: () => { toast('Connection accepted! 🤝', 'success'); refetchReceived(); refetchConnections() },
+    onError: () => toast('Could not accept', 'error'),
+  })
+  const declineMutation = useMutation({
+    mutationFn: (id: string) => connectionsApi.decline(id),
+    onSuccess: () => { toast('Request declined', 'info'); refetchReceived() },
+    onError: () => toast('Could not decline', 'error'),
+  })
+
+  const openChat = async (conn: Connection) => {
+    setOpeningConv(conn.id)
+    try {
+      if (conn.conversation_id) {
+        navigate(`/messages/${conn.conversation_id}`)
+      } else {
+        const res = await connectionsApi.createConversation(conn.id)
+        navigate(`/messages/${res.data.data.id}`)
+      }
+    } catch { toast('Could not open chat', 'error') }
+    finally { setOpeningConv(null) }
+  }
+
   // Group Vibes — browse all
   const { data: allGroupsData, isLoading: allGroupsLoading, refetch: refetchAll } = useQuery({
     queryKey: ['group-vibes-all'],
@@ -374,17 +416,20 @@ export default function VibeInboxPage() {
           </div>
           {/* Tabs */}
           <div className="flex">
-            {([['vibed', 'Vibed You'], ['groups', 'Group Vibes']] as [Tab, string][]).map(([key, label]) => (
+            {([['vibed', 'Vibed You'], ['connect', 'Connections'], ['groups', 'Group Vibes']] as [Tab, string][]).map(([key, label]) => (
               <button
                 key={key}
                 onClick={() => setTab(key)}
-                className={`flex-1 py-2.5 text-sm font-semibold border-b-2 transition-all ${
+                className={`flex-1 py-2.5 text-xs font-semibold border-b-2 transition-all ${
                   tab === key
                     ? 'text-[#236B63] border-[#236B63]'
                     : 'text-[#A1AAA5] border-transparent'
                 }`}
               >
                 {label}
+                {key === 'connect' && received.length > 0 && (
+                  <span className="ml-1 inline-flex items-center justify-center min-w-[16px] h-[16px] bg-[#D76D6D] text-white text-[9px] font-bold rounded-full px-1">{received.length > 9 ? '9+' : received.length}</span>
+                )}
               </button>
             ))}
           </div>
@@ -450,6 +495,106 @@ export default function VibeInboxPage() {
                 </div>
               )}
             </>
+          )}
+
+          {/* ── CONNECTIONS ── */}
+          {tab === 'connect' && (
+            <div className="p-4 space-y-4">
+              {/* Sub-tabs */}
+              <div className="flex gap-2">
+                {(['requests', 'connected'] as const).map(f => (
+                  <button
+                    key={f}
+                    onClick={() => setConnectTab(f)}
+                    className={`px-4 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                      connectTab === f
+                        ? 'bg-[#236B63] text-white border-[#236B63]'
+                        : 'bg-white text-[#77817C] border-[#E8EAE6]'
+                    }`}
+                  >
+                    {f === 'requests' ? `Requests${received.length > 0 ? ` (${received.length})` : ''}` : `Connected${connections.length > 0 ? ` (${connections.length})` : ''}`}
+                  </button>
+                ))}
+              </div>
+
+              {/* Requests sub-tab */}
+              {connectTab === 'requests' && (
+                received.length === 0 ? (
+                  <div className="flex flex-col items-center text-center py-16">
+                    <div className="text-5xl mb-3">💌</div>
+                    <h3 className="font-manrope font-semibold text-[#24332F] mb-1">No pending requests</h3>
+                    <p className="text-sm text-[#A1AAA5]">When someone wants to connect, they'll appear here.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {received.map((req, i) => (
+                      <motion.div key={req.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
+                        className="bg-white rounded-2xl border border-[#E8EAE6] p-4 shadow-sm"
+                      >
+                        <div className="flex items-center gap-3 mb-3">
+                          <button onClick={() => navigate(`/profiles/${req.sender.id}`)} className="shrink-0">
+                            <Avatar src={req.sender.profile_photo_url} name={req.sender.display_name} size="lg" />
+                          </button>
+                          <button onClick={() => navigate(`/profiles/${req.sender.id}`)} className="flex-1 min-w-0 text-left">
+                            <p className="font-manrope font-semibold text-[#24332F] text-sm">{req.sender.display_name}</p>
+                            <p className="text-xs text-[#A1AAA5]">{req.sender.city?.name ? `${req.sender.city.name} · ` : ''}{timeAgo(req.created_at)}</p>
+                            {req.message && <p className="text-xs text-[#77817C] mt-1 line-clamp-2 italic">"{req.message}"</p>}
+                          </button>
+                        </div>
+                        <div className="flex gap-2">
+                          <button onClick={() => declineMutation.mutate(req.id)} disabled={declineMutation.isPending}
+                            className="flex-1 py-2.5 rounded-2xl border border-[#E8EAE6] text-sm text-[#77817C] font-medium flex items-center justify-center gap-1.5 disabled:opacity-50">
+                            <X size={14} /> Decline
+                          </button>
+                          <button onClick={() => acceptMutation.mutate(req.id)} disabled={acceptMutation.isPending}
+                            className="flex-1 py-2.5 rounded-2xl bg-[#236B63] text-white text-sm font-semibold flex items-center justify-center gap-1.5 disabled:opacity-70">
+                            <Check size={14} /> Accept
+                          </button>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                )
+              )}
+
+              {/* Connected sub-tab */}
+              {connectTab === 'connected' && (
+                connections.length === 0 ? (
+                  <div className="flex flex-col items-center text-center py-16">
+                    <div className="text-5xl mb-3">🤝</div>
+                    <h3 className="font-manrope font-semibold text-[#24332F] mb-1">No connections yet</h3>
+                    <p className="text-sm text-[#A1AAA5]">Accept a request or send one to start connecting.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {connections.map((conn, i) => {
+                      const other = conn.other_user
+                      return (
+                        <motion.div key={conn.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
+                          className="bg-white rounded-2xl border border-[#E8EAE6] p-4 flex items-center gap-3 shadow-sm"
+                        >
+                          <button onClick={() => navigate(`/profiles/${other.id}`)} className="shrink-0">
+                            <Avatar src={other?.profile_photo_url} name={other?.display_name ?? 'User'} size="md" />
+                          </button>
+                          <button onClick={() => navigate(`/profiles/${other.id}`)} className="flex-1 min-w-0 text-left">
+                            <p className="font-manrope font-semibold text-[#24332F] text-sm">{other?.display_name}</p>
+                            <p className="text-xs text-[#4D9274] flex items-center gap-1 mt-0.5"><UserCheck size={11} /> Connected</p>
+                          </button>
+                          <button
+                            onClick={() => openChat(conn)}
+                            disabled={openingConv === conn.id}
+                            className="flex items-center gap-1.5 text-xs bg-[#236B63] text-white font-semibold px-3 py-2 rounded-xl disabled:opacity-60 shrink-0"
+                          >
+                            {openingConv === conn.id ? <Loader2 size={12} className="animate-spin" /> : <MessageCircle size={12} />}
+                            Message
+                          </button>
+                        </motion.div>
+                      )
+                    })}
+                  </div>
+                )
+              )}
+            </div>
           )}
 
           {/* ── GROUP VIBES ── */}

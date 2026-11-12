@@ -31,9 +31,18 @@ export default function BottomNav() {
     staleTime: 30000,
   })
 
+  const { data: connReqData } = useQuery({
+    queryKey: ['connections-received'],
+    queryFn: () => connectionsApi.getReceived(),
+    refetchInterval: 60000,
+    staleTime: 30000,
+  })
+
   const conversations: Conversation[] = convsData?.data?.data ?? []
   const totalUnread = conversations.reduce((n, c) => n + (c.unread_count ?? 0), 0)
   const vibeCount: number = vibesData?.data?.data?.total ?? 0
+  const pendingRequests: number = (connReqData?.data?.data as unknown[])?.length ?? 0
+  const vibesBadge = vibeCount + pendingRequests
 
   return (
     <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] z-[100] bg-white border-t border-[#E8EAE6]">
@@ -43,7 +52,7 @@ export default function BottomNav() {
             const isMessages = to === '/messages'
             const isVibes = to === '/vibes'
             const showMsgBadge = isMessages && totalUnread > 0
-            const showVibeBadge = isVibes && vibeCount > 0
+            const showVibeBadge = isVibes && vibesBadge > 0
 
             return (
               <NavLink
@@ -62,7 +71,7 @@ export default function BottomNav() {
                   />
                   {(showMsgBadge || showVibeBadge) && (
                     <span className="absolute -top-1 -right-1 min-w-[14px] h-[14px] bg-[#D76D6D] text-white text-[8px] font-bold rounded-full flex items-center justify-center px-1 border border-white leading-none">
-                      {showMsgBadge ? (totalUnread > 9 ? '9+' : totalUnread) : (vibeCount > 9 ? '9+' : vibeCount)}
+                      {showMsgBadge ? (totalUnread > 9 ? '9+' : totalUnread) : (vibesBadge > 9 ? '9+' : vibesBadge)}
                     </span>
                   )}
                 </div>
