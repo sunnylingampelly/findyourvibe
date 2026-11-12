@@ -145,8 +145,10 @@ Route::prefix('v1')->group(function () {
         Route::get('group-vibes', [GroupVibeController::class, 'index']);
         Route::get('group-vibes/mine', [GroupVibeController::class, 'mine']);
         Route::post('group-vibes', [GroupVibeController::class, 'store']);
+        Route::put('group-vibes/{id}', [GroupVibeController::class, 'update']);
         Route::post('group-vibes/{id}/join', [GroupVibeController::class, 'join']);
         Route::delete('group-vibes/{id}/leave', [GroupVibeController::class, 'leave']);
+        Route::post('group-vibes/{id}/invite', [GroupVibeController::class, 'invite']);
 
         // Notifications
         Route::get('notifications', [NotificationController::class, 'index']);

@@ -229,6 +229,7 @@ export interface GroupVibe {
   is_member: boolean
   is_active: boolean
   host: { id: string; display_name: string; profile_photo_url?: string }
+  members: Array<{ id: string; display_name: string; profile_photo_url?: string }>
 }
 
 export interface ApiResponse<T> {

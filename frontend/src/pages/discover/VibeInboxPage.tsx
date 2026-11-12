@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
-import { Heart, MapPin, ShieldCheck, Users, PlusCircle, CalendarDays, LogOut, Check, X, MessageCircle, UserCheck, Loader2 } from 'lucide-react'
+import { Heart, MapPin, ShieldCheck, Users, PlusCircle, CalendarDays, LogOut, Check, X, MessageCircle, UserCheck, Loader2, Pencil, UserPlus } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState } from 'react'
 import { vibesApi } from '../../api/vibes'
@@ -138,10 +138,136 @@ function CreateGroupSheet({ open, onClose, onCreated }: { open: boolean; onClose
   )
 }
 
+// ── Edit Group Vibe Sheet ─────────────────────────────────────────────────────
+function EditGroupSheet({ vibe, open, onClose, onUpdated }: { vibe: GroupVibe; open: boolean; onClose: () => void; onUpdated: () => void }) {
+  const { toast } = useToast()
+  const [title, setTitle] = useState(vibe.title)
+  const [activity, setActivity] = useState(vibe.activity ?? '')
+  const [location, setLocation] = useState(vibe.location ?? '')
+  const [scheduledAt, setScheduledAt] = useState(vibe.scheduled_at ? new Date(vibe.scheduled_at).toISOString().slice(0, 16) : '')
+  const [maxMembers, setMaxMembers] = useState(String(vibe.max_members))
+  const [description, setDescription] = useState(vibe.description ?? '')
+
+  const update = useMutation({
+    mutationFn: () => groupVibesApi.update(vibe.id, {
+      title, activity: activity || undefined, location: location || undefined,
+      scheduled_at: scheduledAt || undefined, max_members: parseInt(maxMembers) || 6,
+      description: description || undefined,
+    }),
+    onSuccess: () => { toast('Group updated! ✅', 'success'); onUpdated(); onClose() },
+    onError: () => toast('Could not update group vibe', 'error'),
+  })
+
+  return (
+    <BottomSheet open={open} onClose={onClose} title="Edit Group Vibe">
+      <div className="space-y-4">
+        <div>
+          <label className="text-xs font-semibold text-[#A1AAA5] uppercase tracking-wide mb-1 block">Title *</label>
+          <input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Coffee & Conversations"
+            className="w-full border-[1.5px] border-[#E8EAE6] rounded-xl px-3 py-2.5 text-sm text-[#24332F] placeholder:text-[#A1AAA5] focus:outline-none focus:border-[#236B63]" />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="text-xs font-semibold text-[#A1AAA5] uppercase tracking-wide mb-1 block">Activity</label>
+            <input value={activity} onChange={e => setActivity(e.target.value)} placeholder="e.g. Hiking"
+              className="w-full border-[1.5px] border-[#E8EAE6] rounded-xl px-3 py-2.5 text-sm text-[#24332F] placeholder:text-[#A1AAA5] focus:outline-none focus:border-[#236B63]" />
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-[#A1AAA5] uppercase tracking-wide mb-1 block">Max members</label>
+            <select value={maxMembers} onChange={e => setMaxMembers(e.target.value)}
+              className="w-full border-[1.5px] border-[#E8EAE6] rounded-xl px-3 py-2.5 text-sm text-[#24332F] focus:outline-none focus:border-[#236B63] bg-white">
+              {[2, 3, 4, 5, 6, 8, 10].map(n => <option key={n} value={n}>{n} people</option>)}
+            </select>
+          </div>
+        </div>
+        <PlacesAutocomplete label="Location" value={location} onChange={setLocation} placeholder="e.g. MG Road, Bangalore" showLocateButton={true} />
+        <div>
+          <label className="text-xs font-semibold text-[#A1AAA5] uppercase tracking-wide mb-1 block">When</label>
+          <input type="datetime-local" value={scheduledAt} onChange={e => setScheduledAt(e.target.value)}
+            className="w-full border-[1.5px] border-[#E8EAE6] rounded-xl px-3 py-2.5 text-sm text-[#24332F] focus:outline-none focus:border-[#236B63]" />
+        </div>
+        <div>
+          <label className="text-xs font-semibold text-[#A1AAA5] uppercase tracking-wide mb-1 block">Description</label>
+          <textarea value={description} onChange={e => setDescription(e.target.value)} rows={2}
+            placeholder="What's the vibe? Who should join?"
+            className="w-full border-[1.5px] border-[#E8EAE6] rounded-2xl px-3 py-2.5 text-sm text-[#24332F] placeholder:text-[#A1AAA5] focus:outline-none focus:border-[#236B63] resize-none" />
+        </div>
+        <Button loading={update.isPending} disabled={!title.trim()} onClick={() => update.mutate()} className="w-full">Save Changes</Button>
+      </div>
+    </BottomSheet>
+  )
+}
+
+// ── Invite Sheet ──────────────────────────────────────────────────────────────
+function InviteSheet({ vibe, open, onClose }: { vibe: GroupVibe; open: boolean; onClose: () => void }) {
+  const { toast } = useToast()
+  const [sent, setSent] = useState<Set<string>>(new Set())
+
+  const { data: connData } = useQuery({
+    queryKey: ['connections'],
+    queryFn: () => connectionsApi.getConnections(),
+    enabled: open,
+  })
+  const connections: Connection[] = connData?.data?.data ?? []
+
+  const inviteMutation = useMutation({
+    mutationFn: (userId: string) => groupVibesApi.invite(vibe.id, userId),
+    onSuccess: (_, userId) => {
+      setSent(prev => new Set(prev).add(userId))
+      toast('Invitation sent! 📨', 'success')
+    },
+    onError: () => toast('Could not send invitation', 'error'),
+  })
+
+  const alreadyInVibe = new Set(vibe.members.map(m => m.id))
+
+  return (
+    <BottomSheet open={open} onClose={onClose} title="Invite Connections">
+      <div className="space-y-3">
+        {connections.length === 0 ? (
+          <div className="text-center py-8">
+            <div className="text-4xl mb-2">🤝</div>
+            <p className="text-sm text-[#A1AAA5]">No connections yet to invite.</p>
+          </div>
+        ) : connections.map(conn => {
+          const other = conn.other_user
+          const isIn = alreadyInVibe.has(other.id)
+          const wasSent = sent.has(other.id)
+          return (
+            <div key={conn.id} className="flex items-center gap-3 py-2">
+              <Avatar src={other.profile_photo_url} name={other.display_name} size="md" />
+              <div className="flex-1 min-w-0">
+                <p className="font-manrope font-semibold text-[#24332F] text-sm">{other.display_name}</p>
+                {other.city && <p className="text-xs text-[#A1AAA5]">{other.city.name}</p>}
+              </div>
+              {isIn ? (
+                <span className="text-xs text-[#4D9274] font-semibold flex items-center gap-1"><UserCheck size={12} /> Joined</span>
+              ) : wasSent ? (
+                <span className="text-xs text-[#A1AAA5] font-semibold">Invited ✓</span>
+              ) : (
+                <button
+                  onClick={() => inviteMutation.mutate(other.id)}
+                  disabled={inviteMutation.isPending}
+                  className="text-xs bg-[#236B63] text-white font-semibold px-3 py-1.5 rounded-xl disabled:opacity-60"
+                >
+                  Invite
+                </button>
+              )}
+            </div>
+          )
+        })}
+      </div>
+    </BottomSheet>
+  )
+}
+
 // ── Group Vibe Card ───────────────────────────────────────────────────────────
 function GroupVibeCard({ vibe, onAction }: { vibe: GroupVibe; onAction: () => void }) {
+  const navigate = useNavigate()
   const { toast } = useToast()
   const full = vibe.is_full && !vibe.is_member && !vibe.is_host
+  const [showEdit, setShowEdit] = useState(false)
+  const [showInvite, setShowInvite] = useState(false)
 
   const joinMutation = useMutation({
     mutationFn: () => groupVibesApi.join(vibe.id),
@@ -154,96 +280,101 @@ function GroupVibeCard({ vibe, onAction }: { vibe: GroupVibe; onAction: () => vo
 
   const leaveMutation = useMutation({
     mutationFn: () => groupVibesApi.leave(vibe.id),
-    onSuccess: () => {
-      toast(vibe.is_host ? 'Group vibe cancelled' : 'You left', 'success')
-      onAction()
-    },
+    onSuccess: () => { toast(vibe.is_host ? 'Group vibe cancelled' : 'You left', 'success'); onAction() },
     onError: () => toast('Could not leave', 'error'),
   })
 
   const spotsLeft = vibe.max_members - vibe.member_count
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-2xl border border-[#E8EAE6] p-4 shadow-sm"
-    >
-      {/* Header */}
-      <div className="flex items-start justify-between gap-2 mb-3">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
-            <p className="font-manrope font-bold text-[#24332F] text-sm">{vibe.title}</p>
-            {vibe.is_host && (
-              <span className="text-[9px] font-bold bg-[#E8F0EA] text-[#236B63] px-1.5 py-0.5 rounded-full">HOST</span>
-            )}
+    <>
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-2xl border border-[#E8EAE6] p-4 shadow-sm">
+        {/* Header */}
+        <div className="flex items-start justify-between gap-2 mb-2">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
+              <p className="font-manrope font-bold text-[#24332F] text-sm">{vibe.title}</p>
+              {vibe.is_host && <span className="text-[9px] font-bold bg-[#E8F0EA] text-[#236B63] px-1.5 py-0.5 rounded-full">HOST</span>}
+            </div>
+            {vibe.activity && <p className="text-xs text-[#A1AAA5]">📌 {vibe.activity}</p>}
           </div>
-          {vibe.activity && (
-            <p className="text-xs text-[#A1AAA5]">📌 {vibe.activity}</p>
-          )}
+          <div className="flex items-center gap-1.5 shrink-0">
+            {/* Host actions */}
+            {vibe.is_host && (
+              <>
+                <button onClick={() => setShowInvite(true)} className="w-7 h-7 flex items-center justify-center rounded-lg bg-[#F4F9F7] text-[#236B63]" title="Invite connections">
+                  <UserPlus size={13} />
+                </button>
+                <button onClick={() => setShowEdit(true)} className="w-7 h-7 flex items-center justify-center rounded-lg bg-[#F4F9F7] text-[#236B63]" title="Edit group">
+                  <Pencil size={13} />
+                </button>
+              </>
+            )}
+            {/* Member can also invite */}
+            {vibe.is_member && !vibe.is_host && (
+              <button onClick={() => setShowInvite(true)} className="w-7 h-7 flex items-center justify-center rounded-lg bg-[#F4F9F7] text-[#236B63]" title="Invite connections">
+                <UserPlus size={13} />
+              </button>
+            )}
+            <div className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl ${full ? 'bg-[#FFF0EE]' : 'bg-[#E8F0EA]'}`}>
+              <Users size={12} className={full ? 'text-[#D76D6D]' : 'text-[#236B63]'} />
+              <span className={`text-xs font-bold ${full ? 'text-[#D76D6D]' : 'text-[#236B63]'}`}>{vibe.member_count}/{vibe.max_members}</span>
+            </div>
+          </div>
         </div>
-        {/* Member count badge */}
-        <div className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl shrink-0 ${full ? 'bg-[#FFF0EE]' : 'bg-[#E8F0EA]'}`}>
-          <Users size={12} className={full ? 'text-[#D76D6D]' : 'text-[#236B63]'} />
-          <span className={`text-xs font-bold ${full ? 'text-[#D76D6D]' : 'text-[#236B63]'}`}>
-            {vibe.member_count}/{vibe.max_members}
-          </span>
-        </div>
-      </div>
 
-      {/* Meta info */}
-      <div className="flex flex-wrap gap-x-3 gap-y-1 mb-3">
-        {vibe.location && (
-          <p className="text-xs text-[#77817C] flex items-center gap-1">
-            <MapPin size={11} />{vibe.location}
-          </p>
+        {/* Meta */}
+        <div className="flex flex-wrap gap-x-3 gap-y-1 mb-2">
+          {vibe.location && <p className="text-xs text-[#77817C] flex items-center gap-1"><MapPin size={11} />{vibe.location}</p>}
+          {vibe.scheduled_label && <p className="text-xs text-[#77817C] flex items-center gap-1"><CalendarDays size={11} />{vibe.scheduled_label}</p>}
+        </div>
+
+        {vibe.description && <p className="text-xs text-[#77817C] leading-relaxed mb-2 line-clamp-2">{vibe.description}</p>}
+
+        {/* Host */}
+        <div className="flex items-center gap-2 mb-3">
+          <Avatar src={vibe.host.profile_photo_url} name={vibe.host.display_name} size="xs" />
+          <p className="text-xs text-[#A1AAA5]">by <span className="text-[#24332F] font-medium">{vibe.host.display_name}</span></p>
+        </div>
+
+        {/* Member avatars */}
+        {vibe.members.length > 0 && (
+          <div className="flex items-center gap-1.5 mb-3">
+            <div className="flex -space-x-2">
+              {vibe.members.slice(0, 5).map(m => (
+                <button key={m.id} onClick={() => navigate(`/profiles/${m.id}`)} className="shrink-0">
+                  <Avatar src={m.profile_photo_url} name={m.display_name} size="xs" className="border-2 border-white" />
+                </button>
+              ))}
+            </div>
+            {vibe.members.length > 5 && (
+              <span className="text-[10px] text-[#A1AAA5] font-medium">+{vibe.members.length - 5} more</span>
+            )}
+            <span className="text-[10px] text-[#A1AAA5]">going</span>
+          </div>
         )}
-        {vibe.scheduled_label && (
-          <p className="text-xs text-[#77817C] flex items-center gap-1">
-            <CalendarDays size={11} />{vibe.scheduled_label}
-          </p>
+
+        {/* Action button */}
+        {vibe.is_member || vibe.is_host ? (
+          <button onClick={() => leaveMutation.mutate()} disabled={leaveMutation.isPending}
+            className="w-full py-2.5 border border-[#E8EAE6] rounded-xl text-xs font-semibold text-[#D76D6D] flex items-center justify-center gap-1.5 active:scale-[0.98] transition-transform disabled:opacity-50">
+            <LogOut size={13} />
+            {vibe.is_host ? 'Cancel Vibe' : 'Leave Vibe'}
+          </button>
+        ) : full ? (
+          <div className="w-full py-2.5 bg-[#F4F5F4] rounded-xl text-xs font-semibold text-[#A1AAA5] text-center">Group Full</div>
+        ) : (
+          <button onClick={() => joinMutation.mutate()} disabled={joinMutation.isPending}
+            className="w-full py-2.5 bg-gradient-to-br from-[#4D9274] to-[#236B63] rounded-xl text-xs font-bold text-white flex items-center justify-center gap-1.5 active:scale-[0.98] transition-transform disabled:opacity-70 shadow-sm">
+            <PlusCircle size={13} />
+            Join · {spotsLeft} spot{spotsLeft !== 1 ? 's' : ''} left
+          </button>
         )}
-      </div>
+      </motion.div>
 
-      {vibe.description && (
-        <p className="text-xs text-[#77817C] leading-relaxed mb-3 line-clamp-2">{vibe.description}</p>
-      )}
-
-      {/* Host */}
-      <div className="flex items-center gap-2 mb-3">
-        <Avatar
-          src={vibe.host.profile_photo_url}
-          name={vibe.host.display_name}
-          size="xs"
-        />
-        <p className="text-xs text-[#A1AAA5]">by <span className="text-[#24332F] font-medium">{vibe.host.display_name}</span></p>
-      </div>
-
-      {/* Action button */}
-      {vibe.is_member || vibe.is_host ? (
-        <button
-          onClick={() => leaveMutation.mutate()}
-          disabled={leaveMutation.isPending}
-          className="w-full py-2.5 border border-[#E8EAE6] rounded-xl text-xs font-semibold text-[#D76D6D] flex items-center justify-center gap-1.5 active:scale-[0.98] transition-transform disabled:opacity-50"
-        >
-          <LogOut size={13} />
-          {vibe.is_host ? 'Cancel Vibe' : 'Leave Vibe'}
-        </button>
-      ) : full ? (
-        <div className="w-full py-2.5 bg-[#F4F5F4] rounded-xl text-xs font-semibold text-[#A1AAA5] text-center">
-          Group Full
-        </div>
-      ) : (
-        <button
-          onClick={() => joinMutation.mutate()}
-          disabled={joinMutation.isPending}
-          className="w-full py-2.5 bg-gradient-to-br from-[#4D9274] to-[#236B63] rounded-xl text-xs font-bold text-white flex items-center justify-center gap-1.5 active:scale-[0.98] transition-transform disabled:opacity-70 shadow-sm"
-        >
-          <PlusCircle size={13} />
-          Join · {spotsLeft} spot{spotsLeft !== 1 ? 's' : ''} left
-        </button>
-      )}
-    </motion.div>
+      {showEdit && <EditGroupSheet vibe={vibe} open={showEdit} onClose={() => setShowEdit(false)} onUpdated={onAction} />}
+      {showInvite && <InviteSheet vibe={vibe} open={showInvite} onClose={() => setShowInvite(false)} />}
+    </>
   )
 }
 

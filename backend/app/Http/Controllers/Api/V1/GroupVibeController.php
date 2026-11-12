@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\GroupVibe;
 use App\Models\GroupVibeMember;
 use App\Models\User;
+use App\Services\NotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -13,7 +14,7 @@ class GroupVibeController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $vibes = GroupVibe::with(['host.profile', 'acceptedMembers'])
+        $vibes = GroupVibe::with(['host.profile', 'acceptedMembers.user.profile'])
             ->where('is_active', true)
             ->where(fn($q) => $q->whereNull('scheduled_at')->orWhere('scheduled_at', '>=', now()))
             ->orderBy('scheduled_at')
@@ -27,7 +28,7 @@ class GroupVibeController extends Controller
     {
         $user = $request->user();
 
-        $vibes = GroupVibe::with(['host.profile', 'acceptedMembers'])
+        $vibes = GroupVibe::with(['host.profile', 'acceptedMembers.user.profile'])
             ->where(function ($q) use ($user) {
                 $q->where('host_id', $user->id)
                   ->orWhereHas('members', fn($q2) => $q2->where('user_id', $user->id)->where('status', 'accepted'));
@@ -58,7 +59,7 @@ class GroupVibeController extends Controller
             'status'        => 'accepted',
         ]);
 
-        $vibe->load(['host.profile', 'acceptedMembers']);
+        $vibe->load(['host.profile', 'acceptedMembers.user.profile']);
 
         return response()->json([
             'success' => true,
@@ -89,11 +90,72 @@ class GroupVibeController extends Controller
             ['status' => 'accepted', 'joined_at' => now()]
         );
 
+        try {
+            $vibe->load('host');
+            $joinerName = $user->profile?->display_name ?? $user->name;
+            NotificationService::send($vibe->host, $user, 'group_vibe_joined', "{$joinerName} joined your group vibe \"{$vibe->title}\"");
+        } catch (\Throwable) {}
+
         return response()->json([
             'success' => true,
             'message' => 'You joined the group vibe! 🎉',
             'data'    => ['member_id' => $member->id],
         ]);
+    }
+
+    public function update(Request $request, string $id): JsonResponse
+    {
+        $vibe = GroupVibe::findOrFail($id);
+
+        if ($vibe->host_id !== $request->user()->id) {
+            return response()->json(['success' => false, 'message' => 'Only the host can edit this group vibe.'], 403);
+        }
+
+        $validated = $request->validate([
+            'title'        => ['sometimes', 'string', 'max:100'],
+            'description'  => ['nullable', 'string', 'max:500'],
+            'activity'     => ['nullable', 'string', 'max:100'],
+            'location'     => ['nullable', 'string', 'max:200'],
+            'scheduled_at' => ['nullable', 'date', 'after:now'],
+            'max_members'  => ['nullable', 'integer', 'min:2', 'max:20'],
+        ]);
+
+        $vibe->update($validated);
+        $vibe->load(['host.profile', 'acceptedMembers.user.profile']);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Group vibe updated!',
+            'data'    => $this->format($vibe, $request->user()),
+        ]);
+    }
+
+    public function invite(Request $request, string $id): JsonResponse
+    {
+        $vibe = GroupVibe::findOrFail($id);
+        $user = $request->user();
+
+        if (!$vibe->is_active) {
+            return response()->json(['success' => false, 'message' => 'This group vibe is no longer active.'], 422);
+        }
+
+        $validated = $request->validate([
+            'user_id' => ['required', 'exists:users,id'],
+        ]);
+
+        $invitee = User::findOrFail($validated['user_id']);
+        $inviterName = $user->profile?->display_name ?? $user->name;
+
+        try {
+            NotificationService::send(
+                $invitee,
+                $user,
+                'group_vibe_invite',
+                "{$inviterName} invited you to join \"{$vibe->title}\""
+            );
+        } catch (\Throwable) {}
+
+        return response()->json(['success' => true, 'message' => 'Invitation sent!']);
     }
 
     public function leave(Request $request, string $id): JsonResponse
@@ -138,6 +200,11 @@ class GroupVibeController extends Controller
                 'display_name'     => $vibe->host->profile?->display_name ?? $vibe->host->name,
                 'profile_photo_url' => $vibe->host->profile?->profile_photo_url,
             ],
+            'members' => $vibe->acceptedMembers->map(fn($m) => [
+                'id'               => $m->user->id,
+                'display_name'     => $m->user->profile?->display_name ?? $m->user->name,
+                'profile_photo_url' => $m->user->profile?->profile_photo_url,
+            ])->values()->all(),
         ];
     }
 }
