@@ -207,6 +207,16 @@ export default function ProfileDetailPage() {
     onError: () => toast('Could not send booking request', 'error'),
   })
 
+  const reportMutation = useMutation({
+    mutationFn: ({ category, description }: { category: string; description: string }) =>
+      profileApi.report(id!, category, description),
+    onSuccess: () => {
+      toast('Report submitted. Our team will review it.', 'success')
+      setShowReport(false)
+    },
+    onError: () => toast('Could not submit report, please try again', 'error'),
+  })
+
   const saveMutation = useMutation({
     mutationFn: async () => {
       if (isSaved && savedRecord) {
@@ -791,14 +801,14 @@ export default function ProfileDetailPage() {
           {['Inappropriate behaviour', 'Fake profile', 'Harassment', 'Suspicious activity', 'Misleading information', 'Other'].map(cat => (
             <button
               key={cat}
-              className="w-full text-left px-4 py-3 rounded-2xl border border-[#E8EAE6] text-sm text-[#24332F] hover:bg-[#FFF0EE] hover:border-[#D76D6D] transition-colors"
-              onClick={() => {
-                profileApi.report(id!, cat.toLowerCase().replace(/ /g, '_'), cat)
-                toast('Report submitted', 'success')
-                setShowReport(false)
-              }}
+              disabled={reportMutation.isPending}
+              className="w-full text-left px-4 py-3 rounded-2xl border border-[#E8EAE6] text-sm text-[#24332F] hover:bg-[#FFF0EE] hover:border-[#D76D6D] transition-colors disabled:opacity-50"
+              onClick={() => reportMutation.mutate({
+                category: cat.toLowerCase().replace(/ /g, '_'),
+                description: cat,
+              })}
             >
-              {cat}
+              {reportMutation.isPending ? 'Submitting…' : cat}
             </button>
           ))}
         </div>

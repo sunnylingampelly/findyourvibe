@@ -8,8 +8,8 @@ export const profileApi = {
     fd.append('photo', file)
     return api.post('/me/profile-photo', fd)
   },
-  report: (userId: string, category: string, reason: string) =>
-    api.post('/reports', { reported_id: userId, category, reason }),
+  report: (userId: string, category: string, description: string) =>
+    api.post('/reports', { reported_id: userId, category, description }),
 
   // Onboarding
   updateOnboarding: (data: Record<string, unknown>) => api.put('/me/onboarding', data),
