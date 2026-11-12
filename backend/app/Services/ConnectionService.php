@@ -75,4 +75,28 @@ class ConnectionService
             ->where('status', 'pending')
             ->exists();
     }
+
+    public function findOrCreateDirectConnection(User $userA, User $userB): array
+    {
+        $existing = Connection::where(function ($q) use ($userA, $userB) {
+            $q->where('user_one_id', $userA->id)->where('user_two_id', $userB->id);
+        })->orWhere(function ($q) use ($userA, $userB) {
+            $q->where('user_one_id', $userB->id)->where('user_two_id', $userA->id);
+        })->first();
+
+        if ($existing) {
+            $conversation = Conversation::firstOrCreate(['connection_id' => $existing->id]);
+            return ['connection' => $existing, 'conversation' => $conversation];
+        }
+
+        return DB::transaction(function () use ($userA, $userB) {
+            $connection = Connection::create([
+                'user_one_id' => $userA->id,
+                'user_two_id' => $userB->id,
+                'connected_at' => now(),
+            ]);
+            $conversation = Conversation::create(['connection_id' => $connection->id]);
+            return ['connection' => $connection, 'conversation' => $conversation];
+        });
+    }
 }

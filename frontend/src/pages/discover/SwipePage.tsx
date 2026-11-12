@@ -1,13 +1,19 @@
 import { useState, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { motion, useMotionValue, useTransform, useAnimation, type PanInfo } from 'framer-motion'
-import { X, Heart, Info, Bookmark, MapPin, Star } from 'lucide-react'
+import { motion, useMotionValue, useTransform, useAnimation, AnimatePresence, type PanInfo } from 'framer-motion'
+import { X, Heart, Info, Bookmark, MapPin, Star, MessageCircle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { discoverApi } from '../../api/discover'
 import { useToast } from '../../components/ui/Toast'
 import AppShell from '../../components/layout/AppShell'
 import { getInitials } from '../../lib/utils'
 import type { PublicProfile } from '../../types'
+
+interface MatchData {
+  displayName: string
+  photoUrl: string | null
+  conversationId: string
+}
 
 function SwipeCard({ profile, onSwipe, isTop }: { profile: PublicProfile; onSwipe: (dir: 'left' | 'right') => void; isTop: boolean }) {
   const navigate = useNavigate()
@@ -130,7 +136,9 @@ function CardContent({ profile, onInfo }: { profile: PublicProfile; onInfo: () =
 
 export default function SwipePage() {
   const { toast } = useToast()
+  const navigate = useNavigate()
   const [index, setIndex] = useState(0)
+  const [matchData, setMatchData] = useState<MatchData | null>(null)
   const swipedRef = useRef(new Set<string>())
 
   const { data, isLoading, refetch } = useQuery({
@@ -146,13 +154,24 @@ export default function SwipePage() {
     if (!profile || swipedRef.current.has(profile.id)) return
     swipedRef.current.add(profile.id)
 
-    try {
-      await discoverApi.swipe(profile.id, direction)
-      if (direction === 'right') toast(`You liked ${profile.display_name}! 💚`, 'success')
-    } catch { /* ignore */ }
-
     setIndex(i => i + 1)
     if (index >= profiles.length - 3) refetch()
+
+    try {
+      const res = await discoverApi.swipe(profile.id, direction)
+      const resData = res?.data?.data
+      if (direction === 'right') {
+        if (resData?.matched && resData?.conversation_id) {
+          setMatchData({
+            displayName: resData.matched_profile?.display_name ?? profile.display_name,
+            photoUrl: resData.matched_profile?.profile_photo_url ?? profile.profile_photo_url ?? null,
+            conversationId: resData.conversation_id,
+          })
+        } else {
+          toast(`You vibed ${profile.display_name}! 💚`, 'success')
+        }
+      }
+    } catch { /* ignore */ }
   }
 
   if (isLoading) {
@@ -167,6 +186,60 @@ export default function SwipePage() {
 
   return (
     <AppShell>
+      {/* Match overlay */}
+      <AnimatePresence>
+        {matchData && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex flex-col items-center justify-center px-8"
+            style={{ background: 'linear-gradient(160deg, #1A5750 0%, #236B63 60%, #15453F 100%)' }}
+          >
+            <motion.div
+              initial={{ scale: 0.6, opacity: 0, y: 40 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              transition={{ type: 'spring', stiffness: 260, damping: 22, delay: 0.1 }}
+              className="w-full max-w-xs text-center"
+            >
+              <div className="text-7xl mb-4">💚</div>
+              <h2 className="font-manrope font-extrabold text-4xl text-white mb-2 leading-tight">It's a Match!</h2>
+              <p className="text-white/70 text-sm mb-8">
+                You and <span className="text-white font-semibold">{matchData.displayName}</span> both vibed!
+              </p>
+
+              {matchData.photoUrl ? (
+                <img
+                  src={matchData.photoUrl}
+                  alt={matchData.displayName}
+                  className="w-28 h-28 rounded-full object-cover mx-auto mb-8 border-4 border-white/80 shadow-2xl"
+                />
+              ) : (
+                <div className="w-28 h-28 rounded-full mx-auto mb-8 border-4 border-white/80 bg-white/20 flex items-center justify-center shadow-2xl">
+                  <span className="text-3xl font-manrope font-bold text-white">{getInitials(matchData.displayName)}</span>
+                </div>
+              )}
+
+              <div className="space-y-3 w-full">
+                <motion.button
+                  whileTap={{ scale: 0.96 }}
+                  onClick={() => { setMatchData(null); navigate(`/messages/${matchData.conversationId}`) }}
+                  className="w-full py-4 bg-white rounded-2xl font-manrope font-bold text-[#236B63] text-base flex items-center justify-center gap-2 shadow-lg"
+                >
+                  <MessageCircle size={18} /> Say Hello!
+                </motion.button>
+                <button
+                  onClick={() => setMatchData(null)}
+                  className="w-full py-3 text-white/60 text-sm font-medium"
+                >
+                  Keep Vibing
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="flex flex-col items-center h-dvh pt-safe pb-[80px]">
         <div className="text-center py-3">
           <h1 className="font-manrope font-bold text-lg text-[#24332F]">Discover</h1>
