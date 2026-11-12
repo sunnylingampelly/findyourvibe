@@ -6,6 +6,7 @@ import { useState } from 'react'
 import { vibesApi } from '../../api/vibes'
 import { groupVibesApi } from '../../api/groupVibes'
 import { connectionsApi } from '../../api/connections'
+import { PlacesAutocomplete } from '../../components/ui/PlacesAutocomplete'
 import { discoverApi } from '../../api/discover'
 import { useToast } from '../../components/ui/Toast'
 import AppShell from '../../components/layout/AppShell'
@@ -98,15 +99,13 @@ function CreateGroupSheet({ open, onClose, onCreated }: { open: boolean; onClose
             </select>
           </div>
         </div>
-        <div>
-          <label className="text-xs font-semibold text-[#A1AAA5] uppercase tracking-wide mb-1 block">Location</label>
-          <input
-            value={location}
-            onChange={e => setLocation(e.target.value)}
-            placeholder="e.g. MG Road, Bangalore"
-            className="w-full border-[1.5px] border-[#E8EAE6] rounded-xl px-3 py-2.5 text-sm text-[#24332F] placeholder:text-[#A1AAA5] focus:outline-none focus:border-[#236B63]"
-          />
-        </div>
+        <PlacesAutocomplete
+          label="Location"
+          value={location}
+          onChange={setLocation}
+          placeholder="e.g. MG Road, Bangalore"
+          showLocateButton={true}
+        />
         <div>
           <label className="text-xs font-semibold text-[#A1AAA5] uppercase tracking-wide mb-1 block">When</label>
           <input
