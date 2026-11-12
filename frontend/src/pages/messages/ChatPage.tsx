@@ -259,6 +259,7 @@ export default function ChatPage() {
     queryFn: () => connectionsApi.getConversations(),
     refetchInterval: 10000,
     refetchIntervalInBackground: false,
+    staleTime: 60000,
   })
 
   const serverMessages: Message[] = Array.isArray(msgsData?.data?.data) ? msgsData.data.data : []
@@ -275,8 +276,10 @@ export default function ChatPage() {
 
   const conversations = convsData?.data?.data ?? []
   const conv = conversations.find((c: { id: string }) => c.id === id)
+  // Derive other user from: conversation object → any message sender that isn't me → conversation last_message sender
   const otherUser = conv?.other_user
     ?? (messages.find((m: Message) => m.sender.id !== user?.id)?.sender)
+    ?? (conv?.last_message?.sender?.id !== user?.id ? conv?.last_message?.sender : undefined)
 
   // Bookings where current user is the requester (booked a companion)
   const { data: bookingsData } = useQuery({
@@ -677,7 +680,7 @@ export default function ChatPage() {
         {otherUser ? (
           <button
             onClick={() => navigate(`/profiles/${otherUser.id}`)}
-            className="flex items-center gap-2.5 flex-1 min-w-0 text-left"
+            className="flex items-center gap-2.5 flex-1 min-w-0 text-left active:opacity-70 transition-opacity"
           >
             <div className="relative shrink-0">
               <Avatar src={otherUser.profile_photo_url} name={otherUser.display_name} size="sm" />
@@ -685,17 +688,17 @@ export default function ChatPage() {
             </div>
             <div className="min-w-0">
               <h2 className="font-semibold text-white text-sm truncate">{otherUser.display_name}</h2>
-              <p className="text-[11px] text-white/70">
-                {otherTyping ? 'typing…' : 'tap here for info'}
+              <p className="text-[11px] text-white/60">
+                {otherTyping ? 'typing…' : 'View profile →'}
               </p>
             </div>
           </button>
         ) : (
           <div className="flex items-center gap-2.5 flex-1 min-w-0">
-            <div className="w-8 h-8 rounded-full bg-white/20 shrink-0" />
-            <div className="space-y-1 flex-1">
-              <div className="h-3.5 w-28 rounded bg-white/20" />
-              <div className="h-2.5 w-16 rounded bg-white/15" />
+            <div className="w-8 h-8 rounded-full bg-white/20 animate-pulse shrink-0" />
+            <div className="space-y-1.5 flex-1">
+              <div className="h-3 w-28 rounded-full bg-white/20 animate-pulse" />
+              <div className="h-2.5 w-16 rounded-full bg-white/15 animate-pulse" />
             </div>
           </div>
         )}
