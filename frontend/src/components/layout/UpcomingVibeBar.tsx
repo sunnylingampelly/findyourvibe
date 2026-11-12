@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Bell, ChevronRight, X, MessageCircle, Heart, Users, UserPlus, Clock } from 'lucide-react'
+import { Bell, ChevronRight, X, MessageCircle, Heart, UserPlus, Clock } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
 import { groupVibesApi } from '../../api/groupVibes'
