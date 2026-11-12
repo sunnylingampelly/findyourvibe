@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Heart, MapPin, ShieldCheck, Users, PlusCircle, CalendarDays, LogOut, Check, X, MessageCircle, UserCheck, Loader2, Pencil, UserPlus } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState } from 'react'
@@ -381,9 +381,13 @@ function GroupVibeCard({ vibe, onAction }: { vibe: GroupVibe; onAction: () => vo
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function VibeInboxPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { toast } = useToast()
   const qc = useQueryClient()
-  const [tab, setTab] = useState<Tab>('vibed')
+  const initialTab = (['vibed', 'connect', 'groups'] as Tab[]).includes(searchParams.get('tab') as Tab)
+    ? (searchParams.get('tab') as Tab)
+    : 'vibed'
+  const [tab, setTab] = useState<Tab>(initialTab)
   const [matchData, setMatchData] = useState<MatchData | null>(null)
   const [pendingIds, setPendingIds] = useState<Set<string>>(new Set())
   const [showCreate, setShowCreate] = useState(false)
