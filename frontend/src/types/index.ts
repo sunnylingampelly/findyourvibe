@@ -186,6 +186,7 @@ export interface Message {
   read_at?: string | null
   created_at: string
   attachments?: Array<{ id: number; url: string; original_name: string; mime_type: string }>
+  reactions?: Record<string, string>
 }
 
 export interface Notification {

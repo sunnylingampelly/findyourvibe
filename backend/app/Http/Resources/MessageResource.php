@@ -28,6 +28,9 @@ class MessageResource extends JsonResource
                     'mime_type' => $a->mime_type,
                 ])
             ),
+            'reactions' => $this->whenLoaded('reactions', fn() =>
+                $this->reactions->mapWithKeys(fn($r) => [$r->user_id => $r->emoji])
+            ),
         ];
     }
 }

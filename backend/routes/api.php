@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\V1\ConnectionRequestController;
 use App\Http\Controllers\Api\V1\ConversationController;
 use App\Http\Controllers\Api\V1\DiscoverController;
 use App\Http\Controllers\Api\V1\MessageController;
+use App\Http\Controllers\Api\V1\MessageReactionController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\OnboardingController;
 use App\Http\Controllers\Api\V1\ProfileController;
@@ -117,6 +118,7 @@ Route::prefix('v1')->group(function () {
         Route::post('conversations/{id}/messages', [MessageController::class, 'store']);
         Route::delete('conversations/{conversationId}/messages/{messageId}', [MessageController::class, 'destroy']);
         Route::post('messages/{id}/read', [MessageController::class, 'markRead']);
+        Route::post('messages/{id}/reactions', [MessageReactionController::class, 'toggle']);
 
         // Companion
         Route::get('companion/applications/me', [CompanionController::class, 'show']);

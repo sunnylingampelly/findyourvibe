@@ -215,7 +215,8 @@ export default function ChatPage() {
   const [optimistic, setOptimistic] = useState<Message[]>([])
   const [replyTo, setReplyTo] = useState<Message | null>(null)
   const [contextMenu, setContextMenu] = useState<{ msg: Message } | null>(null)
-  const [reactions, setReactions] = useState<Record<string, string>>({})
+  const [allReactions, setAllReactions] = useState<Record<string, Record<string, string>>>({})
+  const myId = user?.id
   const [otherTyping, setOtherTyping] = useState(false)
   const [showScrollBtn, setShowScrollBtn] = useState(false)
   const [showRating, setShowRating] = useState(false)
@@ -273,6 +274,18 @@ export default function ChatPage() {
   }, [serverMessages, optimistic])
 
   useEffect(() => { messagesRef.current = messages }, [messages])
+
+  // Seed reactions map from server messages (merge server state into local)
+  useEffect(() => {
+    if (!serverMessages.length) return
+    setAllReactions(prev => {
+      const next = { ...prev }
+      serverMessages.forEach(m => {
+        if (m.reactions) next[m.id] = m.reactions
+      })
+      return next
+    })
+  }, [serverMessages])
 
   const conversations = convsData?.data?.data ?? []
   const conv = conversations.find((c: { id: string }) => c.id === id)
@@ -352,6 +365,14 @@ export default function ChatPage() {
       })
       qc.invalidateQueries({ queryKey: ['conversations'] })
     })
+    channel.listen('.ReactionAdded', (data: { message_id: string; user_id: string; emoji: string | null; removed: boolean }) => {
+      setAllReactions(prev => {
+        const msgRxns = { ...(prev[data.message_id] ?? {}) }
+        if (data.removed || !data.emoji) delete msgRxns[data.user_id]
+        else msgRxns[data.user_id] = data.emoji
+        return { ...prev, [data.message_id]: msgRxns }
+      })
+    })
     channel.listenForWhisper('typing', () => {
       setOtherTyping(true)
       clearTimeout(typingTimeout.current)
@@ -359,6 +380,7 @@ export default function ChatPage() {
     })
     return () => {
       channel.stopListening('.MessageSent')
+      channel.stopListening('.ReactionAdded')
       echo.leave(`conversation.${id}`)
       clearTimeout(typingTimeout.current)
     }
@@ -654,15 +676,27 @@ export default function ChatPage() {
   }
 
   const addReaction = (msgId: string, emoji: string) => {
-    setReactions(prev => {
-      if (prev[msgId] === emoji) {
-        const next = { ...prev }
-        delete next[msgId]
-        return next
-      }
-      return { ...prev, [msgId]: emoji }
+    if (!myId) return
+    const myCurrentEmoji = allReactions[msgId]?.[myId]
+    const isToggleOff = myCurrentEmoji === emoji
+
+    setAllReactions(prev => {
+      const msgRxns = { ...(prev[msgId] ?? {}) }
+      if (isToggleOff) delete msgRxns[myId]
+      else msgRxns[myId] = emoji
+      return { ...prev, [msgId]: msgRxns }
     })
     setContextMenu(null)
+
+    connectionsApi.reactToMessage(msgId, emoji).catch(() => {
+      // revert on error
+      setAllReactions(prev => {
+        const msgRxns = { ...(prev[msgId] ?? {}) }
+        if (isToggleOff) msgRxns[myId] = emoji
+        else delete msgRxns[myId]
+        return { ...prev, [msgId]: msgRxns }
+      })
+    })
   }
 
   return (
@@ -938,7 +972,9 @@ export default function ChatPage() {
                     const isFirstInChain = !prevMsg || prevMsg.sender.id !== msg.sender.id
                     const isLastInChain = !nextMsg || nextMsg.sender.id !== msg.sender.id
                     const dx = swipeDx[msg.id] ?? 0
-                    const msgReaction = reactions[msg.id]
+                    const msgRxnMap = allReactions[msg.id] ?? {}
+                    const rxnEmojis = [...new Set(Object.values(msgRxnMap))]
+                    const rxnCount = Object.values(msgRxnMap).length
 
                     return (
                       <motion.div
@@ -1027,8 +1063,8 @@ export default function ChatPage() {
                             </div>
                           </div>
 
-                          {/* Reaction */}
-                          {msgReaction && (
+                          {/* Reactions */}
+                          {rxnEmojis.length > 0 && (
                             <button
                               onClick={() => setContextMenu({ msg })}
                               className={cn(
@@ -1037,7 +1073,7 @@ export default function ChatPage() {
                                 'border-[#E8EAE6]'
                               )}
                             >
-                              {msgReaction}
+                              {rxnEmojis.join('')}{rxnCount > 1 ? ` ${rxnCount}` : ''}
                             </button>
                           )}
                         </div>
@@ -1121,7 +1157,7 @@ export default function ChatPage() {
                     onClick={() => addReaction(contextMenu.msg.id, emoji)}
                     className={cn(
                       'text-2xl w-11 h-11 rounded-full flex items-center justify-center transition-all active:scale-90',
-                      reactions[contextMenu.msg.id] === emoji
+                      myId && allReactions[contextMenu.msg.id]?.[myId] === emoji
                         ? 'bg-[#E8F0EA] scale-110'
                         : 'hover:bg-[#F4F1EA]'
                     )}

@@ -21,4 +21,6 @@ export const connectionsApi = {
     api.post(`/conversations/${conversationId}/messages`, form),
   clearConversation: (conversationId: string) =>
     api.delete(`/conversations/${conversationId}/messages`),
+  reactToMessage: (messageId: string, emoji: string) =>
+    api.post(`/messages/${messageId}/reactions`, { emoji }),
 }

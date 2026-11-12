@@ -26,7 +26,7 @@ class MessageController extends Controller
 
         $messages = $conversation->messages()
             ->withTrashed()
-            ->with(['sender.profile', 'attachments'])
+            ->with(['sender.profile', 'attachments', 'reactions'])
             ->latest()
             ->take(200)
             ->get()
