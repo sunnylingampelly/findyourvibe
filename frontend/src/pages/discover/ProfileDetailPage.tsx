@@ -460,7 +460,8 @@ export default function ProfileDetailPage() {
         <div className="flex gap-3">
           <button
             onClick={() => saveMutation.mutate()}
-            className={`w-12 h-12 rounded-2xl border flex items-center justify-center shrink-0 transition-colors ${
+            disabled={saveMutation.isPending}
+            className={`w-12 h-12 rounded-2xl border flex items-center justify-center shrink-0 transition-all disabled:opacity-60 ${
               isSaved ? 'bg-[#E8F0EA] border-[#C8DDD2] text-[#236B63]' : 'bg-white border-[#E8EAE6] text-[#A1AAA5]'
             }`}
           >

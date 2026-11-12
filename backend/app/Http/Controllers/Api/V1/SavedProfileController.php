@@ -40,23 +40,19 @@ class SavedProfileController extends Controller
             'saved_user_id' => ['required', 'exists:users,id', Rule::notIn([$request->user()->id])],
         ]);
 
-        $existing = SavedProfile::where('user_id', $request->user()->id)
-            ->where('saved_user_id', $validated['saved_user_id'])
-            ->first();
-
-        if ($existing) {
-            return response()->json(['success' => false, 'message' => 'Profile already saved.'], 422);
-        }
-
-        $saved = SavedProfile::create([
+        $saved = SavedProfile::firstOrCreate([
             'user_id' => $request->user()->id,
             'saved_user_id' => $validated['saved_user_id'],
         ]);
 
-        $savedUser = User::find($validated['saved_user_id']);
-        if ($savedUser) {
-            $saverName = $request->user()->profile?->display_name ?? $request->user()->name;
-            NotificationService::send($savedUser, $request->user(), 'profile_saved', "{$saverName} saved your profile");
+        if ($saved->wasRecentlyCreated) {
+            try {
+                $savedUser = User::find($validated['saved_user_id']);
+                if ($savedUser) {
+                    $saverName = $request->user()->profile?->display_name ?? $request->user()->name;
+                    NotificationService::send($savedUser, $request->user(), 'profile_saved', "{$saverName} saved your profile");
+                }
+            } catch (\Throwable) {}
         }
 
         return response()->json([
