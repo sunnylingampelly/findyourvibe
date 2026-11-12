@@ -15,6 +15,8 @@ use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\OnboardingController;
 use App\Http\Controllers\Api\V1\ProfileController;
 use App\Http\Controllers\Api\V1\ReportController;
+use App\Http\Controllers\Api\V1\ReviewController;
+use App\Http\Controllers\Api\V1\SafeMeetController;
 use App\Http\Controllers\Api\V1\SavedProfileController;
 use App\Http\Controllers\Api\V1\SwipeController;
 use App\Http\Controllers\Api\V1\Admin;
@@ -112,6 +114,19 @@ Route::prefix('v1')->group(function () {
         Route::post('bookings', [BookingController::class, 'store']);
         Route::patch('bookings/{id}', [BookingController::class, 'update']);
 
+        // Reviews (double-blind)
+        Route::post('bookings/{id}/reviews', [ReviewController::class, 'store']);
+        Route::get('bookings/{id}/reviews/mine', [ReviewController::class, 'myReviewForBooking']);
+        Route::get('profiles/{id}/reviews', [ReviewController::class, 'forProfile']);
+
+        // Safe Meet
+        Route::get('bookings/{id}/safe-meet', [SafeMeetController::class, 'show']);
+        Route::post('bookings/{id}/safe-meet', [SafeMeetController::class, 'store']);
+        Route::patch('safe-meets/{id}', [SafeMeetController::class, 'update']);
+
+        // Selfie verification
+        Route::post('me/selfie', [ProfileController::class, 'uploadSelfie']);
+
         // Notifications
         Route::get('notifications', [NotificationController::class, 'index']);
         Route::get('notifications/unread-count', [NotificationController::class, 'unreadCount']);
@@ -147,6 +162,8 @@ Route::prefix('v1')->group(function () {
             Route::get('reports', [Admin\ReportController::class, 'index']);
             Route::get('reports/{id}', [Admin\ReportController::class, 'show']);
             Route::post('reports/{id}/resolve', [Admin\ReportController::class, 'resolve']);
+
+            Route::post('users/{id}/verify-identity', [Admin\UserController::class, 'verifyIdentity']);
 
             Route::get('audit-logs', [Admin\AuditLogController::class, 'index']);
 

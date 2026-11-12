@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm, Controller } from 'react-hook-form'
-import { Camera, Check } from 'lucide-react'
+import { Camera, Check, ShieldCheck, Clock, Upload } from 'lucide-react'
 import { profileApi } from '../../api/profile'
 import { discoverApi } from '../../api/discover'
 import { useAuthStore } from '../../stores/authStore'
@@ -46,6 +46,7 @@ export default function EditProfilePage() {
   const allServices: Service[] = servicesData?.data?.data ?? []
 
   const [selectedServiceIds, setSelectedServiceIds] = useState<Set<string>>(new Set())
+  const [selfieFile, setSelfieFile] = useState<File | null>(null)
 
   const { register, handleSubmit, control, reset, formState: { errors, isSubmitting } } = useForm<FormData>()
 
@@ -82,6 +83,16 @@ export default function EditProfilePage() {
   }
 
   const fromDashboard = searchParams.get('section') === 'services'
+
+  const uploadSelfie = useMutation({
+    mutationFn: (file: File) => profileApi.uploadSelfie(file),
+    onSuccess: () => {
+      toast('Selfie submitted! We\'ll review within 24 hours.', 'success')
+      setSelfieFile(null)
+      qc.invalidateQueries({ queryKey: ['me'] })
+    },
+    onError: () => toast('Failed to upload selfie', 'error'),
+  })
 
   const save = useMutation({
     mutationFn: (formData: FormData) =>
@@ -244,6 +255,65 @@ export default function EditProfilePage() {
               )}
             </div>
           )}
+
+          {/* Identity verification */}
+          <div className="rounded-2xl border-[1.5px] border-[#E8EAE6] bg-white p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ShieldCheck size={18} className="text-[#236B63]" />
+                <span className="text-sm font-semibold text-[#24332F] font-manrope">Identity Verification</span>
+              </div>
+              {profile?.identity_verified ? (
+                <span className="flex items-center gap-1 text-xs font-bold text-[#236B63] bg-[#E8F0EA] px-2.5 py-1 rounded-full">
+                  <Check size={11} strokeWidth={3} /> Verified
+                </span>
+              ) : profile?.selfie_pending ? (
+                <span className="flex items-center gap-1 text-xs font-bold text-[#D9A45B] bg-[#FEF3DB] px-2.5 py-1 rounded-full">
+                  <Clock size={11} /> Pending Review
+                </span>
+              ) : (
+                <span className="text-xs text-[#A1AAA5]">Not verified</span>
+              )}
+            </div>
+
+            {!profile?.identity_verified && (
+              <>
+                <p className="text-xs text-[#A1AAA5] leading-relaxed">
+                  {profile?.selfie_pending
+                    ? 'Your selfie has been submitted. Our team verifies IDs within 24 hours.'
+                    : 'Submit a clear selfie photo. Our team verifies IDs within 24 hours. A verified badge appears on your profile.'}
+                </p>
+                {!profile?.selfie_pending && (
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-2 cursor-pointer border-[1.5px] border-dashed border-[#E8EAE6] rounded-xl px-4 py-3 hover:border-[#236B63] transition-colors">
+                      <Upload size={16} className="text-[#A1AAA5]" />
+                      <span className="text-sm text-[#A1AAA5]">
+                        {selfieFile ? selfieFile.name : 'Choose selfie photo…'}
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/*,.heic,.heif"
+                        className="hidden"
+                        onChange={e => setSelfieFile(e.target.files?.[0] ?? null)}
+                      />
+                    </label>
+                    {selfieFile && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        loading={uploadSelfie.isPending}
+                        onClick={() => uploadSelfie.mutate(selfieFile)}
+                        className="w-full"
+                      >
+                        Submit for Verification
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
 
           <Button type="submit" size="lg" loading={isSubmitting} className="mt-2">
             {fromDashboard ? 'Save & Go to Pricing' : 'Save Changes'}

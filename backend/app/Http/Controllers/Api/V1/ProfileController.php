@@ -76,6 +76,30 @@ class ProfileController extends Controller
         ]);
     }
 
+    public function uploadSelfie(Request $request): JsonResponse
+    {
+        $request->validate([
+            'selfie' => ['required', 'image', 'max:10240'],
+        ]);
+
+        $user = $request->user();
+
+        $existing = $user->profile?->selfie_photo;
+        if ($existing && !str_starts_with($existing, 'http')) {
+            Storage::disk('public')->delete($existing);
+        }
+
+        Storage::disk('public')->makeDirectory('selfies');
+        $path = $request->file('selfie')->store('selfies', 'public');
+        $user->profile()->updateOrCreate(['user_id' => $user->id], ['selfie_photo' => $path]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Selfie uploaded. Our team will verify your identity within 24 hours.',
+            'data' => ['selfie_url' => '/storage/' . $path],
+        ]);
+    }
+
     public function updatePhoto(Request $request): JsonResponse
     {
         $request->validate([

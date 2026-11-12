@@ -112,4 +112,19 @@ class UserController extends Controller
             'message' => "User account {$validated['status']}.",
         ]);
     }
+
+    public function verifyIdentity(Request $request, string $id): JsonResponse
+    {
+        $user = User::with('profile')->findOrFail($id);
+
+        if (!$user->profile?->selfie_photo) {
+            return response()->json(['success' => false, 'message' => 'User has not submitted a selfie.'], 422);
+        }
+
+        $user->profile->update(['identity_verified_at' => now()]);
+
+        $this->auditService->logFromRequest($request, 'identity_verified', 'User', $user->id, []);
+
+        return response()->json(['success' => true, 'message' => 'Identity verified.']);
+    }
 }

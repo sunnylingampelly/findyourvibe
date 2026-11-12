@@ -12,16 +12,17 @@ class UserProfile extends Model
 
     protected $fillable = [
         'user_id', 'display_name', 'date_of_birth', 'gender', 'bio', 'introduction',
-        'country_id', 'city_id', 'profile_photo', 'is_companion',
-        'companion_verification_status', 'avg_rating', 'rating_count',
+        'country_id', 'city_id', 'profile_photo', 'selfie_photo', 'identity_verified_at',
+        'is_companion', 'companion_verification_status', 'avg_rating', 'rating_count',
     ];
 
     protected function casts(): array
     {
         return [
-            'date_of_birth' => 'date',
-            'is_companion' => 'boolean',
-            'avg_rating' => 'decimal:2',
+            'date_of_birth'       => 'date',
+            'is_companion'        => 'boolean',
+            'avg_rating'          => 'decimal:2',
+            'identity_verified_at' => 'datetime',
         ];
     }
 

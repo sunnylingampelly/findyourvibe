@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Calendar, Clock, MapPin, CheckCircle, XCircle, MessageCircle, ChevronRight } from 'lucide-react'
+import { Calendar, Clock, MapPin, CheckCircle, XCircle, MessageCircle, ChevronRight, Shield, Star, AlertTriangle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { bookingsApi } from '../../api/bookings'
 import { connectionsApi } from '../../api/connections'
+import { reviewsApi } from '../../api/reviews'
+import { safeMeetApi } from '../../api/safeMeet'
 import { useAuthStore } from '../../stores/authStore'
 import { useToast } from '../../components/ui/Toast'
 import AppShell from '../../components/layout/AppShell'
@@ -12,7 +14,7 @@ import PageHeader from '../../components/layout/PageHeader'
 import Avatar from '../../components/ui/Avatar'
 import BottomSheet from '../../components/ui/BottomSheet'
 import Button from '../../components/ui/Button'
-import type { Booking } from '../../types'
+import type { Booking, SafeMeet } from '../../types'
 
 const SERVICE_ICONS: Record<string, string> = {
   'movie-companion': '🎬', 'coffee-buddy': '☕', 'event-companion': '🎭',
@@ -33,13 +35,23 @@ export default function BookingsPage() {
   const navigate = useNavigate()
   const { toast } = useToast()
   const qc = useQueryClient()
-  // Check nested profile (new sessions) OR flat root fields (old cached sessions)
   const isCompanion = (user?.profile?.is_companion ?? (user as any)?.is_companion) &&
     ((user?.profile?.companion_verification_status ?? (user as any)?.companion_verification_status) === 'approved')
 
   const [tab, setTab] = useState<'sent' | 'received'>('sent')
   const [selected, setSelected] = useState<Booking | null>(null)
   const [responseNote, setResponseNote] = useState('')
+
+  // Review state
+  const [reviewBooking, setReviewBooking] = useState<Booking | null>(null)
+  const [reviewRating, setReviewRating] = useState(5)
+  const [reviewBody, setReviewBody] = useState('')
+
+  // Safe Meet state
+  const [safeMeetBooking, setSafeMeetBooking] = useState<Booking | null>(null)
+  const [safeMeetData, setSafeMeetData] = useState<SafeMeet | null>(null)
+  const [trustedName, setTrustedName] = useState('')
+  const [trustedPhone, setTrustedPhone] = useState('')
 
   const role = tab === 'received' ? 'companion' : 'requester'
   const { data, isLoading } = useQuery({
@@ -65,6 +77,41 @@ export default function BookingsPage() {
     mutationFn: (id: string) => bookingsApi.updateBooking(id, 'cancelled'),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['bookings'] }); toast('Booking cancelled', 'success') },
     onError: () => toast('Could not cancel booking', 'error'),
+  })
+
+  const submitReview = useMutation({
+    mutationFn: () => reviewsApi.submit(reviewBooking!.id, { rating: reviewRating, body: reviewBody || undefined }),
+    onSuccess: (res) => {
+      const bothPublished = res.data?.data?.both_published
+      toast(bothPublished ? '⭐ Reviews are now live!' : '✓ Review submitted. Waiting for the other party.', 'success')
+      setReviewBooking(null)
+      setReviewRating(5)
+      setReviewBody('')
+      qc.invalidateQueries({ queryKey: ['bookings'] })
+    },
+    onError: (e: unknown) => {
+      const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message
+      toast(msg ?? 'Could not submit review', 'error')
+    },
+  })
+
+  const setupSafeMeet = useMutation({
+    mutationFn: () => safeMeetApi.setup(safeMeetBooking!.id, { trusted_name: trustedName, trusted_phone: trustedPhone }),
+    onSuccess: (res) => {
+      setSafeMeetData(res.data?.data)
+      toast('Safe Meet active 🛡️', 'success')
+    },
+    onError: () => toast('Could not set up Safe Meet', 'error'),
+  })
+
+  const safeMeetAction = useMutation({
+    mutationFn: (action: 'checkin' | 'checkout' | 'sos') => safeMeetApi.action(safeMeetData!.id, action),
+    onSuccess: (res, action) => {
+      setSafeMeetData(res.data?.data)
+      const msg = action === 'sos' ? '🚨 SOS sent!' : action === 'checkin' ? 'Checked in 🛡️' : 'Checked out ✓'
+      toast(msg, action === 'sos' ? 'error' : 'success')
+    },
+    onError: () => toast('Action failed', 'error'),
   })
 
   return (
@@ -180,6 +227,7 @@ export default function BookingsPage() {
                       )}
                     </div>
 
+                    {/* Pending actions */}
                     {booking.status === 'pending' && (
                       <div className="border-t border-[#F4F1EA] px-4 py-2.5 flex gap-2">
                         {tab === 'received' ? (
@@ -214,6 +262,35 @@ export default function BookingsPage() {
                             <XCircle size={13} /> Cancel Request
                           </button>
                         )}
+                      </div>
+                    )}
+
+                    {/* Safe Meet button for accepted bookings */}
+                    {booking.status === 'accepted' && (
+                      <div className="border-t border-[#F4F1EA] px-4 py-2.5 flex gap-2">
+                        <button
+                          onClick={() => {
+                            setSafeMeetBooking(booking)
+                            setTrustedName('')
+                            setTrustedPhone('')
+                            setSafeMeetData(null)
+                          }}
+                          className="flex items-center gap-1.5 py-2 px-4 bg-[#E8F0EA] text-[#236B63] rounded-xl text-xs font-semibold"
+                        >
+                          <Shield size={13} /> Safe Meet
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Leave Review for completed bookings */}
+                    {booking.status === 'completed' && (
+                      <div className="border-t border-[#F4F1EA] px-4 py-2.5 flex gap-2">
+                        <button
+                          onClick={() => { setReviewBooking(booking); setReviewRating(5); setReviewBody('') }}
+                          className="flex items-center gap-1.5 py-2 px-4 bg-[#FFF5E6] text-[#D9A45B] rounded-xl text-xs font-semibold"
+                        >
+                          <Star size={13} /> Leave Review
+                        </button>
                       </div>
                     )}
                   </motion.div>
@@ -255,6 +332,126 @@ export default function BookingsPage() {
                 <XCircle size={15} /> Decline
               </button>
             </div>
+          </div>
+        )}
+      </BottomSheet>
+
+      {/* Review sheet */}
+      <BottomSheet open={!!reviewBooking} onClose={() => setReviewBooking(null)} title="Leave a Review">
+        {reviewBooking && (
+          <div className="space-y-4">
+            <p className="text-sm text-[#77817C]">
+              Rate your experience with {tab === 'sent' ? reviewBooking.companion?.display_name : reviewBooking.requester?.display_name}
+            </p>
+            <div className="flex gap-2 justify-center py-2">
+              {[1, 2, 3, 4, 5].map(n => (
+                <button key={n} onClick={() => setReviewRating(n)}>
+                  <Star size={32} className={n <= reviewRating ? 'text-[#D9A45B] fill-[#D9A45B]' : 'text-[#E8EAE6]'} />
+                </button>
+              ))}
+            </div>
+            <textarea
+              value={reviewBody}
+              onChange={e => setReviewBody(e.target.value)}
+              rows={3}
+              placeholder="Share your experience (optional)…"
+              className="w-full border border-[#E8EAE6] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#236B63] resize-none"
+            />
+            <p className="text-xs text-[#A1AAA5]">Your review will only be visible once both parties have submitted theirs.</p>
+            <Button loading={submitReview.isPending} onClick={() => submitReview.mutate()} className="w-full">
+              Submit Review
+            </Button>
+          </div>
+        )}
+      </BottomSheet>
+
+      {/* Safe Meet sheet */}
+      <BottomSheet open={!!safeMeetBooking} onClose={() => setSafeMeetBooking(null)} title="Safe Meet 🛡️">
+        {safeMeetBooking && (
+          <div className="space-y-4">
+            {!safeMeetData ? (
+              <>
+                <p className="text-sm text-[#77817C]">
+                  Enter a trusted contact who should be alerted if you trigger SOS during this meet.
+                </p>
+                <div>
+                  <label className="text-xs font-semibold text-[#77817C] block mb-1">Contact Name</label>
+                  <input
+                    value={trustedName}
+                    onChange={e => setTrustedName(e.target.value)}
+                    placeholder="e.g. Mom, Best Friend"
+                    className="w-full border border-[#E8EAE6] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#236B63]"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-[#77817C] block mb-1">Contact Phone</label>
+                  <input
+                    value={trustedPhone}
+                    onChange={e => setTrustedPhone(e.target.value)}
+                    placeholder="+91 98765 43210"
+                    type="tel"
+                    className="w-full border border-[#E8EAE6] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#236B63]"
+                  />
+                </div>
+                <Button
+                  loading={setupSafeMeet.isPending}
+                  onClick={() => setupSafeMeet.mutate()}
+                  disabled={!trustedName || !trustedPhone}
+                  className="w-full"
+                >
+                  Activate Safe Meet
+                </Button>
+              </>
+            ) : (
+              <>
+                <div className="bg-[#E8F0EA] rounded-xl p-3">
+                  <p className="text-xs text-[#236B63] font-semibold">Safe Meet Active ✓</p>
+                  <p className="text-xs text-[#77817C] mt-0.5">
+                    Trusted contact: {safeMeetData.trusted_name} ({safeMeetData.trusted_phone})
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  {!safeMeetData.checkin_at && (
+                    <Button onClick={() => safeMeetAction.mutate('checkin')} loading={safeMeetAction.isPending} className="w-full">
+                      <Shield size={15} /> Check In — Start Meet
+                    </Button>
+                  )}
+                  {safeMeetData.checkin_at && !safeMeetData.checkout_at && (
+                    <>
+                      <div className="bg-[#E8F0EA] rounded-xl px-3 py-2 text-xs text-[#236B63]">
+                        ✓ Checked in at {new Date(safeMeetData.checkin_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                      </div>
+                      <button
+                        onClick={() => safeMeetAction.mutate('checkout')}
+                        disabled={safeMeetAction.isPending}
+                        className="w-full py-3 bg-[#E8F0EA] text-[#236B63] rounded-2xl text-sm font-semibold disabled:opacity-50"
+                      >
+                        Check Out — End Meet ✓
+                      </button>
+                    </>
+                  )}
+                  {safeMeetData.checkout_at && (
+                    <div className="bg-[#E8F0EA] rounded-xl px-3 py-2 text-xs text-[#236B63] text-center">
+                      Meet completed ✓
+                    </div>
+                  )}
+                  {!safeMeetData.checkout_at && !safeMeetData.sos_triggered_at && (
+                    <button
+                      onClick={() => safeMeetAction.mutate('sos')}
+                      disabled={safeMeetAction.isPending}
+                      className="w-full py-3 bg-[#D76D6D] text-white rounded-2xl text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50"
+                    >
+                      <AlertTriangle size={15} /> SOS — Send Emergency Alert
+                    </button>
+                  )}
+                  {safeMeetData.sos_triggered_at && (
+                    <div className="bg-[#FFF0EE] rounded-xl px-3 py-2 text-xs text-[#D76D6D] font-semibold text-center">
+                      🚨 SOS triggered at {new Date(safeMeetData.sos_triggered_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         )}
       </BottomSheet>

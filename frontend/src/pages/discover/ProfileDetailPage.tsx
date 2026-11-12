@@ -7,13 +7,14 @@ import { discoverApi } from '../../api/discover'
 import { connectionsApi } from '../../api/connections'
 import { profileApi } from '../../api/profile'
 import { bookingsApi } from '../../api/bookings'
+import { reviewsApi } from '../../api/reviews'
 import { useToast } from '../../components/ui/Toast'
 import { Skeleton } from '../../components/ui/Skeleton'
 import Button from '../../components/ui/Button'
 import BottomSheet from '../../components/ui/BottomSheet'
 import { staticMapUrl } from '../../components/ui/PlacesAutocomplete'
 import { getInitials } from '../../lib/utils'
-import type { PublicProfile, Service } from '../../types'
+import type { PublicProfile, Service, Review } from '../../types'
 
 const SERVICE_ICONS: Record<string, string> = {
   'movie-companion': '🎬',
@@ -75,6 +76,13 @@ export default function ProfileDetailPage() {
     myConnection ? 'connected' : pendingRequest ? 'pending' : 'none'
 
   const profile: PublicProfile | undefined = data?.data?.data
+
+  const { data: reviewsData } = useQuery({
+    queryKey: ['profile-reviews', id],
+    queryFn: () => reviewsApi.forProfile(id!),
+    enabled: !!id,
+  })
+  const reviews: Review[] = reviewsData?.data?.data ?? []
 
   // bookLocation derived AFTER profile is available
   const bookLocation = [profile?.city?.name, profile?.country?.name].filter(Boolean).join(', ')
@@ -249,6 +257,11 @@ export default function ProfileDetailPage() {
                 </h1>
                 {profile.companion_verification_status === 'approved' && (
                   <CheckCircle2 size={20} className="text-[#4D9274] fill-white shrink-0" />
+                )}
+                {profile.identity_verified && (
+                  <span className="text-[9px] font-bold bg-white/20 backdrop-blur-sm text-white px-2 py-0.5 rounded-full border border-white/30 shrink-0">
+                    🆔 ID Verified
+                  </span>
                 )}
               </div>
               {profile.city && (
@@ -431,9 +444,9 @@ export default function ProfileDetailPage() {
           )}
 
           {tab === 'reviews' && (
-            <div>
+            <div className="space-y-4">
               {profile.avg_rating && profile.avg_rating > 0 ? (
-                <div className="bg-white rounded-2xl p-5 border border-[#E8EAE6] text-center mb-4">
+                <div className="bg-white rounded-2xl p-5 border border-[#E8EAE6] text-center">
                   <div className="font-manrope font-extrabold text-5xl text-[#24332F] mb-1">{Number(profile.avg_rating).toFixed(1)}</div>
                   <div className="flex justify-center gap-1 mb-2">
                     {[1,2,3,4,5].map(n => (
@@ -443,11 +456,30 @@ export default function ProfileDetailPage() {
                   <p className="text-[#A1AAA5] text-sm">{profile.rating_count ?? 0} reviews</p>
                 </div>
               ) : (
-                <div className="text-center py-12">
+                <div className="text-center py-8">
                   <div className="w-14 h-14 bg-[#E8F0EA] rounded-2xl flex items-center justify-center mx-auto mb-3">
                     <Star size={22} className="text-[#236B63]" />
                   </div>
                   <p className="text-[#A1AAA5] text-sm">No reviews yet</p>
+                  <p className="text-[#A1AAA5] text-xs mt-1">Reviews appear after both parties submit one</p>
+                </div>
+              )}
+              {reviews.length > 0 && (
+                <div className="space-y-3">
+                  {reviews.map(r => (
+                    <div key={r.id} className="bg-white rounded-2xl border border-[#E8EAE6] p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex gap-0.5">
+                          {[1,2,3,4,5].map(n => (
+                            <Star key={n} size={13} className={n <= r.rating ? 'text-[#D9A45B] fill-[#D9A45B]' : 'text-[#E8EAE6]'} />
+                          ))}
+                        </div>
+                        <span className="text-[10px] text-[#A1AAA5]">{r.created_at}</span>
+                      </div>
+                      {r.body && <p className="text-sm text-[#24332F] leading-relaxed mb-2">{r.body}</p>}
+                      <p className="text-[10px] text-[#A1AAA5] capitalize">{r.reviewer_role} · {r.reviewer_name}</p>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>

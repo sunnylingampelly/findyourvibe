@@ -24,6 +24,8 @@ class UserResource extends JsonResource
             'companion_verification_status' => $profile?->companion_verification_status ?? 'not_started',
             'avg_rating' => $profile?->avg_rating,
             'rating_count' => $profile?->rating_count ?? 0,
+            'identity_verified' => (bool) $profile?->identity_verified_at,
+            'selfie_pending' => $profile?->selfie_photo && !$profile?->identity_verified_at,
             'country' => $profile?->country ? ['id' => $profile->country->id, 'name' => $profile->country->name, 'code' => $profile->country->code, 'phone_code' => $profile->country->phone_code ?? ''] : null,
             'city' => $profile?->city ? ['id' => $profile->city->id, 'name' => $profile->city->name, 'country_id' => $profile->city->country_id] : null,
         ];
@@ -42,6 +44,7 @@ class UserResource extends JsonResource
             'companion_verification_status' => $profileData['companion_verification_status'],
             'avg_rating' => $profileData['avg_rating'],
             'rating_count' => $profileData['rating_count'],
+            'identity_verified' => $profileData['identity_verified'],
             'location' => [
                 'city' => $profile?->city ? ['id' => $profile->city->id, 'name' => $profile->city->name] : null,
                 'country' => $profile?->country ? ['id' => $profile->country->id, 'name' => $profile->country->name, 'code' => $profile->country->code] : null,

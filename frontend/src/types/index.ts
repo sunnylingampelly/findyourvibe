@@ -29,6 +29,9 @@ export interface UserProfile {
   companion_verification_status: CompanionStatus
   avg_rating?: number
   rating_count: number
+  identity_verified?: boolean
+  selfie_pending?: boolean
+  selfie_photo?: string
 }
 
 export type CompanionStatus =
@@ -90,9 +93,30 @@ export interface PublicProfile {
   companion_verification_status?: CompanionStatus
   avg_rating?: number
   rating_count?: number
+  identity_verified?: boolean
   interests?: Interest[]
   languages?: Language[]
   services?: Service[]
+}
+
+export interface Review {
+  id: string
+  rating: number
+  body?: string
+  reviewer_role: 'requester' | 'companion'
+  reviewer_name: string
+  created_at: string
+}
+
+export interface SafeMeet {
+  id: string
+  booking_id: string
+  trusted_name: string
+  trusted_phone: string
+  checkin_at?: string | null
+  checkout_at?: string | null
+  sos_triggered_at?: string | null
+  status: 'setup' | 'active' | 'completed' | 'sos'
 }
 
 export interface ConnectionRequest {
