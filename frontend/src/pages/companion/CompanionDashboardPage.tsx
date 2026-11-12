@@ -98,7 +98,7 @@ export default function CompanionDashboardPage() {
   }
 
   const savePkg = useMutation({
-    mutationFn: () => {
+    mutationFn: (): Promise<any> => {
       const payload = {
         title: pkgTitle,
         description: pkgDesc || undefined,
