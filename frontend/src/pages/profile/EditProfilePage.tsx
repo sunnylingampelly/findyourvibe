@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm, Controller } from 'react-hook-form'
-import { Camera, Check, ShieldCheck, Clock, Upload } from 'lucide-react'
+import { Camera, Check, ShieldCheck, Clock, Upload, Mic, MicOff, Play, Pause, Trash2, ChevronDown } from 'lucide-react'
 import { profileApi } from '../../api/profile'
 import { discoverApi } from '../../api/discover'
 import { useAuthStore } from '../../stores/authStore'
@@ -13,6 +13,17 @@ import Input from '../../components/ui/Input'
 import Button from '../../components/ui/Button'
 import { GenderPicker, DobPicker } from '../../components/ui/FormPickers'
 import type { Service, User } from '../../types'
+
+const PROMPT_OPTIONS = [
+  'What makes me laugh',
+  'My favourite way to spend a weekend',
+  'The best trip I ever took',
+  'A hidden gem in my city',
+  'The activity I could do for hours',
+  'My go-to conversation starter',
+  'Something most people don\'t know about me',
+  'What I\'m looking for in a companion',
+]
 
 const SERVICE_ICONS: Record<string, string> = {
   'movie-companion': '🎬', 'coffee-buddy': '☕', 'event-companion': '🎭',
@@ -48,6 +59,20 @@ export default function EditProfilePage() {
   const [selectedServiceIds, setSelectedServiceIds] = useState<Set<string>>(new Set())
   const [selfieFile, setSelfieFile] = useState<File | null>(null)
 
+  // Voice intro
+  const [isRecording, setIsRecording] = useState(false)
+  const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null)
+  const [isPlaying, setIsPlaying] = useState(false)
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const audioChunksRef = useRef<Blob[]>([])
+  const playbackRef = useRef<HTMLAudioElement | null>(null)
+  const recordTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Prompts
+  const [prompts, setPrompts] = useState<Array<{ q: string; a: string }>>([
+    { q: '', a: '' }, { q: '', a: '' }, { q: '', a: '' },
+  ])
+
   const { register, handleSubmit, control, reset, formState: { errors, isSubmitting } } = useForm<FormData>()
 
   useEffect(() => {
@@ -62,6 +87,13 @@ export default function EditProfilePage() {
     }
     if (user?.services) {
       setSelectedServiceIds(new Set(user.services.map(s => String(s.id))))
+    }
+    if (user?.profile) {
+      setPrompts([
+        { q: user.profile.prompt_1_q ?? '', a: user.profile.prompt_1_a ?? '' },
+        { q: user.profile.prompt_2_q ?? '', a: user.profile.prompt_2_a ?? '' },
+        { q: user.profile.prompt_3_q ?? '', a: user.profile.prompt_3_a ?? '' },
+      ])
     }
   }, [user, reset])
 
@@ -99,6 +131,12 @@ export default function EditProfilePage() {
       profileApi.updateProfile({
         ...(formData as unknown as Record<string, unknown>),
         service_ids: Array.from(selectedServiceIds),
+        prompt_1_q: prompts[0].q || null,
+        prompt_1_a: prompts[0].a || null,
+        prompt_2_q: prompts[1].q || null,
+        prompt_2_a: prompts[1].a || null,
+        prompt_3_q: prompts[2].q || null,
+        prompt_3_a: prompts[2].a || null,
       }),
     onSuccess: () => {
       toast('Profile updated!', 'success')
@@ -107,6 +145,64 @@ export default function EditProfilePage() {
     },
     onError: () => toast('Failed to save', 'error'),
   })
+
+  const uploadVoice = useMutation({
+    mutationFn: (blob: Blob) => {
+      const file = new File([blob], 'voice-intro.webm', { type: blob.type })
+      return profileApi.uploadVoiceIntro(file)
+    },
+    onSuccess: () => {
+      toast('Voice intro saved!', 'success')
+      setRecordedBlob(null)
+      qc.invalidateQueries({ queryKey: ['me'] })
+    },
+    onError: () => toast('Failed to upload voice intro', 'error'),
+  })
+
+  const deleteVoice = useMutation({
+    mutationFn: () => profileApi.deleteVoiceIntro(),
+    onSuccess: () => {
+      toast('Voice intro removed', 'success')
+      qc.invalidateQueries({ queryKey: ['me'] })
+    },
+    onError: () => toast('Failed to remove voice intro', 'error'),
+  })
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const mr = new MediaRecorder(stream)
+      audioChunksRef.current = []
+      mr.ondataavailable = e => audioChunksRef.current.push(e.data)
+      mr.onstop = () => {
+        const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' })
+        setRecordedBlob(blob)
+        stream.getTracks().forEach(t => t.stop())
+      }
+      mr.start()
+      mediaRecorderRef.current = mr
+      setIsRecording(true)
+      recordTimerRef.current = setTimeout(() => stopRecording(), 30000)
+    } catch {
+      toast('Microphone access required', 'error')
+    }
+  }
+
+  const stopRecording = () => {
+    mediaRecorderRef.current?.stop()
+    setIsRecording(false)
+    if (recordTimerRef.current) clearTimeout(recordTimerRef.current)
+  }
+
+  const togglePlayback = () => {
+    if (!recordedBlob) return
+    if (!playbackRef.current) {
+      playbackRef.current = new Audio(URL.createObjectURL(recordedBlob))
+      playbackRef.current.onended = () => setIsPlaying(false)
+    }
+    if (isPlaying) { playbackRef.current.pause(); setIsPlaying(false) }
+    else { playbackRef.current.play(); setIsPlaying(true) }
+  }
 
   const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -255,6 +351,116 @@ export default function EditProfilePage() {
               )}
             </div>
           )}
+
+          {/* Profile prompts */}
+          <div className="space-y-3">
+            <div>
+              <label className="block text-sm font-semibold text-[#24332F] font-manrope mb-0.5">Profile Prompts</label>
+              <p className="text-xs text-[#A1AAA5] mb-3">Add up to 3 Q&A cards to spark conversations on your profile.</p>
+            </div>
+            {prompts.map((p, i) => (
+              <div key={i} className="rounded-2xl border-[1.5px] border-[#E8EAE6] bg-white p-4 space-y-2">
+                <div className="relative">
+                  <select
+                    value={p.q}
+                    onChange={e => setPrompts(prev => prev.map((pp, ii) => ii === i ? { ...pp, q: e.target.value } : pp))}
+                    className="w-full border-[1.5px] border-[#E8EAE6] rounded-xl px-3 py-2.5 text-sm text-[#24332F] focus:outline-none focus:border-[#236B63] bg-white appearance-none pr-8"
+                  >
+                    <option value="">Choose a prompt…</option>
+                    {PROMPT_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                  </select>
+                  <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#A1AAA5] pointer-events-none" />
+                </div>
+                {p.q && (
+                  <textarea
+                    value={p.a}
+                    onChange={e => setPrompts(prev => prev.map((pp, ii) => ii === i ? { ...pp, a: e.target.value } : pp))}
+                    placeholder="Your answer…"
+                    rows={2}
+                    maxLength={500}
+                    className="w-full border-[1.5px] border-[#E8EAE6] rounded-xl px-3 py-2.5 text-sm text-[#24332F] placeholder:text-[#A1AAA5] focus:outline-none focus:border-[#236B63] resize-none"
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Voice intro */}
+          <div className="rounded-2xl border-[1.5px] border-[#E8EAE6] bg-white p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Mic size={18} className="text-[#236B63]" />
+                <span className="text-sm font-semibold text-[#24332F] font-manrope">Voice Intro</span>
+              </div>
+              {profile?.voice_intro_url && !recordedBlob && (
+                <span className="text-xs font-bold text-[#236B63] bg-[#E8F0EA] px-2.5 py-1 rounded-full flex items-center gap-1">
+                  <Check size={11} strokeWidth={3} /> Saved
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-[#A1AAA5] leading-relaxed">
+              Record a 30-second voice intro. It plays on your profile so people can hear your personality before connecting.
+            </p>
+
+            {/* Existing voice intro playback */}
+            {profile?.voice_intro_url && !recordedBlob && (
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-[#77817C] flex-1">Current voice intro saved</span>
+                <button
+                  type="button"
+                  onClick={() => deleteVoice.mutate()}
+                  disabled={deleteVoice.isPending}
+                  className="text-[#D76D6D] text-xs font-semibold flex items-center gap-1 disabled:opacity-50"
+                >
+                  <Trash2 size={13} /> Remove
+                </button>
+              </div>
+            )}
+
+            {/* Recorded blob controls */}
+            {recordedBlob && (
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={togglePlayback}
+                  className="w-9 h-9 rounded-full bg-[#E8F0EA] flex items-center justify-center shrink-0"
+                >
+                  {isPlaying ? <Pause size={15} className="text-[#236B63]" /> : <Play size={15} className="text-[#236B63] ml-0.5" />}
+                </button>
+                <span className="text-xs text-[#77817C] flex-1">Recording ready</span>
+                <Button
+                  type="button"
+                  size="sm"
+                  loading={uploadVoice.isPending}
+                  onClick={() => uploadVoice.mutate(recordedBlob)}
+                >
+                  Save
+                </Button>
+                <button type="button" onClick={() => { setRecordedBlob(null); playbackRef.current = null }} className="text-[#A1AAA5]">
+                  <Trash2 size={15} />
+                </button>
+              </div>
+            )}
+
+            {/* Record button */}
+            {!recordedBlob && (
+              <button
+                type="button"
+                onClick={isRecording ? stopRecording : startRecording}
+                className={`w-full py-3 rounded-xl flex items-center justify-center gap-2 text-sm font-semibold transition-colors ${
+                  isRecording
+                    ? 'bg-[#D76D6D] text-white animate-pulse'
+                    : 'bg-[#E8F0EA] text-[#236B63] hover:bg-[#D6EBE2]'
+                }`}
+              >
+                {isRecording ? <MicOff size={16} /> : <Mic size={16} />}
+                {isRecording ? 'Stop Recording' : (profile?.voice_intro_url ? 'Record New Intro' : 'Start Recording')}
+              </button>
+            )}
+            {isRecording && (
+              <p className="text-xs text-center text-[#A1AAA5]">Recording… (max 30 sec)</p>
+            )}
+          </div>
 
           {/* Identity verification */}
           <div className="rounded-2xl border-[1.5px] border-[#E8EAE6] bg-white p-4 space-y-3">

@@ -12,6 +12,8 @@ class UserProfile extends Model
 
     protected $fillable = [
         'user_id', 'display_name', 'date_of_birth', 'gender', 'bio', 'introduction',
+        'prompt_1_q', 'prompt_1_a', 'prompt_2_q', 'prompt_2_a', 'prompt_3_q', 'prompt_3_a',
+        'voice_intro',
         'country_id', 'city_id', 'profile_photo', 'selfie_photo', 'identity_verified_at',
         'is_companion', 'companion_verification_status', 'avg_rating', 'rating_count',
     ];
@@ -44,6 +46,17 @@ class UserProfile extends Model
     public function getAgeAttribute(): ?int
     {
         return $this->date_of_birth?->age;
+    }
+
+    public function getVoiceIntroUrlAttribute(): ?string
+    {
+        if (!$this->voice_intro) {
+            return null;
+        }
+        if (str_starts_with($this->voice_intro, 'http')) {
+            return $this->voice_intro;
+        }
+        return '/storage/' . $this->voice_intro;
     }
 
     public function getProfilePhotoUrlAttribute(): ?string

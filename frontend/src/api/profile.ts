@@ -15,4 +15,12 @@ export const profileApi = {
     fd.append('selfie', file)
     return api.post('/me/selfie', fd)
   },
+  uploadVoiceIntro: (file: File) => {
+    const fd = new FormData()
+    fd.append('audio', file)
+    return api.post('/me/voice-intro', fd)
+  },
+  deleteVoiceIntro: () => api.delete('/me/voice-intro'),
+  updatePrompts: (prompts: Record<string, string | null>) =>
+    api.put('/me/profile', prompts),
 }

@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, MapPin, Star, Bookmark, Heart, Flag, MessageCircle, Languages, Clock, CheckCircle2, CalendarDays, IndianRupee, UserPlus, Lock, Send } from 'lucide-react'
+import { ArrowLeft, MapPin, Star, Bookmark, Heart, Flag, MessageCircle, Languages, Clock, CheckCircle2, CalendarDays, IndianRupee, UserPlus, Lock, Send, Play, Pause, Mic } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { discoverApi } from '../../api/discover'
 import { connectionsApi } from '../../api/connections'
@@ -30,6 +30,41 @@ const SERVICE_ICONS: Record<string, string> = {
 }
 
 type Tab = 'about' | 'services' | 'reviews'
+
+function VoicePlayer({ url }: { url: string }) {
+  const audioRef = useRef<HTMLAudioElement>(null)
+  const [playing, setPlaying] = useState(false)
+
+  const toggle = () => {
+    const a = audioRef.current
+    if (!a) return
+    if (playing) { a.pause(); setPlaying(false) }
+    else { a.play(); setPlaying(true) }
+  }
+
+  return (
+    <div className="bg-white rounded-2xl border border-[#E8EAE6] p-4 flex items-center gap-3">
+      <button
+        onClick={toggle}
+        className="w-10 h-10 rounded-full bg-[#236B63] flex items-center justify-center shrink-0"
+      >
+        {playing ? <Pause size={16} className="text-white" /> : <Play size={16} className="text-white ml-0.5" />}
+      </button>
+      <div className="flex-1 min-w-0">
+        <p className="text-xs font-semibold text-[#24332F] font-manrope flex items-center gap-1.5">
+          <Mic size={11} className="text-[#236B63]" /> Voice Intro
+        </p>
+        <p className="text-[10px] text-[#A1AAA5] mt-0.5">Tap to listen</p>
+      </div>
+      <audio
+        ref={audioRef}
+        src={url}
+        onEnded={() => setPlaying(false)}
+        onPause={() => setPlaying(false)}
+      />
+    </div>
+  )
+}
 
 export default function ProfileDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -321,9 +356,26 @@ export default function ProfileDetailPage() {
         >
           {tab === 'about' && (
             <div className="space-y-5">
-              {!hasAbout && (
+              {!hasAbout && !profile.voice_intro_url && !(profile.prompt_1_q && profile.prompt_1_a) && (
                 <p className="text-[#A1AAA5] text-sm text-center py-8">No profile details yet.</p>
               )}
+
+              {/* Voice intro */}
+              {profile.voice_intro_url && (
+                <VoicePlayer url={profile.voice_intro_url} />
+              )}
+
+              {/* Profile prompts */}
+              {([
+                { q: profile.prompt_1_q, a: profile.prompt_1_a },
+                { q: profile.prompt_2_q, a: profile.prompt_2_a },
+                { q: profile.prompt_3_q, a: profile.prompt_3_a },
+              ] as Array<{ q?: string; a?: string }>).filter(p => p.q && p.a).map((p, i) => (
+                <div key={i} className="bg-white rounded-2xl border border-[#E8EAE6] p-4">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-[#A1AAA5] mb-1">{p.q}</p>
+                  <p className="text-[#24332F] leading-relaxed text-[0.925rem]">{p.a}</p>
+                </div>
+              ))}
 
               {profile.introduction && (
                 <div className="bg-white rounded-2xl p-4 border border-[#E8EAE6]">

@@ -96,6 +96,42 @@ class SwipeController extends Controller
         ], 201);
     }
 
+    public function received(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        // People who right-swiped us and we haven't swiped back yet
+        $vibers = Swipe::where('swiped_id', $user->id)
+            ->where('direction', 'right')
+            ->whereNotIn('swiper_id', function ($q) use ($user) {
+                $q->select('swiped_id')
+                  ->from('swipes')
+                  ->where('swiper_id', $user->id);
+            })
+            ->with(['swiper.profile.country', 'swiper.profile.city'])
+            ->latest()
+            ->paginate(20);
+
+        $data = $vibers->through(function ($swipe) {
+            $swiper = $swipe->swiper;
+            $profile = $swiper?->profile;
+            return [
+                'swipe_id' => $swipe->id,
+                'id' => $swiper?->id,
+                'display_name' => $profile?->display_name ?? $swiper?->name,
+                'age' => $profile?->age,
+                'profile_photo_url' => $profile?->profile_photo_url,
+                'city' => $profile?->city ? ['id' => $profile->city->id, 'name' => $profile->city->name] : null,
+                'country' => $profile?->country ? ['id' => $profile->country->id, 'name' => $profile->country->name] : null,
+                'bio' => $profile?->bio,
+                'identity_verified' => (bool) $profile?->identity_verified_at,
+                'vibed_at' => $swipe->created_at?->diffForHumans(),
+            ];
+        });
+
+        return response()->json(['success' => true, 'data' => $data]);
+    }
+
     public function history(Request $request): JsonResponse
     {
         $swipes = $request->user()->swipesGiven()

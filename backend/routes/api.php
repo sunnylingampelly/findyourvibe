@@ -78,6 +78,7 @@ Route::prefix('v1')->group(function () {
         // Swipes
         Route::post('swipes', [SwipeController::class, 'store']);
         Route::get('swipes/history', [SwipeController::class, 'history']);
+        Route::get('swipes/received', [SwipeController::class, 'received']);
 
         // Saved profiles
         Route::get('saved-profiles', [SavedProfileController::class, 'index']);
@@ -126,6 +127,10 @@ Route::prefix('v1')->group(function () {
 
         // Selfie verification
         Route::post('me/selfie', [ProfileController::class, 'uploadSelfie']);
+
+        // Voice intro
+        Route::post('me/voice-intro', [ProfileController::class, 'uploadVoiceIntro']);
+        Route::delete('me/voice-intro', [ProfileController::class, 'deleteVoiceIntro']);
 
         // Notifications
         Route::get('notifications', [NotificationController::class, 'index']);

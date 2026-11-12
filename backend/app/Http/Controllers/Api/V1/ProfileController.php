@@ -39,6 +39,12 @@ class ProfileController extends Controller
             'language_ids.*' => ['exists:languages,id'],
             'service_ids' => ['sometimes', 'array'],
             'service_ids.*' => ['exists:services,id'],
+            'prompt_1_q' => ['sometimes', 'nullable', 'string', 'max:200'],
+            'prompt_1_a' => ['sometimes', 'nullable', 'string', 'max:500'],
+            'prompt_2_q' => ['sometimes', 'nullable', 'string', 'max:200'],
+            'prompt_2_a' => ['sometimes', 'nullable', 'string', 'max:500'],
+            'prompt_3_q' => ['sometimes', 'nullable', 'string', 'max:200'],
+            'prompt_3_a' => ['sometimes', 'nullable', 'string', 'max:500'],
         ]);
 
         $user = $request->user();
@@ -48,7 +54,8 @@ class ProfileController extends Controller
         }
 
         $profileData = array_intersect_key($validated, array_flip([
-            'display_name', 'date_of_birth', 'gender', 'bio', 'introduction', 'country_id', 'city_id'
+            'display_name', 'date_of_birth', 'gender', 'bio', 'introduction', 'country_id', 'city_id',
+            'prompt_1_q', 'prompt_1_a', 'prompt_2_q', 'prompt_2_a', 'prompt_3_q', 'prompt_3_a',
         ]));
 
         if (!empty($profileData)) {
@@ -98,6 +105,42 @@ class ProfileController extends Controller
             'message' => 'Selfie uploaded. Our team will verify your identity within 24 hours.',
             'data' => ['selfie_url' => '/storage/' . $path],
         ]);
+    }
+
+    public function uploadVoiceIntro(Request $request): JsonResponse
+    {
+        $request->validate([
+            'audio' => ['required', 'file', 'mimes:webm,ogg,mp4,m4a,aac,wav', 'max:10240'],
+        ]);
+
+        $user = $request->user();
+
+        $existing = $user->profile?->voice_intro;
+        if ($existing && !str_starts_with($existing, 'http')) {
+            Storage::disk('public')->delete($existing);
+        }
+
+        Storage::disk('public')->makeDirectory('voice-intros');
+        $path = $request->file('audio')->store('voice-intros', 'public');
+        $user->profile()->updateOrCreate(['user_id' => $user->id], ['voice_intro' => $path]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Voice intro uploaded.',
+            'data' => ['voice_intro_url' => '/storage/' . $path],
+        ]);
+    }
+
+    public function deleteVoiceIntro(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $existing = $user->profile?->voice_intro;
+        if ($existing && !str_starts_with($existing, 'http')) {
+            Storage::disk('public')->delete($existing);
+        }
+        $user->profile()->updateOrCreate(['user_id' => $user->id], ['voice_intro' => null]);
+
+        return response()->json(['success' => true, 'message' => 'Voice intro removed.']);
     }
 
     public function updatePhoto(Request $request): JsonResponse

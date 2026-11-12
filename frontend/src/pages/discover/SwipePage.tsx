@@ -7,12 +7,36 @@ import { discoverApi } from '../../api/discover'
 import { useToast } from '../../components/ui/Toast'
 import AppShell from '../../components/layout/AppShell'
 import { getInitials } from '../../lib/utils'
-import type { PublicProfile } from '../../types'
+import type { PublicProfile, Service } from '../../types'
+
+const SERVICE_ICONS: Record<string, string> = {
+  'movie-companion': '🎬', 'coffee-buddy': '☕', 'event-companion': '🎭',
+  'travel-buddy': '✈️', 'shopping-companion': '🛍️', 'food-explorer': '🍜',
+  'city-explorer': '🗺️', 'weekend-companion': '🌅', 'adventure-companion': '🏔️', 'gaming-buddy': '🎮',
+}
+
+function generateIcebreakers(profile: PublicProfile): string[] {
+  const breakers: string[] = []
+  if (profile.interests && profile.interests.length > 0) {
+    const interest = profile.interests[0].name
+    breakers.push(`What do you love most about ${interest}?`)
+  }
+  if (profile.city) {
+    breakers.push(`What's your favourite spot in ${profile.city.name}?`)
+  }
+  if (profile.services && profile.services.length > 0) {
+    const svc = profile.services[0].name
+    breakers.push(`I'd love to try ${svc} with you! Where would we go?`)
+  }
+  breakers.push(`Hey ${profile.display_name.split(' ')[0]}, what are you up to this weekend?`)
+  return breakers.slice(0, 3)
+}
 
 interface MatchData {
   displayName: string
   photoUrl: string | null
   conversationId: string
+  icebreakers: string[]
 }
 
 function SwipeCard({ profile, onSwipe, isTop }: { profile: PublicProfile; onSwipe: (dir: 'left' | 'right') => void; isTop: boolean }) {
@@ -139,11 +163,19 @@ export default function SwipePage() {
   const navigate = useNavigate()
   const [index, setIndex] = useState(0)
   const [matchData, setMatchData] = useState<MatchData | null>(null)
+  const [selectedService, setSelectedService] = useState<string | null>(null)
   const swipedRef = useRef(new Set<string>())
 
+  const { data: servicesData } = useQuery({
+    queryKey: ['services'],
+    queryFn: () => discoverApi.getServices(),
+    staleTime: 60000,
+  })
+  const allServices: Service[] = servicesData?.data?.data ?? []
+
   const { data, isLoading, refetch } = useQuery({
-    queryKey: ['swipe-profiles'],
-    queryFn: () => discoverApi.getProfiles({ per_page: 20 }),
+    queryKey: ['swipe-profiles', selectedService],
+    queryFn: () => discoverApi.getProfiles({ per_page: 20, ...(selectedService ? { service_id: selectedService } : {}) }),
   })
 
   const profiles: PublicProfile[] = data?.data?.data ?? []
@@ -166,6 +198,7 @@ export default function SwipePage() {
             displayName: resData.matched_profile?.display_name ?? profile.display_name,
             photoUrl: resData.matched_profile?.profile_photo_url ?? profile.profile_photo_url ?? null,
             conversationId: resData.conversation_id,
+            icebreakers: generateIcebreakers(profile),
           })
         } else {
           toast(`You vibed ${profile.display_name}! 💚`, 'success')
@@ -220,6 +253,28 @@ export default function SwipePage() {
                 </div>
               )}
 
+              {matchData.icebreakers.length > 0 && (
+                <div className="w-full mb-6">
+                  <p className="text-white/50 text-xs mb-2 text-center uppercase tracking-wider">Break the ice</p>
+                  <div className="space-y-2">
+                    {matchData.icebreakers.map((ice, i) => (
+                      <motion.button
+                        key={i}
+                        whileTap={{ scale: 0.97 }}
+                        onClick={() => {
+                          const convId = matchData.conversationId
+                          setMatchData(null)
+                          navigate(`/messages/${convId}`, { state: { prefill: ice } })
+                        }}
+                        className="w-full py-2.5 px-4 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-white/90 text-xs font-medium text-left transition-colors"
+                      >
+                        {ice}
+                      </motion.button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="space-y-3 w-full">
                 <motion.button
                   whileTap={{ scale: 0.96 }}
@@ -241,9 +296,31 @@ export default function SwipePage() {
       </AnimatePresence>
 
       <div className="flex flex-col items-center h-dvh pt-safe pb-[80px]">
-        <div className="text-center py-3">
-          <h1 className="font-manrope font-bold text-lg text-[#24332F]">Discover</h1>
-          <p className="text-xs text-[#A1AAA5]">{remaining.length} profiles nearby</p>
+        <div className="w-full px-4 pt-3 pb-2">
+          <div className="flex items-center justify-between mb-2">
+            <h1 className="font-manrope font-bold text-lg text-[#24332F]">Discover</h1>
+            <span className="text-xs text-[#A1AAA5]">{remaining.length} profiles</span>
+          </div>
+          {/* Activity filter pills */}
+          {allServices.length > 0 && (
+            <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+              <button
+                onClick={() => { setSelectedService(null); setIndex(0); swipedRef.current.clear() }}
+                className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${!selectedService ? 'bg-[#236B63] text-white border-[#236B63]' : 'bg-white text-[#77817C] border-[#E8EAE6]'}`}
+              >
+                All
+              </button>
+              {allServices.map(s => (
+                <button
+                  key={s.id}
+                  onClick={() => { setSelectedService(String(s.id)); setIndex(0); swipedRef.current.clear() }}
+                  className={`shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${selectedService === String(s.id) ? 'bg-[#236B63] text-white border-[#236B63]' : 'bg-white text-[#77817C] border-[#E8EAE6]'}`}
+                >
+                  <span>{SERVICE_ICONS[s.slug] ?? '✨'}</span> {s.name}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Card stack */}

@@ -18,6 +18,7 @@ import OnboardingPage from './pages/onboarding/OnboardingPage'
 // User app
 import DiscoverPage from './pages/discover/DiscoverPage'
 import SwipePage from './pages/discover/SwipePage'
+import VibeInboxPage from './pages/discover/VibeInboxPage'
 import ProfileDetailPage from './pages/discover/ProfileDetailPage'
 import SavedProfilesPage from './pages/discover/SavedProfilesPage'
 import ConnectionsPage from './pages/connections/ConnectionsPage'
@@ -136,6 +137,7 @@ export default function App() {
             {/* Protected user app */}
             <Route path="/discover" element={<RequireAuth><RequireOnboarding><DiscoverPage /></RequireOnboarding></RequireAuth>} />
             <Route path="/swipe" element={<RequireAuth><RequireOnboarding><SwipePage /></RequireOnboarding></RequireAuth>} />
+            <Route path="/vibes" element={<RequireAuth><RequireOnboarding><VibeInboxPage /></RequireOnboarding></RequireAuth>} />
             <Route path="/profiles/:id" element={<RequireAuth><ProfileDetailPage /></RequireAuth>} />
             <Route path="/saved" element={<RequireAuth><SavedProfilesPage /></RequireAuth>} />
             <Route path="/connections" element={<RequireAuth><RequireOnboarding><ConnectionsPage /></RequireOnboarding></RequireAuth>} />

@@ -32,6 +32,13 @@ export interface UserProfile {
   identity_verified?: boolean
   selfie_pending?: boolean
   selfie_photo?: string
+  prompt_1_q?: string
+  prompt_1_a?: string
+  prompt_2_q?: string
+  prompt_2_a?: string
+  prompt_3_q?: string
+  prompt_3_a?: string
+  voice_intro_url?: string
 }
 
 export type CompanionStatus =
@@ -94,6 +101,13 @@ export interface PublicProfile {
   avg_rating?: number
   rating_count?: number
   identity_verified?: boolean
+  prompt_1_q?: string
+  prompt_1_a?: string
+  prompt_2_q?: string
+  prompt_2_a?: string
+  prompt_3_q?: string
+  prompt_3_a?: string
+  voice_intro_url?: string
   interests?: Interest[]
   languages?: Language[]
   services?: Service[]

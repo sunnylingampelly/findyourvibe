@@ -26,6 +26,13 @@ class UserResource extends JsonResource
             'rating_count' => $profile?->rating_count ?? 0,
             'identity_verified' => (bool) $profile?->identity_verified_at,
             'selfie_pending' => $profile?->selfie_photo && !$profile?->identity_verified_at,
+            'prompt_1_q' => $profile?->prompt_1_q,
+            'prompt_1_a' => $profile?->prompt_1_a,
+            'prompt_2_q' => $profile?->prompt_2_q,
+            'prompt_2_a' => $profile?->prompt_2_a,
+            'prompt_3_q' => $profile?->prompt_3_q,
+            'prompt_3_a' => $profile?->prompt_3_a,
+            'voice_intro_url' => $profile?->voice_intro_url,
             'country' => $profile?->country ? ['id' => $profile->country->id, 'name' => $profile->country->name, 'code' => $profile->country->code, 'phone_code' => $profile->country->phone_code ?? ''] : null,
             'city' => $profile?->city ? ['id' => $profile->city->id, 'name' => $profile->city->name, 'country_id' => $profile->city->country_id] : null,
         ];
