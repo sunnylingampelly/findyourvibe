@@ -319,7 +319,7 @@ export default function SwipePage() {
           </div>
           {/* Activity filter pills */}
           {allServices.length > 0 && (
-            <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+            <div className="flex gap-2 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
               <button
                 onClick={() => { setSelectedService(null); setIndex(0); swipedRef.current.clear() }}
                 className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${!selectedService ? 'bg-[#236B63] text-white border-[#236B63]' : 'bg-white text-[#77817C] border-[#E8EAE6]'}`}
