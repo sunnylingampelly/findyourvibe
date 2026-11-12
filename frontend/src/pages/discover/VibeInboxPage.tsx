@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
-import { Heart, MapPin, ShieldCheck, Users, PlusCircle, CalendarDays, Pin, LogOut } from 'lucide-react'
+import { Heart, MapPin, ShieldCheck, Users, PlusCircle, CalendarDays, LogOut } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState } from 'react'
 import { vibesApi } from '../../api/vibes'
