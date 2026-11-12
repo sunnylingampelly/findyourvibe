@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  CalendarDays, User, IndianRupee, CheckCircle2, Sparkles,
-  Shield, MessageCircle, TrendingUp, ChevronRight, Info, PlusCircle,
-  BadgeCheck, Clock, Pencil, Trash2, Package
+  CalendarDays, User, IndianRupee, CheckCircle2,
+  ChevronRight, Info, PlusCircle,
+  Clock, Pencil, Trash2, Package, Star,
 } from 'lucide-react'
 import { bookingsApi } from '../../api/bookings'
 import { profileApi } from '../../api/profile'
@@ -13,9 +13,9 @@ import { packagesApi } from '../../api/packages'
 import { useAuthStore } from '../../stores/authStore'
 import { useToast } from '../../components/ui/Toast'
 import AppShell from '../../components/layout/AppShell'
-import PageHeader from '../../components/layout/PageHeader'
 import BottomSheet from '../../components/ui/BottomSheet'
 import Button from '../../components/ui/Button'
+import { getInitials } from '../../lib/utils'
 import type { Service, ExperiencePackage } from '../../types'
 
 const SERVICE_ICONS: Record<string, string> = {
@@ -24,20 +24,17 @@ const SERVICE_ICONS: Record<string, string> = {
   'city-explorer': '🗺️', 'weekend-companion': '🌅', 'adventure-companion': '🏔️', 'gaming-buddy': '🎮',
 }
 
-const COMPANION_BENEFITS = [
-  { icon: BadgeCheck, color: '#236B63', bg: '#E8F0EA', title: 'Verified Badge', desc: 'A green tick on your profile builds instant trust with users.' },
-  { icon: TrendingUp, color: '#D9A45B', bg: '#FFF5E6', title: 'Priority Discovery', desc: 'Approved companions rank higher in search and browse results.' },
-  { icon: Shield, color: '#4D9274', bg: '#E8F0EA', title: 'Identity Verified', desc: 'Your documents are on file — a signal of authenticity.' },
-  { icon: MessageCircle, color: '#6B8CE0', bg: '#EEF1FB', title: 'Booking Requests', desc: 'Users can send you formal service booking requests directly.' },
-  { icon: IndianRupee, color: '#236B63', bg: '#E8F0EA', title: 'Set Your Pricing', desc: 'You control what you charge — per session or per hour.' },
-  { icon: Sparkles, color: '#D9A45B', bg: '#FFF5E6', title: 'Build Your Reputation', desc: 'Collect reviews and grow as a trusted companion over time.' },
-]
-
 interface PricingRow {
   service_id: number
   price_per_session: string
   price_currency: string
   price_unit: string
+}
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="text-[11px] font-bold uppercase tracking-widest text-[#A1AAA5] mb-2.5 px-1">{children}</p>
+  )
 }
 
 export default function CompanionDashboardPage() {
@@ -68,6 +65,11 @@ export default function CompanionDashboardPage() {
   const companionBookings = bookingsRes?.data?.data ?? []
   const pendingCount = companionBookings.filter((b: { status: string }) => b.status === 'pending').length
   const totalBookings = companionBookings.length
+
+  const displayName = user?.profile?.display_name ?? (user as any)?.display_name ?? user?.name ?? 'You'
+  const photoUrl = user?.profile?.profile_photo_url
+  const avgRating = Number(user?.profile?.avg_rating ?? (user as any)?.avg_rating ?? 0)
+  const ratingCount = user?.profile?.rating_count ?? (user as any)?.rating_count ?? 0
 
   const [pricing, setPricing] = useState<PricingRow[]>([])
   const [saved, setSaved] = useState(false)
@@ -168,94 +170,128 @@ export default function CompanionDashboardPage() {
 
   return (
     <AppShell>
-      <div className="screen-scroll overflow-y-auto h-dvh bg-[#FAF9F6]">
-        <PageHeader title="Companion Dashboard" />
+      <div className="screen-scroll overflow-y-auto h-dvh bg-[#F3F5F4]">
 
-        <div className="px-4 pb-12 space-y-4">
+        {/* ── HERO ─────────────────────────────────────────────────── */}
+        <div className="bg-gradient-to-br from-[#0F3330] via-[#194E49] to-[#226057] px-5 pt-14 pb-6 relative overflow-hidden">
+          {/* Decorative shapes */}
+          <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white/[0.04] pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-28 h-28 rounded-full bg-white/[0.04] pointer-events-none" />
 
-          {/* Hero status card */}
-          <div className="bg-gradient-to-br from-[#194E49] to-[#2E7D6F] rounded-3xl p-5 text-white shadow-lg">
-            <div className="flex items-center gap-2 mb-0.5">
-              <CheckCircle2 size={17} className="text-[#7EC8A8]" />
-              <span className="font-manrope font-bold text-base">Verified Companion</span>
-            </div>
-            <p className="text-white/60 text-xs mb-5">
-              Hi {user?.profile?.display_name ?? (user as any)?.display_name ?? user?.name} — your profile is live ✨
-            </p>
-            <div className="grid grid-cols-3 gap-2">
-              {[
-                { value: pendingCount, label: 'Pending', accent: pendingCount > 0 },
-                { value: totalBookings, label: 'Total Bookings', accent: false },
-                { value: user?.profile?.rating_count ?? (user as any)?.rating_count ?? 0, label: 'Reviews', accent: false },
-              ].map(stat => (
-                <div key={stat.label} className={`rounded-2xl px-3 py-3 text-center ${stat.accent ? 'bg-[#D9A45B]/30 ring-1 ring-[#D9A45B]/50' : 'bg-white/10'}`}>
-                  <p className="font-manrope font-extrabold text-2xl leading-none">{stat.value}</p>
-                  <p className="text-[10px] text-white/60 mt-1 leading-tight">{stat.label}</p>
+          {/* Profile row */}
+          <div className="flex items-center gap-3 mb-5 relative">
+            <div className="w-14 h-14 rounded-2xl overflow-hidden border-2 border-white/20 shrink-0 shadow-lg">
+              {photoUrl ? (
+                <img src={photoUrl} alt={displayName} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-white/15 flex items-center justify-center">
+                  <span className="text-xl font-manrope font-bold text-white">{getInitials(displayName)}</span>
                 </div>
-              ))}
+              )}
             </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-manrope font-extrabold text-[18px] text-white leading-snug truncate">{displayName}</p>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <CheckCircle2 size={12} className="text-[#7EC8A8]" />
+                <span className="text-[11px] text-[#7EC8A8] font-semibold tracking-wide">Verified Companion</span>
+              </div>
+            </div>
+            {avgRating > 0 && (
+              <div className="flex flex-col items-center bg-white/15 backdrop-blur-sm px-3 py-2.5 rounded-2xl shrink-0 gap-0.5">
+                <Star size={14} className="text-[#D9A45B] fill-[#D9A45B]" />
+                <span className="text-white font-extrabold text-[15px] font-manrope leading-none">{avgRating.toFixed(1)}</span>
+              </div>
+            )}
           </div>
 
+          {/* Stats row */}
+          <div className="grid grid-cols-3 gap-2 relative">
+            {[
+              { value: pendingCount, label: 'Pending', accent: pendingCount > 0 },
+              { value: totalBookings, label: 'Bookings', accent: false },
+              { value: ratingCount, label: 'Reviews', accent: false },
+            ].map(stat => (
+              <div
+                key={stat.label}
+                className={`rounded-2xl px-3 py-3.5 text-center ${stat.accent ? 'bg-[#D9A45B]/30 ring-1 ring-[#D9A45B]/50' : 'bg-white/10'}`}
+              >
+                <p className="font-manrope font-extrabold text-[26px] leading-none text-white">{stat.value}</p>
+                <p className="text-[10px] text-white/55 mt-1 leading-tight">{stat.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ── CONTENT ─────────────────────────────────────────────── */}
+        <div className="px-4 pb-12 space-y-5 pt-4">
+
           {/* Quick actions */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-2.5">
             <button
               onClick={() => navigate('/bookings')}
-              className="bg-white rounded-2xl border border-[#E8EAE6] p-4 flex items-center gap-3 active:scale-95 transition-transform text-left relative overflow-hidden"
+              className="bg-white rounded-2xl border border-[#E8EAE6] p-3.5 flex flex-col items-center gap-2 active:scale-95 transition-transform relative overflow-hidden shadow-sm"
             >
-              <div className="w-10 h-10 bg-[#E8F0EA] rounded-xl flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 bg-[#E8F0EA] rounded-xl flex items-center justify-center">
                 <CalendarDays size={18} className="text-[#236B63]" />
               </div>
-              <div className="min-w-0">
-                <p className="font-semibold text-[#24332F] text-sm">Bookings</p>
-                <p className="text-xs text-[#A1AAA5]">{pendingCount > 0 ? `${pendingCount} need response` : 'No pending'}</p>
+              <div className="text-center">
+                <p className="font-semibold text-[#24332F] text-xs leading-tight">Bookings</p>
+                {pendingCount > 0 && <p className="text-[9px] text-[#D9A45B] font-semibold mt-0.5">{pendingCount} pending</p>}
               </div>
               {pendingCount > 0 && (
-                <span className="absolute top-3 right-3 w-5 h-5 bg-[#D9A45B] rounded-full flex items-center justify-center text-[10px] font-bold text-white">
+                <span className="absolute top-2 right-2 w-4 h-4 bg-[#D9A45B] rounded-full flex items-center justify-center text-[9px] font-bold text-white">
                   {pendingCount}
                 </span>
               )}
             </button>
+
             <button
               onClick={() => navigate('/profile/edit?section=services')}
-              className="bg-white rounded-2xl border border-[#E8EAE6] p-4 flex items-center gap-3 active:scale-95 transition-transform text-left"
+              className="bg-white rounded-2xl border border-[#E8EAE6] p-3.5 flex flex-col items-center gap-2 active:scale-95 transition-transform shadow-sm"
             >
-              <div className="w-10 h-10 bg-[#E8F0EA] rounded-xl flex items-center justify-center shrink-0">
-                <Pencil size={18} className="text-[#236B63]" />
+              <div className="w-10 h-10 bg-[#E8F0EA] rounded-xl flex items-center justify-center">
+                <Pencil size={17} className="text-[#236B63]" />
               </div>
-              <div className="min-w-0">
-                <p className="font-semibold text-[#24332F] text-sm">Edit Profile</p>
-                <p className="text-xs text-[#A1AAA5]">Services & info</p>
+              <p className="font-semibold text-[#24332F] text-xs text-center leading-tight">Edit Profile</p>
+            </button>
+
+            <button
+              onClick={() => navigate('/profile')}
+              className="bg-white rounded-2xl border border-[#E8EAE6] p-3.5 flex flex-col items-center gap-2 active:scale-95 transition-transform shadow-sm"
+            >
+              <div className="w-10 h-10 bg-[#E8F0EA] rounded-xl flex items-center justify-center">
+                <User size={17} className="text-[#236B63]" />
               </div>
+              <p className="font-semibold text-[#24332F] text-xs text-center leading-tight">My Profile</p>
             </button>
           </div>
 
-          {/* Pricing section */}
+          {/* ── Service Pricing ─────────────────────────────────── */}
           <div>
-            <div className="flex items-center justify-between mb-2 px-1">
-              <p className="text-[11px] font-bold uppercase tracking-widest text-[#A1AAA5]">Service Pricing</p>
+            <div className="flex items-center justify-between mb-2.5 px-1">
+              <SectionLabel>Service Pricing</SectionLabel>
               {myServices.length > 0 && (
                 <button
                   onClick={() => navigate('/profile/edit?section=services')}
                   className="flex items-center gap-1 text-xs text-[#236B63] font-semibold"
                 >
-                  <PlusCircle size={13} /> Manage services
+                  <PlusCircle size={12} /> Manage
                 </button>
               )}
             </div>
 
             {isLoading ? (
-              <div className="bg-white rounded-2xl border border-[#E8EAE6] p-6 flex items-center justify-center">
+              <div className="bg-white rounded-2xl border border-[#E8EAE6] p-6 flex items-center justify-center shadow-sm">
                 <div className="w-5 h-5 border-2 border-[#236B63] border-t-transparent rounded-full animate-spin" />
               </div>
             ) : myServices.length === 0 ? (
-              /* Empty state */
-              <div className="bg-white rounded-2xl border-2 border-dashed border-[#D5E0D8] p-6 text-center">
-                <div className="w-14 h-14 bg-[#E8F0EA] rounded-2xl flex items-center justify-center mx-auto mb-3">
-                  <IndianRupee size={22} className="text-[#236B63]" />
+              <div className="bg-white rounded-2xl border-2 border-dashed border-[#D5E0D8] p-6 text-center shadow-sm">
+                <div className="w-12 h-12 bg-[#E8F0EA] rounded-2xl flex items-center justify-center mx-auto mb-3">
+                  <IndianRupee size={20} className="text-[#236B63]" />
                 </div>
                 <p className="font-manrope font-bold text-[#24332F] text-sm mb-1">No services added yet</p>
                 <p className="text-xs text-[#A1AAA5] leading-relaxed max-w-[220px] mx-auto mb-4">
-                  Add the services you offer to your profile — then set your price for each one here.
+                  Add the services you offer, then set your price for each one here.
                 </p>
                 <button
                   onClick={() => navigate('/profile/edit?section=services')}
@@ -265,13 +301,11 @@ export default function CompanionDashboardPage() {
                 </button>
               </div>
             ) : (
-              /* Pricing cards */
-              <div className="bg-white rounded-2xl border border-[#E8EAE6] overflow-hidden">
-                {/* Info banner */}
+              <div className="bg-white rounded-2xl border border-[#E8EAE6] overflow-hidden shadow-sm">
                 <div className="flex items-start gap-2.5 px-4 py-3 bg-[#F4F9F7] border-b border-[#E8EAE6]">
                   <Info size={14} className="text-[#236B63] mt-0.5 shrink-0" />
                   <p className="text-xs text-[#4D7A6E] leading-relaxed">
-                    Prices are shown to users on your profile. You can leave a price blank to show "Contact to discuss".
+                    Prices are shown to users on your profile. Leave blank to show "Contact to discuss".
                   </p>
                 </div>
 
@@ -332,16 +366,14 @@ export default function CompanionDashboardPage() {
                   {unpricedCount > 0 && (
                     <p className="text-xs text-[#D9A45B] text-center flex items-center justify-center gap-1">
                       <Clock size={12} />
-                      {unpricedCount} service{unpricedCount > 1 ? 's' : ''} without a price — users will see "Contact to discuss"
+                      {unpricedCount} service{unpricedCount > 1 ? 's' : ''} without a price
                     </p>
                   )}
                   <button
                     onClick={() => updatePricing.mutate()}
                     disabled={updatePricing.isPending || saved}
                     className={`w-full py-3.5 rounded-2xl font-semibold text-sm flex items-center justify-center gap-2 transition-all disabled:opacity-70 ${
-                      saved
-                        ? 'bg-[#4D9274] text-white'
-                        : 'bg-[#194E49] text-white active:scale-[0.98]'
+                      saved ? 'bg-[#4D9274] text-white' : 'bg-[#194E49] text-white active:scale-[0.98]'
                     }`}
                   >
                     <AnimatePresence mode="wait">
@@ -366,28 +398,28 @@ export default function CompanionDashboardPage() {
             )}
           </div>
 
-          {/* Experience packages */}
+          {/* ── Experience Packages ──────────────────────────────── */}
           <div>
-            <div className="flex items-center justify-between mb-2 px-1">
-              <p className="text-[11px] font-bold uppercase tracking-widest text-[#A1AAA5]">Experience Packages</p>
+            <div className="flex items-center justify-between mb-2.5 px-1">
+              <SectionLabel>Experience Packages</SectionLabel>
               {myPackages.length < 5 && (
                 <button
                   onClick={() => openPkgSheet()}
                   className="flex items-center gap-1 text-xs text-[#236B63] font-semibold"
                 >
-                  <PlusCircle size={13} /> Add
+                  <PlusCircle size={12} /> Add
                 </button>
               )}
             </div>
 
             {myPackages.length === 0 ? (
-              <div className="bg-white rounded-2xl border-2 border-dashed border-[#D5E0D8] p-5 text-center">
+              <div className="bg-white rounded-2xl border-2 border-dashed border-[#D5E0D8] p-5 text-center shadow-sm">
                 <div className="w-12 h-12 bg-[#E8F0EA] rounded-2xl flex items-center justify-center mx-auto mb-3">
                   <Package size={20} className="text-[#236B63]" />
                 </div>
                 <p className="font-manrope font-bold text-[#24332F] text-sm mb-1">No packages yet</p>
                 <p className="text-xs text-[#A1AAA5] leading-relaxed max-w-[220px] mx-auto mb-4">
-                  Create curated experience packages to let users book a full experience at a fixed price.
+                  Create curated experience packages users can book at a fixed price.
                 </p>
                 <button
                   onClick={() => openPkgSheet()}
@@ -399,7 +431,7 @@ export default function CompanionDashboardPage() {
             ) : (
               <div className="space-y-2">
                 {myPackages.map(pkg => (
-                  <div key={pkg.id} className="bg-white rounded-2xl border border-[#E8EAE6] p-4 flex items-start gap-3">
+                  <div key={pkg.id} className="bg-white rounded-2xl border border-[#E8EAE6] p-4 flex items-start gap-3 shadow-sm">
                     <div className="w-9 h-9 bg-[#E8F0EA] rounded-xl flex items-center justify-center shrink-0 mt-0.5">
                       <Package size={16} className="text-[#236B63]" />
                     </div>
@@ -427,41 +459,17 @@ export default function CompanionDashboardPage() {
                     onClick={() => openPkgSheet()}
                     className="w-full py-3 border border-dashed border-[#C8DDD2] rounded-2xl text-sm text-[#236B63] font-semibold flex items-center justify-center gap-1.5"
                   >
-                    <PlusCircle size={14} /> Add another package ({myPackages.length}/5)
+                    <PlusCircle size={14} /> Add another ({myPackages.length}/5)
                   </button>
                 )}
               </div>
             )}
           </div>
 
-          {/* What you get as a companion */}
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-widest text-[#A1AAA5] mb-3 px-1">What You Get as a Companion</p>
-            <div className="space-y-2">
-              {COMPANION_BENEFITS.map((b, i) => (
-                <motion.div
-                  key={b.title}
-                  initial={{ opacity: 0, x: -8 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                  className="bg-white rounded-2xl border border-[#E8EAE6] p-4 flex items-start gap-3"
-                >
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5" style={{ background: b.bg }}>
-                    <b.icon size={17} style={{ color: b.color }} />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-[#24332F] text-sm">{b.title}</p>
-                    <p className="text-xs text-[#77817C] mt-0.5 leading-relaxed">{b.desc}</p>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-
-          {/* Profile link */}
+          {/* ── View profile row ─────────────────────────────────── */}
           <button
             onClick={() => navigate('/profile')}
-            className="w-full flex items-center justify-between bg-white border border-[#E8EAE6] rounded-2xl px-4 py-3.5 active:scale-[0.98] transition-transform"
+            className="w-full flex items-center justify-between bg-white border border-[#E8EAE6] rounded-2xl px-4 py-3.5 active:scale-[0.98] transition-transform shadow-sm"
           >
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 bg-[#E8F0EA] rounded-xl flex items-center justify-center">
@@ -477,6 +485,7 @@ export default function CompanionDashboardPage() {
 
         </div>
       </div>
+
       {/* Package create/edit sheet */}
       <BottomSheet open={showPkgSheet} onClose={() => setShowPkgSheet(false)} title={editingPkg ? 'Edit Package' : 'New Experience Package'}>
         <div className="space-y-4">

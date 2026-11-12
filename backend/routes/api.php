@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\V1\OnboardingController;
 use App\Http\Controllers\Api\V1\ProfileController;
 use App\Http\Controllers\Api\V1\ReportController;
 use App\Http\Controllers\Api\V1\ExperiencePackageController;
+use App\Http\Controllers\Api\V1\GroupVibeController;
 use App\Http\Controllers\Api\V1\ReviewController;
 use App\Http\Controllers\Api\V1\SafeMeetController;
 use App\Http\Controllers\Api\V1\SavedProfileController;
@@ -139,6 +140,13 @@ Route::prefix('v1')->group(function () {
         Route::post('me/packages', [ExperiencePackageController::class, 'store']);
         Route::put('me/packages/{id}', [ExperiencePackageController::class, 'update']);
         Route::delete('me/packages/{id}', [ExperiencePackageController::class, 'destroy']);
+
+        // Group Vibes
+        Route::get('group-vibes', [GroupVibeController::class, 'index']);
+        Route::get('group-vibes/mine', [GroupVibeController::class, 'mine']);
+        Route::post('group-vibes', [GroupVibeController::class, 'store']);
+        Route::post('group-vibes/{id}/join', [GroupVibeController::class, 'join']);
+        Route::delete('group-vibes/{id}/leave', [GroupVibeController::class, 'leave']);
 
         // Notifications
         Route::get('notifications', [NotificationController::class, 'index']);

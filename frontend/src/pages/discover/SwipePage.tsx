@@ -340,7 +340,7 @@ export default function SwipePage() {
         </div>
 
         {/* Card stack */}
-        <div className="relative flex-1 w-full max-w-sm mx-auto px-4">
+        <div className="relative flex-1 w-[86%] max-w-sm mx-auto">
           {remaining.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center px-6">
               <div className="text-6xl mb-4">🌟</div>

@@ -214,6 +214,23 @@ export interface CompanionApplication {
   documents?: CompanionDocument[]
 }
 
+export interface GroupVibe {
+  id: string
+  title: string
+  description?: string
+  activity?: string
+  location?: string
+  scheduled_at?: string
+  scheduled_label?: string
+  max_members: number
+  member_count: number
+  is_full: boolean
+  is_host: boolean
+  is_member: boolean
+  is_active: boolean
+  host: { id: string; display_name: string; profile_photo_url?: string }
+}
+
 export interface ApiResponse<T> {
   success: boolean
   data: T
