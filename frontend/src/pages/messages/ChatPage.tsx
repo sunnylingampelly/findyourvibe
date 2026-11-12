@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   ArrowLeft, Send, Smile, Info, CalendarDays,
   Clock, IndianRupee, Check, CheckCheck, CornerUpLeft, Copy, ChevronDown, X, Trash2, Star,
-  Mic, Play, Pause,
+  Mic, Play, Pause, MapPin,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { connectionsApi } from '../../api/connections'
@@ -105,6 +105,39 @@ function ReadReceipt({ msg, isOptimistic }: { msg: Message; isOptimistic: boolea
   return <CheckCheck size={11} style={{ color: '#9BB5AE' }} />
 }
 
+const MAPS_KEY = import.meta.env.VITE_GOOGLE_MAPS_KEY as string | undefined
+
+function LocationMessage({ body, isMe }: { body: string; isMe: boolean }) {
+  let lat = 0, lng = 0, address = 'My Location'
+  try {
+    const d = JSON.parse(body.replace('__LOCATION__:', ''))
+    lat = d.lat; lng = d.lng; address = d.address || 'My Location'
+  } catch {
+    return <span className="text-xs">📍 Location</span>
+  }
+  const mapsLink = `https://maps.google.com/?q=${lat},${lng}`
+  const mapImg = MAPS_KEY
+    ? `https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=15&size=280x150&scale=2&markers=color:red%7C${lat},${lng}&style=feature:poi%7Cvisibility:off&key=${MAPS_KEY}`
+    : null
+  return (
+    <a
+      href={mapsLink}
+      target="_blank"
+      rel="noopener noreferrer"
+      style={{ display: 'block', minWidth: 200, maxWidth: 240, textDecoration: 'none' }}
+    >
+      {mapImg && (
+        <img src={mapImg} alt="Map" className="w-full rounded-xl" style={{ height: 110, objectFit: 'cover', display: 'block' }} />
+      )}
+      <div className="flex items-center gap-1.5 pt-1.5 pb-0.5">
+        <MapPin size={13} style={{ color: isMe ? '#236B63' : '#236B63', flexShrink: 0 }} />
+        <span className="text-xs font-semibold text-[#24332F] truncate">{address}</span>
+      </div>
+      <span style={{ color: '#236B63', fontSize: 10 }}>Tap to open in Maps ↗</span>
+    </a>
+  )
+}
+
 const WAVEFORM_BARS = [4, 8, 14, 10, 6, 16, 12, 8, 14, 6, 10, 18, 8, 12, 6, 14, 10, 8, 16, 6]
 
 function AudioMessage({ url, isMe }: { url: string; isMe: boolean }) {
@@ -191,6 +224,7 @@ export default function ChatPage() {
 
   const [isRecording, setIsRecording] = useState(false)
   const [recordingTime, setRecordingTime] = useState(0)
+  const [locSending, setLocSending] = useState(false)
 
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -493,6 +527,22 @@ export default function ChatPage() {
   }
 
   const fmtRecTime = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
+
+  const sendLocation = () => {
+    if (!navigator.geolocation) { toast('Location not supported on this device', 'error'); return }
+    setLocSending(true)
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        const { latitude: lat, longitude: lng } = pos.coords
+        const body = `__LOCATION__:${JSON.stringify({ lat, lng, address: 'My Location' })}`
+        isNearBottom.current = true
+        send.mutate(body)
+        setLocSending(false)
+      },
+      () => { toast('Location access denied', 'error'); setLocSending(false) },
+      { timeout: 10000 }
+    )
+  }
 
   const handleSend = () => {
     const body = text.trim()
@@ -953,6 +1003,8 @@ export default function ChatPage() {
                             >
                               {msg.type === 'audio' && msg.attachments?.[0] && !msg.deleted
                                 ? <AudioMessage url={msg.attachments[0].url} isMe={isMe} />
+                                : msg.body?.startsWith('__LOCATION__:') && !msg.deleted
+                                ? <LocationMessage body={msg.body} isMe={isMe} />
                                 : <span>{msg.deleted ? '🚫 This message was deleted' : msg.body}</span>
                               }
                               {/* Timestamp row — only on last in chain */}
@@ -1218,11 +1270,21 @@ export default function ChatPage() {
                 <button
                   onClick={() => setShowEmoji(s => !s)}
                   className={cn(
-                    'w-8 h-7 flex items-center justify-center rounded-full transition-colors shrink-0 mr-1',
+                    'w-8 h-7 flex items-center justify-center rounded-full transition-colors shrink-0 mr-0.5',
                     showEmoji ? 'text-[#236B63]' : 'text-[#A1AAA5]'
                   )}
                 >
                   <Smile size={20} />
+                </button>
+                <button
+                  onClick={sendLocation}
+                  disabled={locSending}
+                  className="w-8 h-7 flex items-center justify-center rounded-full transition-colors shrink-0 mr-1 text-[#A1AAA5] hover:text-[#236B63] disabled:opacity-50"
+                >
+                  {locSending
+                    ? <span className="text-[9px] font-bold tracking-tight animate-pulse">GPS</span>
+                    : <MapPin size={18} />
+                  }
                 </button>
                 <textarea
                   ref={inputRef}

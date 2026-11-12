@@ -155,7 +155,14 @@ export default function ProfileDetailPage() {
       qc.invalidateQueries({ queryKey: ['saved-profiles'] })
       toast(isSaved ? 'Removed from saved' : 'Profile saved! 🔖', 'success')
     },
-    onError: () => toast('Could not update saved', 'error'),
+    onError: (error: unknown) => {
+      const msg = (error as { response?: { data?: { message?: string } } })?.response?.data?.message
+      if (msg === 'Profile already saved.') {
+        qc.invalidateQueries({ queryKey: ['saved-profiles'] })
+        return
+      }
+      toast(msg ?? 'Could not update saved', 'error')
+    },
   })
 
   if (isLoading || !profile) {
@@ -204,7 +211,8 @@ export default function ProfileDetailPage() {
           <div className="flex gap-2">
             <button
               onClick={() => saveMutation.mutate()}
-              className={`w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-md border ${isSaved ? 'bg-[#236B63] border-[#236B63] text-white' : 'bg-black/35 border-white/10 text-white'}`}
+              disabled={saveMutation.isPending}
+              className={`w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-md border transition-opacity disabled:opacity-60 ${isSaved ? 'bg-[#236B63] border-[#236B63] text-white' : 'bg-black/35 border-white/10 text-white'}`}
             >
               <Bookmark size={18} fill={isSaved ? 'white' : 'none'} />
             </button>
