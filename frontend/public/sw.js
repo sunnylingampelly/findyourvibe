@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fyv-cache-v1'
+const CACHE_NAME = 'fyv-cache-v2'
 const OFFLINE_ASSETS = ['/', '/index.html', '/manifest.json', '/favicon.svg']
 
 self.addEventListener('install', event => {
