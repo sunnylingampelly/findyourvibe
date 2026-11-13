@@ -165,9 +165,12 @@ h1, h2, h3, h4, h5, h6 {
   opacity: 0.9;
 }
 
-/* All form controls inherit light text on dark bg */
-input, select, textarea, button {
+/* Form inputs inherit light text on dark bg — NOT button (buttons have explicit colors) */
+input, select, textarea {
   color: inherit;
+  font-family: inherit;
+}
+button {
   font-family: inherit;
 }
 input::placeholder, textarea::placeholder {
