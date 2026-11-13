@@ -251,10 +251,20 @@ select option {
 
 /* Focus rings — lime */
 :focus-visible { outline: none; }
-input:focus, textarea:focus, select:focus {
+input:focus, select:focus {
   outline: none !important;
   border-color: #C8FF4D !important;
   box-shadow: 0 0 0 2px rgba(200, 255, 77, 0.12) !important;
+}
+textarea:focus {
+  outline: none !important;
+  border-color: #C8FF4D !important;
+  box-shadow: 0 0 0 2px rgba(200, 255, 77, 0.12) !important;
+}
+/* Chat input textarea sits inside a styled pill — suppress the glow on the element itself */
+.chat-textarea:focus {
+  box-shadow: none !important;
+  border-color: transparent !important;
 }
 button:focus { outline: none; }
 

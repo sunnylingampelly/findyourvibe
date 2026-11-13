@@ -704,7 +704,7 @@ export default function ChatPage() {
     <div className="app-container flex flex-col h-dvh" style={{ background: '#0D0D12' }}>
 
       {/* Header */}
-      <div className="flex items-center gap-3 px-3 py-2.5 pt-safe shrink-0 border-b" style={{ background: 'rgba(13,13,18,0.96)', borderColor: '#2E2E3A', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}>
+      <div className="flex items-center gap-3 px-3 py-3 pt-safe shrink-0" style={{ background: 'rgba(13,13,18,0.97)', borderBottom: '1px solid rgba(200,255,77,0.07)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)' }}>
         <button
           onClick={() => navigate(-1)}
           className="w-9 h-9 flex items-center justify-center rounded-xl active:bg-white/10 transition-colors"
@@ -719,12 +719,12 @@ export default function ChatPage() {
           >
             <div className="relative shrink-0">
               <Avatar src={otherUser.profile_photo_url} name={otherUser.display_name} size="sm" />
-              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2" style={{ background: '#C8FF4D', borderColor: '#0D0D12' }} />
+              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2" style={{ background: '#C8FF4D', borderColor: '#0D0D12', boxShadow: '0 0 6px #C8FF4D88' }} />
             </div>
             <div className="min-w-0">
-              <h2 className="font-semibold text-[#F2F0EB] text-sm truncate">{otherUser.display_name}</h2>
-              <p className="text-[11px] text-[#52525E]">
-                {otherTyping ? 'typing…' : 'View profile →'}
+              <h2 className="font-manrope font-bold text-[#F2F0EB] text-sm truncate">{otherUser.display_name}</h2>
+              <p className="text-[11px]" style={{ color: otherTyping ? '#C8FF4D' : '#52525E' }}>
+                {otherTyping ? '● typing…' : 'Online · tap to view profile'}
               </p>
             </div>
           </button>
@@ -915,8 +915,8 @@ export default function ChatPage() {
       <div
         ref={scrollRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto px-3 py-3"
-        style={{ scrollbarWidth: 'none', background: '#0D0D12' }}
+        className="flex-1 overflow-y-auto px-3 py-4"
+        style={{ scrollbarWidth: 'none', background: 'radial-gradient(ellipse 100% 60% at 50% 0%, #0F1118 0%, #0D0D12 65%)' }}
       >
         {isLoading ? (
           <div className="flex flex-col gap-3 pt-6">
@@ -1212,7 +1212,7 @@ export default function ChatPage() {
       </AnimatePresence>
 
       {/* Input bar */}
-      <div className="shrink-0 pb-safe" style={{ background: '#141418', borderTop: '1px solid #2E2E3A' }}>
+      <div className="shrink-0 pb-safe" style={{ background: '#141418', borderTop: '1px solid rgba(200,255,77,0.07)' }}>
         {/* Emoji picker */}
         <AnimatePresence>
           {showEmoji && (
@@ -1268,7 +1268,7 @@ export default function ChatPage() {
         </AnimatePresence>
 
         {/* Input row */}
-        <div className="flex items-end gap-2 px-2 py-2 relative">
+        <div className="flex items-end gap-2.5 px-3 py-3 relative">
           <AnimatePresence mode="wait">
             {isRecording ? (
               /* Recording UI */
@@ -1278,8 +1278,8 @@ export default function ChatPage() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 6 }}
                 transition={{ duration: 0.15 }}
-                className="flex-1 flex items-center gap-2.5 rounded-full px-3 py-2"
-                style={{ background: '#1C1C22' }}
+                className="flex-1 flex items-center gap-2.5 rounded-2xl px-4 py-3"
+                style={{ background: '#1C1C22', border: '1px solid #2E2E3A' }}
               >
                 <button onClick={() => stopRecording(false)} className="shrink-0 text-[#D76D6D] active:scale-90 transition-transform">
                   <X size={18} />
@@ -1310,14 +1310,14 @@ export default function ChatPage() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.1 }}
-                className="flex-1 flex items-end rounded-full px-3 py-2"
-                style={{ background: '#1C1C22' }}
+                className="flex-1 flex items-end rounded-2xl px-3 py-2.5 gap-1"
+                style={{ background: '#1C1C22', border: '1px solid #2E2E3A' }}
               >
                 <button
                   onClick={() => setShowEmoji(s => !s)}
                   className={cn(
-                    'w-8 h-7 flex items-center justify-center rounded-full transition-colors shrink-0 mr-0.5',
-                    showEmoji ? 'text-[#C8FF4D]' : 'text-[#52525E]'
+                    'w-8 h-8 flex items-center justify-center rounded-xl transition-colors shrink-0',
+                    showEmoji ? 'text-[#C8FF4D]' : 'text-[#52525E] hover:text-[#8B8B9A]'
                   )}
                 >
                   <Smile size={20} />
@@ -1325,7 +1325,7 @@ export default function ChatPage() {
                 <button
                   onClick={sendLocation}
                   disabled={locSending}
-                  className="w-8 h-7 flex items-center justify-center rounded-full transition-colors shrink-0 mr-1 text-[#52525E] hover:text-[#C8FF4D] disabled:opacity-50"
+                  className="w-8 h-8 flex items-center justify-center rounded-xl transition-colors shrink-0 text-[#52525E] hover:text-[#8B8B9A] disabled:opacity-50"
                 >
                   {locSending
                     ? <span className="text-[9px] font-bold tracking-tight animate-pulse">GPS</span>
@@ -1338,10 +1338,10 @@ export default function ChatPage() {
                   onChange={e => { setText(e.target.value); autoResize(e.target); whisperTyping() }}
                   onKeyDown={handleKeyDown}
                   onFocus={() => setShowEmoji(false)}
-                  placeholder="Message…"
+                  placeholder="Type a message…"
                   rows={1}
-                  className="flex-1 bg-transparent text-sm text-[#F2F0EB] placeholder:text-[#52525E] outline-none ring-0 resize-none leading-relaxed self-center"
-                  style={{ minHeight: '20px', maxHeight: '120px', WebkitTapHighlightColor: 'transparent' }}
+                  className="chat-textarea flex-1 bg-transparent text-sm text-[#F2F0EB] placeholder:text-[#52525E] outline-none ring-0 resize-none leading-relaxed self-center"
+                  style={{ minHeight: '36px', maxHeight: '120px', WebkitTapHighlightColor: 'transparent', paddingTop: '6px' }}
                 />
               </motion.div>
             )}
@@ -1357,8 +1357,8 @@ export default function ChatPage() {
                 exit={{ scale: 0.7, opacity: 0 }}
                 transition={{ type: 'spring', stiffness: 500, damping: 28 }}
                 onClick={() => stopRecording(true)}
-                className="w-10 h-10 rounded-full flex items-center justify-center text-white shrink-0 shadow-md active:scale-90 transition-transform"
-                style={{ background: '#FF5C7A' }}
+                className="w-11 h-11 rounded-2xl flex items-center justify-center text-white shrink-0 shadow-md active:scale-90 transition-transform"
+                style={{ background: '#FF5C7A', boxShadow: '0 4px 16px rgba(255,92,122,0.3)' }}
               >
                 <Send size={16} />
               </motion.button>
@@ -1370,8 +1370,8 @@ export default function ChatPage() {
                 exit={{ scale: 0.7, opacity: 0 }}
                 transition={{ type: 'spring', stiffness: 500, damping: 28 }}
                 onClick={handleSend}
-                className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-md active:scale-90 transition-transform"
-                style={{ background: '#C8FF4D', color: '#0A1A00' }}
+                className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 shadow-md active:scale-90 transition-transform"
+                style={{ background: '#C8FF4D', color: '#0A1A00', boxShadow: '0 4px 16px rgba(200,255,77,0.25)' }}
               >
                 <Send size={17} />
               </motion.button>
@@ -1383,8 +1383,8 @@ export default function ChatPage() {
                 exit={{ scale: 0.7, opacity: 0 }}
                 transition={{ type: 'spring', stiffness: 500, damping: 28 }}
                 onPointerDown={startRecording}
-                className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-md active:scale-90 transition-transform"
-                style={{ background: '#C8FF4D', color: '#0A1A00' }}
+                className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 active:scale-90 transition-transform"
+                style={{ background: '#C8FF4D', color: '#0A1A00', boxShadow: '0 4px 16px rgba(200,255,77,0.25)' }}
               >
                 <Mic size={18} />
               </motion.button>
