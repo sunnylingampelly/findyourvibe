@@ -27,12 +27,12 @@ function strengthScore(pw: string): number {
 
 function StrengthBar({ score }: { score: number }) {
   const levels = [
-    { label: '', color: 'bg-[#E8EAE6]' },
-    { label: 'Weak',      color: 'bg-[#D76D6D]' },
-    { label: 'Fair',      color: 'bg-[#D9A45B]' },
-    { label: 'Good',      color: 'bg-[#4D9274]' },
-    { label: 'Strong',    color: 'bg-[#236B63]' },
-    { label: 'Very strong', color: 'bg-[#194E49]' },
+    { label: '', color: '#2E2E3A' },
+    { label: 'Weak',       color: '#FF5C7A' },
+    { label: 'Fair',       color: '#FF9F43' },
+    { label: 'Good',       color: '#8B7CFF' },
+    { label: 'Strong',     color: '#C8FF4D' },
+    { label: 'Very strong', color: '#C8FF4D' },
   ]
   const level = levels[score] ?? levels[0]
 
@@ -42,12 +42,13 @@ function StrengthBar({ score }: { score: number }) {
         {[1, 2, 3, 4, 5].map(i => (
           <div
             key={i}
-            className={`flex-1 h-1 rounded-full transition-colors duration-300 ${i <= score ? level.color : 'bg-[#E8EAE6]'}`}
+            className="flex-1 h-1 rounded-full transition-colors duration-300"
+            style={{ background: i <= score ? level.color : '#2E2E3A' }}
           />
         ))}
       </div>
       {score > 0 && (
-        <p className={`text-[11px] font-semibold ${score <= 1 ? 'text-[#D76D6D]' : score <= 2 ? 'text-[#D9A45B]' : score <= 3 ? 'text-[#4D9274]' : 'text-[#236B63]'}`}>
+        <p className="text-[11px] font-semibold" style={{ color: level.color }}>
           {level.label}
         </p>
       )}
@@ -63,7 +64,7 @@ function PasswordChecklist({ password }: { password: string }) {
       animate={{ opacity: 1, height: 'auto' }}
       exit={{ opacity: 0, height: 0 }}
       transition={{ duration: 0.2 }}
-      className="bg-[#F4F9F7] border border-[#C8DDD2] rounded-2xl p-4 space-y-2.5"
+      className="rounded-2xl p-4 space-y-2.5" style={{ background: '#1C1C22', border: '1px solid #2E2E3A' }}
     >
       <StrengthBar score={strengthScore(password)} />
       <div className="mt-3 space-y-2">
@@ -71,13 +72,13 @@ function PasswordChecklist({ password }: { password: string }) {
           const ok = rule.test(password)
           return (
             <div key={rule.id} className="flex items-center gap-2.5">
-              <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 transition-colors duration-200 ${ok ? 'bg-[#236B63]' : 'bg-[#E8EAE6]'}`}>
+              <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 transition-colors duration-200" style={{ background: ok ? '#C8FF4D' : '#252530' }}>
                 {ok
-                  ? <Check size={11} className="text-white" strokeWidth={3} />
-                  : <X size={10} className="text-[#A1AAA5]" strokeWidth={2.5} />
+                  ? <Check size={11} style={{ color: '#0A1A00' }} strokeWidth={3} />
+                  : <X size={10} style={{ color: '#52525E' }} strokeWidth={2.5} />
                 }
               </div>
-              <span className={`text-xs transition-colors duration-200 ${ok ? 'text-[#236B63] font-medium' : 'text-[#A1AAA5]'}`}>
+              <span className={`text-xs transition-colors duration-200 ${ok ? 'font-medium' : ''}`} style={{ color: ok ? '#C8FF4D' : '#52525E' }}>
                 {rule.label}
               </span>
             </div>
@@ -138,12 +139,12 @@ export default function RegisterPage() {
   const allRulesMet = rules.every(r => r.test(pwValue))
 
   return (
-    <div className="app-container min-h-dvh bg-[#FAF9F6] flex flex-col">
+    <div className="app-container min-h-dvh bg-[#0D0D12] flex flex-col">
       {/* Back button */}
       <div className="flex items-center px-4 pt-safe pt-4 pb-2">
         <button
           onClick={() => navigate(-1)}
-          className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-[#E8EAE6] text-[#24332F]"
+          className="w-9 h-9 flex items-center justify-center rounded-xl text-[#8B8B9A] hover:bg-[#1C1C22] transition-colors"
           aria-label="Go back"
         >
           <ArrowLeft size={20} />
@@ -159,15 +160,15 @@ export default function RegisterPage() {
         {/* Logo */}
         <div className="flex items-center gap-2 mb-8">
           <LogoMark size={32} />
-          <span className="font-manrope font-extrabold text-[#24332F] text-lg tracking-tight">FindYourVibe</span>
+          <span className="font-manrope font-extrabold text-[#F2F0EB] text-lg tracking-tight">FindYourVibe</span>
         </div>
 
         {/* Heading */}
         <div className="mb-7">
-          <h1 className="font-manrope font-extrabold text-[2rem] text-[#24332F] leading-tight tracking-[-0.5px]">
+          <h1 className="font-manrope font-extrabold text-[2rem] text-[#F2F0EB] leading-tight tracking-[-0.5px]">
             Create account
           </h1>
-          <p className="text-[#77817C] mt-1.5">Join thousands finding their vibe</p>
+          <p className="text-[#8B8B9A] mt-1.5">Join thousands finding their vibe</p>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
@@ -220,11 +221,11 @@ export default function RegisterPage() {
             {...register('password_confirmation')}
           />
 
-          <p className="text-xs text-[#A1AAA5] text-center leading-relaxed">
+          <p className="text-xs text-[#52525E] text-center leading-relaxed">
             By creating an account you agree to our{' '}
-            <Link to="/terms" className="text-[#236B63] underline underline-offset-2">Terms of Service</Link>
+            <Link to="/terms" className="text-[#C8FF4D] underline underline-offset-2">Terms of Service</Link>
             {' '}and{' '}
-            <Link to="/terms" className="text-[#236B63] underline underline-offset-2">Privacy Policy</Link>
+            <Link to="/terms" className="text-[#C8FF4D] underline underline-offset-2">Privacy Policy</Link>
           </p>
 
           <Button
@@ -238,14 +239,14 @@ export default function RegisterPage() {
         </form>
 
         <div className="flex items-center gap-3 my-6">
-          <div className="flex-1 h-px bg-[#E8EAE6]" />
-          <span className="text-xs text-[#A1AAA5] font-medium">or</span>
-          <div className="flex-1 h-px bg-[#E8EAE6]" />
+          <div className="flex-1 h-px bg-[#2E2E3A]" />
+          <span className="text-xs text-[#52525E] font-medium">or</span>
+          <div className="flex-1 h-px bg-[#2E2E3A]" />
         </div>
 
-        <p className="text-center text-[#77817C] text-sm">
+        <p className="text-center text-[#8B8B9A] text-sm">
           Already have an account?{' '}
-          <Link to="/login" className="text-[#236B63] font-bold">Sign in</Link>
+          <Link to="/login" className="text-[#C8FF4D] font-bold">Sign in</Link>
         </p>
       </motion.div>
     </div>

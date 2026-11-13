@@ -43,12 +43,12 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="app-container min-h-dvh bg-[#FAF9F6] flex flex-col">
+    <div className="app-container min-h-dvh bg-[#0D0D12] flex flex-col">
       {/* Top bar */}
       <div className="flex items-center px-4 pt-safe pt-4 pb-2">
         <button
           onClick={() => navigate(-1)}
-          className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-[#E8EAE6] text-[#24332F] mr-3"
+          className="w-9 h-9 flex items-center justify-center rounded-xl text-[#8B8B9A] hover:bg-[#1C1C22] transition-colors"
           aria-label="Go back"
         >
           <ArrowLeft size={20} />
@@ -64,15 +64,15 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="flex items-center gap-2 mb-10">
           <LogoMark size={32} />
-          <span className="font-manrope font-extrabold text-[#24332F] text-lg tracking-tight">FindYourVibe</span>
+          <span className="font-manrope font-bold text-[#F2F0EB] text-lg tracking-tight">FindYourVibe</span>
         </div>
 
         {/* Heading */}
         <div className="mb-7">
-          <h1 className="font-manrope font-extrabold text-[2rem] text-[#24332F] leading-tight tracking-[-0.5px]">
+          <h1 className="font-manrope font-extrabold text-[2rem] text-[#F2F0EB] leading-tight tracking-[-0.5px]">
             Welcome back
           </h1>
-          <p className="text-[#77817C] mt-1.5 text-base">Sign in to continue your journey</p>
+          <p className="text-[#8B8B9A] mt-1.5 text-base">Sign in to continue your journey</p>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
@@ -99,7 +99,7 @@ export default function LoginPage() {
           />
 
           <div className="flex justify-end -mt-1">
-            <Link to="/forgot-password" className="text-sm text-[#236B63] font-semibold">
+            <Link to="/forgot-password" className="text-sm text-[#C8FF4D] font-semibold">
               Forgot password?
             </Link>
           </div>
@@ -111,14 +111,14 @@ export default function LoginPage() {
 
         {/* Divider */}
         <div className="flex items-center gap-3 my-6">
-          <div className="flex-1 h-px bg-[#E8EAE6]" />
-          <span className="text-xs text-[#A1AAA5] font-medium">or</span>
-          <div className="flex-1 h-px bg-[#E8EAE6]" />
+          <div className="flex-1 h-px bg-[#2E2E3A]" />
+          <span className="text-xs text-[#52525E] font-medium">or</span>
+          <div className="flex-1 h-px bg-[#2E2E3A]" />
         </div>
 
-        <p className="text-center text-[#77817C] text-sm">
+        <p className="text-center text-[#8B8B9A] text-sm">
           Don't have an account?{' '}
-          <Link to="/register" className="text-[#236B63] font-bold">Sign up free</Link>
+          <Link to="/register" className="text-[#C8FF4D] font-bold">Sign up free</Link>
         </p>
       </motion.div>
     </div>

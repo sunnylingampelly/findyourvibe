@@ -1,36 +1,43 @@
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
 
 @import "tailwindcss";
 
 :root {
-  /* Primary */
-  --color-primary: #236B63;
-  --color-primary-dark: #194E49;
-
-  /* Secondary */
-  --color-secondary: #A8C5B5;
-  --color-secondary-pale: #E8F0EA;
-
-  /* Background */
-  --color-bg: #FAF9F6;
-  --color-bg-cream: #F4F1EA;
+  /* Surfaces */
+  --color-bg: #0D0D12;
+  --color-surface: #141418;
+  --color-surface-2: #1C1C22;
+  --color-surface-3: #252530;
 
   /* Accent */
-  --color-accent: #E9B7A5;
-  --color-accent-dark: #D98D7A;
+  --color-primary: #C8FF4D;
+  --color-primary-dark: #A8E62D;
+  --color-primary-text: #0A1A00;
+
+  /* Secondary (vibes / hearts) */
+  --color-secondary: #FF5C7A;
+  --color-secondary-pale: #FF5C7A1A;
+
+  /* Trust / companion */
+  --color-trust: #8B7CFF;
+
+  /* Background aliases kept for compat */
+  --color-bg-cream: #1C1C22;
+  --color-accent: #FF5C7A;
+  --color-accent-dark: #E03A5A;
 
   /* Text */
-  --color-text: #24332F;
-  --color-text-secondary: #77817C;
-  --color-text-muted: #A1AAA5;
+  --color-text: #F2F0EB;
+  --color-text-secondary: #8B8B9A;
+  --color-text-muted: #52525E;
 
   /* Border */
-  --color-border: #E8EAE6;
+  --color-border: #2E2E3A;
 
   /* Status */
-  --color-success: #4D9274;
-  --color-warning: #D9A45B;
-  --color-error: #D76D6D;
+  --color-success: #4ADE80;
+  --color-warning: #FFC85A;
+  --color-error: #FF5C7A;
 
   /* App shell */
   --app-max-width: 430px;
@@ -39,22 +46,27 @@
 }
 
 @theme {
-  --color-primary: #236B63;
-  --color-primary-dark: #194E49;
-  --color-secondary: #A8C5B5;
-  --color-secondary-pale: #E8F0EA;
-  --color-bg-app: #FAF9F6;
-  --color-bg-cream: #F4F1EA;
-  --color-accent: #E9B7A5;
-  --color-accent-dark: #D98D7A;
-  --color-text-main: #24332F;
-  --color-text-secondary: #77817C;
-  --color-text-muted: #A1AAA5;
-  --color-border: #E8EAE6;
-  --color-success: #4D9274;
-  --color-warning: #D9A45B;
-  --color-error: #D76D6D;
-  --font-manrope: 'Manrope', sans-serif;
+  --color-primary: #C8FF4D;
+  --color-primary-dark: #A8E62D;
+  --color-secondary: #FF5C7A;
+  --color-secondary-pale: #FF5C7A1A;
+  --color-trust: #8B7CFF;
+  --color-bg-app: #0D0D12;
+  --color-surface: #141418;
+  --color-surface-2: #1C1C22;
+  --color-surface-3: #252530;
+  --color-bg-cream: #1C1C22;
+  --color-accent: #FF5C7A;
+  --color-accent-dark: #E03A5A;
+  --color-text-main: #F2F0EB;
+  --color-text-secondary: #8B8B9A;
+  --color-text-muted: #52525E;
+  --color-border: #2E2E3A;
+  --color-success: #4ADE80;
+  --color-warning: #FFC85A;
+  --color-error: #FF5C7A;
+  /* Remap font-manrope class to Space Grotesk — most leverage with one change */
+  --font-manrope: 'Space Grotesk', sans-serif;
   --font-inter: 'Inter', sans-serif;
 }
 
@@ -68,7 +80,7 @@ html, body {
   margin: 0;
   padding: 0;
   font-family: 'Inter', sans-serif;
-  background-color: #D8DBD6;
+  background-color: #07070A;
   overscroll-behavior: none;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -90,7 +102,7 @@ html, body {
   background: var(--color-bg);
   position: relative;
   overflow: hidden;
-  box-shadow: 0 0 80px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.04);
+  box-shadow: 0 0 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.03);
 }
 
 /* Scrollable screen area */
@@ -108,10 +120,10 @@ html, body {
 .pb-safe { padding-bottom: max(16px, var(--safe-area-bottom)); }
 .pb-nav { padding-bottom: calc(80px + var(--safe-area-bottom)); }
 
-/* Typography */
+/* Typography — Space Grotesk for all headings */
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Manrope', sans-serif;
-  letter-spacing: -0.3px;
+  font-family: 'Space Grotesk', sans-serif;
+  letter-spacing: -0.4px;
 }
 
 /* Transitions */
@@ -132,7 +144,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Card styles */
 .card {
-  background: white;
+  background: var(--color-surface);
   border-radius: 20px;
   border: 1px solid var(--color-border);
 }
@@ -140,10 +152,10 @@ h1, h2, h3, h4, h5, h6 {
 /* Button base */
 .btn-primary {
   background: var(--color-primary);
-  color: white;
+  color: var(--color-primary-text);
   border-radius: 14px;
-  font-family: 'Manrope', sans-serif;
-  font-weight: 600;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
   transition: all 0.2s ease;
 }
 .btn-primary:active {
@@ -155,7 +167,7 @@ h1, h2, h3, h4, h5, h6 {
 .input-base {
   border: 1.5px solid var(--color-border);
   border-radius: 12px;
-  background: white;
+  background: var(--color-surface-2);
   font-family: 'Inter', sans-serif;
   color: var(--color-text);
   transition: border-color 0.2s;
@@ -167,11 +179,11 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Verification badge */
 .verified-badge {
-  background: linear-gradient(135deg, #236B63, #4D9274);
+  background: linear-gradient(135deg, #8B7CFF, #A99CFF);
   color: white;
   border-radius: 999px;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   padding: 2px 8px;
 }
 
@@ -183,10 +195,12 @@ h1, h2, h3, h4, h5, h6 {
   transform: translateX(-50%);
   width: 100%;
   max-width: var(--app-max-width);
-  background: white;
-  border-top: 1px solid var(--color-border);
+  background: rgba(20, 20, 24, 0.97);
+  border-top: 1px solid rgba(255,255,255,0.06);
   z-index: 100;
   padding-bottom: var(--safe-area-bottom);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
 /* Swipe card */
@@ -205,24 +219,24 @@ h1, h2, h3, h4, h5, h6 {
   cursor: grabbing;
 }
 
-/* Loading skeleton */
+/* Loading skeleton — dark shimmer */
 @keyframes shimmer {
   0% { background-position: -600px 0; }
   100% { background-position: 600px 0; }
 }
 .skeleton {
-  background: linear-gradient(90deg, #ECEAE6 0%, #F4F1EA 40%, #F9F7F3 50%, #F4F1EA 60%, #ECEAE6 100%);
+  background: linear-gradient(90deg, #1C1C22 0%, #252530 40%, #2A2A36 50%, #252530 60%, #1C1C22 100%);
   background-size: 1200px 100%;
   animation: shimmer 1.8s ease-in-out infinite;
   border-radius: 10px;
 }
 
-/* No focus rings — PWA native-app feel, suppress all green focus borders */
+/* Focus rings — lime */
 :focus-visible { outline: none; }
 input:focus, textarea:focus, select:focus {
   outline: none !important;
-  border-color: #D0D9D6 !important;
-  box-shadow: none !important;
+  border-color: #C8FF4D !important;
+  box-shadow: 0 0 0 2px rgba(200, 255, 77, 0.12) !important;
 }
 button:focus { outline: none; }
 
@@ -245,15 +259,19 @@ button, a {
   display: none;
 }
 
-/* Premium shadows */
+/* Premium shadows — dark */
 .shadow-card {
-  box-shadow: 0 2px 12px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.3);
 }
 .shadow-elevated {
-  box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.4);
 }
 .shadow-float {
-  box-shadow: 0 4px 24px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.45), 0 1px 4px rgba(0,0,0,0.3);
+}
+/* Lime glow — for primary CTA */
+.shadow-lime {
+  box-shadow: 0 4px 24px rgba(200, 255, 77, 0.25), 0 1px 4px rgba(200, 255, 77, 0.1);
 }
 
 /* Smooth image loading */

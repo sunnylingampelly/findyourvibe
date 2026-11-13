@@ -40,8 +40,8 @@ function GridCard({ profile }: { profile: PublicProfile }) {
       {profile.profile_photo_url ? (
         <img src={profile.profile_photo_url} alt={profile.display_name} className="w-full h-full object-cover" />
       ) : (
-        <div className="w-full h-full bg-gradient-to-br from-[#A8C5B5] to-[#194E49] flex items-center justify-center">
-          <span className="font-manrope font-extrabold text-white text-3xl">{getInitials(profile.display_name)}</span>
+        <div className="w-full h-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #1C1C22 0%, #252530 100%)' }}>
+          <span className="font-manrope font-extrabold text-[#C8FF4D] text-3xl">{getInitials(profile.display_name)}</span>
         </div>
       )}
 
@@ -50,7 +50,7 @@ function GridCard({ profile }: { profile: PublicProfile }) {
 
       {/* Verified badge */}
       {profile.companion_verification_status === 'approved' && (
-        <div className="absolute top-2.5 left-2.5 flex items-center gap-1 bg-[#236B63] px-2 py-0.5 rounded-full">
+        <div className="absolute top-2.5 left-2.5 flex items-center gap-1 px-2 py-0.5 rounded-full" style={{ background: '#8B7CFF' }}>
           <CheckCircle2 size={9} className="text-white" />
           <span className="text-white text-[9px] font-bold tracking-wide">PRO</span>
         </div>
@@ -101,8 +101,8 @@ function FeaturedCard({ profile }: { profile: PublicProfile }) {
       {profile.profile_photo_url ? (
         <img src={profile.profile_photo_url} alt={profile.display_name} className="w-full h-full object-cover" />
       ) : (
-        <div className="w-full h-full bg-gradient-to-br from-[#A8C5B5] to-[#194E49] flex items-center justify-center">
-          <span className="font-manrope font-bold text-white text-2xl">{getInitials(profile.display_name)}</span>
+        <div className="w-full h-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #1C1C22 0%, #252530 100%)' }}>
+          <span className="font-manrope font-bold text-[#C8FF4D] text-2xl">{getInitials(profile.display_name)}</span>
         </div>
       )}
       <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/5 to-transparent" />
@@ -305,15 +305,15 @@ export default function DiscoverPage() {
 
   return (
     <AppShell>
-      <div className="screen-scroll h-dvh overflow-y-auto bg-[#FAF9F6]">
+      <div className="screen-scroll h-dvh overflow-y-auto bg-[#0D0D12]">
 
         {/* Sticky top bar */}
-        <div className="sticky top-0 z-40 bg-[#FAF9F6]/95 backdrop-blur-md">
+        <div className="sticky top-0 z-40 backdrop-blur-xl" style={{ background: 'rgba(13,13,18,0.96)' }}>
           {/* Greeting */}
           <div className="flex items-center justify-between px-4 pt-safe pt-4 pb-3">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#A1AAA5]">{greeting}</p>
-              <h1 className="font-manrope font-extrabold text-[1.35rem] text-[#1A2822] tracking-tight leading-tight">
+              <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#52525E]">{greeting}</p>
+              <h1 className="font-manrope font-extrabold text-[1.35rem] text-[#F2F0EB] tracking-tight leading-tight">
                 {firstName} 👋
               </h1>
             </div>
@@ -321,25 +321,28 @@ export default function DiscoverPage() {
               {canInstall && (
                 <button
                   onClick={() => setShowInstallSheet(true)}
-                  className="flex items-center gap-1.5 bg-[#236B63] text-white text-[11px] font-bold px-3 py-2 rounded-xl shadow-sm active:scale-95 transition-transform"
+                  className="flex items-center gap-1.5 text-[#0A1A00] text-[11px] font-bold px-3 py-2 rounded-xl active:scale-95 transition-transform"
+                  style={{ background: '#C8FF4D' }}
                 >
                   <Download size={12} />
-                  Install App
+                  Install
                 </button>
               )}
               <Link
                 to="/saved"
-                className="w-10 h-10 bg-white rounded-2xl border border-[#E8EAE6] flex items-center justify-center shadow-sm"
+                className="w-10 h-10 rounded-2xl flex items-center justify-center"
+                style={{ background: '#1C1C22', border: '1px solid #2E2E3A' }}
               >
-                <Bookmark size={18} className="text-[#24332F]" />
+                <Bookmark size={18} className="text-[#8B8B9A]" />
               </Link>
               <Link
                 to="/notifications"
-                className="relative w-10 h-10 bg-white rounded-2xl border border-[#E8EAE6] flex items-center justify-center shadow-sm"
+                className="relative w-10 h-10 rounded-2xl flex items-center justify-center"
+                style={{ background: '#1C1C22', border: '1px solid #2E2E3A' }}
               >
-                <Bell size={18} className="text-[#24332F]" />
+                <Bell size={18} className="text-[#8B8B9A]" />
                 {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[16px] h-4 bg-[#D76D6D] text-white text-[8px] font-bold rounded-full flex items-center justify-center px-1 border border-white leading-none">
+                  <span className="absolute -top-1 -right-1 min-w-[16px] h-4 bg-[#FF5C7A] text-white text-[8px] font-bold rounded-full flex items-center justify-center px-1 border border-[#0D0D12] leading-none">
                     {unreadCount > 9 ? '9+' : unreadCount}
                   </span>
                 )}
@@ -349,12 +352,13 @@ export default function DiscoverPage() {
 
           {/* Search */}
           <div className="relative px-4 mb-3">
-            <Search size={15} className="absolute left-7 top-1/2 -translate-y-1/2 text-[#A1AAA5] pointer-events-none" />
+            <Search size={15} className="absolute left-7 top-1/2 -translate-y-1/2 text-[#52525E] pointer-events-none" />
             <input
               value={searchInput}
               onChange={e => handleSearchChange(e.target.value)}
               placeholder="Search by name, vibe, city…"
-              className="w-full pl-10 pr-4 py-3 bg-white border border-[#E8EAE6] rounded-2xl text-sm text-[#24332F] placeholder:text-[#B8BDB9] focus:outline-none focus:border-[#236B63] shadow-sm transition-colors"
+              className="w-full pl-10 pr-4 py-3 rounded-2xl text-sm text-[#F2F0EB] placeholder:text-[#52525E] focus:outline-none transition-colors"
+              style={{ background: '#1C1C22', border: '1px solid #2E2E3A' }}
             />
           </div>
 
@@ -364,9 +368,13 @@ export default function DiscoverPage() {
               onClick={() => setSelectedService(null)}
               className={`shrink-0 px-4 py-2 rounded-xl text-xs font-bold font-manrope transition-all duration-200 ${
                 !selectedService
-                  ? 'bg-[#1A2822] text-white shadow-md shadow-black/15'
-                  : 'bg-white border border-[#E8EAE6] text-[#77817C] hover:border-[#C0C8C2]'
+                  ? 'text-[#0A1A00]'
+                  : 'text-[#8B8B9A]'
               }`}
+              style={!selectedService
+                ? { background: '#C8FF4D', boxShadow: '0 2px 12px rgba(200,255,77,0.2)' }
+                : { background: '#1C1C22', border: '1px solid #2E2E3A' }
+              }
             >
               All
             </button>
@@ -377,10 +385,12 @@ export default function DiscoverPage() {
                   key={s.id}
                   onClick={() => setSelectedService(isActive ? null : s.slug)}
                   className={`shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold font-manrope transition-all duration-200 whitespace-nowrap ${
-                    isActive
-                      ? 'bg-[#236B63] text-white shadow-md shadow-[#236B63]/30'
-                      : 'bg-white border border-[#E8EAE6] text-[#77817C] hover:border-[#C0C8C2]'
+                    isActive ? 'text-[#0A1A00]' : 'text-[#8B8B9A]'
                   }`}
+                  style={isActive
+                    ? { background: '#C8FF4D', boxShadow: '0 2px 12px rgba(200,255,77,0.2)' }
+                    : { background: '#1C1C22', border: '1px solid #2E2E3A' }
+                  }
                 >
                   {SERVICE_ICONS[s.slug] || '✨'}{' '}
                   {s.name.replace(' Companion', '').replace(' Buddy', '').replace(' Explorer', '')}
@@ -401,11 +411,11 @@ export default function DiscoverPage() {
             animate={{ opacity: 1, y: 0 }}
             className="flex flex-col items-center justify-center py-24 px-8 text-center"
           >
-            <div className="w-16 h-16 bg-[#E8F0EA] rounded-2xl flex items-center justify-center mb-4">
-              <Search size={24} className="text-[#236B63]" />
+            <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background: 'rgba(200,255,77,0.08)', border: '1px solid rgba(200,255,77,0.15)' }}>
+              <Search size={24} style={{ color: '#C8FF4D' }} />
             </div>
-            <h3 className="font-manrope font-bold text-[#24332F] mb-2">No companions found</h3>
-            <p className="text-[#A1AAA5] text-sm leading-relaxed max-w-[220px]">
+            <h3 className="font-manrope font-bold text-[#F2F0EB] mb-2">No companions found</h3>
+            <p className="text-[#8B8B9A] text-sm leading-relaxed max-w-[220px]">
               Try a different category or clear the search
             </p>
           </motion.div>
@@ -432,13 +442,13 @@ export default function DiscoverPage() {
                           <span className="text-white font-bold text-lg">{story.user.display_name[0]}</span>
                         )}
                         {/* Story ring */}
-                        <div className="absolute inset-0 rounded-[14px] border-2 border-[#236B63] pointer-events-none" />
+                        <div className="absolute inset-0 rounded-[14px] pointer-events-none" style={{ border: '2px solid #C8FF4D' }} />
                       </div>
-                      <p className="text-[9px] font-semibold text-[#24332F] text-center w-16 truncate">
+                      <p className="text-[9px] font-semibold text-[#F2F0EB] text-center w-16 truncate">
                         {story.user.display_name.split(' ')[0]}
                       </p>
                       {story.caption && (
-                        <p className="text-[8px] text-[#A1AAA5] text-center w-16 truncate">{story.caption}</p>
+                        <p className="text-[8px] text-[#8B8B9A] text-center w-16 truncate">{story.caption}</p>
                       )}
                     </motion.div>
                   ))}
@@ -451,8 +461,8 @@ export default function DiscoverPage() {
               <div className="mb-5">
                 <div className="flex items-center justify-between px-4 mb-3">
                   <div>
-                    <h2 className="font-manrope font-extrabold text-[#1A2822] text-base tracking-tight">🔥 Trending</h2>
-                    <p className="text-xs text-[#A1AAA5]">Most popular this week</p>
+                    <h2 className="font-manrope font-extrabold text-[#F2F0EB] text-base tracking-tight">🔥 Trending</h2>
+                    <p className="text-xs text-[#8B8B9A]">Most popular this week</p>
                   </div>
                 </div>
                 <div className="flex gap-3 overflow-x-auto px-4 pb-1 scrollbar-hide">
@@ -468,8 +478,8 @@ export default function DiscoverPage() {
               <div className="mb-5">
                 <div className="flex items-center justify-between px-4 mb-3">
                   <div>
-                    <h2 className="font-manrope font-extrabold text-[#1A2822] text-base tracking-tight">Top Rated</h2>
-                    <p className="text-xs text-[#A1AAA5]">Highest reviewed companions</p>
+                    <h2 className="font-manrope font-extrabold text-[#F2F0EB] text-base tracking-tight">Top Rated</h2>
+                    <p className="text-xs text-[#8B8B9A]">Highest reviewed companions</p>
                   </div>
                 </div>
                 <div className="flex gap-3 overflow-x-auto px-4 pb-1 scrollbar-hide">
@@ -482,14 +492,14 @@ export default function DiscoverPage() {
 
             {/* Grid heading */}
             <div className="px-4 mb-3">
-              <h2 className="font-manrope font-extrabold text-[#1A2822] text-base tracking-tight">
+              <h2 className="font-manrope font-extrabold text-[#F2F0EB] text-base tracking-tight">
                 {search
                   ? `Results for "${search}"`
                   : selectedService
                     ? services.find(s => s.slug === selectedService)?.name ?? 'Companions'
                     : 'Discover Companions'}
               </h2>
-              <p className="text-xs text-[#A1AAA5] mt-0.5">{profiles.length} available near you</p>
+              <p className="text-xs text-[#8B8B9A] mt-0.5">{profiles.length} available near you</p>
             </div>
 
             {/* 2-column grid */}
@@ -532,35 +542,36 @@ export default function DiscoverPage() {
             <motion.div
               initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 28, stiffness: 320 }}
-              className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-white rounded-t-3xl z-[201] px-6 pt-5 pb-10"
+              className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] rounded-t-3xl z-[201] px-6 pt-5 pb-10"
+              style={{ background: '#141418', border: '1px solid rgba(255,255,255,0.08)', borderBottom: 'none' }}
             >
-              <div className="w-10 h-1 bg-[#E8EAE6] rounded-full mx-auto mb-5" />
+              <div className="w-10 h-1 bg-[#2E2E3A] rounded-full mx-auto mb-5" />
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-[#236B63] rounded-2xl flex items-center justify-center shadow-md">
+                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-md" style={{ background: '#C8FF4D' }}>
                     <LogoMark size={28} />
                   </div>
                   <div>
-                    <p className="font-manrope font-bold text-[#24332F] text-base leading-tight">FindYourVibe</p>
-                    <p className="text-[#A1AAA5] text-xs">findyourvibe.com</p>
+                    <p className="font-manrope font-bold text-[#F2F0EB] text-base leading-tight">FindYourVibe</p>
+                    <p className="text-[#52525E] text-xs">findyourvibe.com</p>
                   </div>
                 </div>
-                <button onClick={() => setShowInstallSheet(false)} className="w-8 h-8 rounded-full bg-[#F5F5F3] flex items-center justify-center text-[#A1AAA5]">
+                <button onClick={() => setShowInstallSheet(false)} className="w-8 h-8 rounded-full flex items-center justify-center text-[#8B8B9A]" style={{ background: '#252530' }}>
                   <X size={16} />
                 </button>
               </div>
 
-              <div className="bg-[#F9FAF8] rounded-2xl p-4 space-y-3 mb-6">
+              <div className="rounded-2xl p-4 space-y-3 mb-6" style={{ background: '#1C1C22', border: '1px solid #2E2E3A' }}>
                 {[
                   { icon: Zap, text: 'Faster — loads instantly like a native app' },
                   { icon: Wifi, text: 'Works offline — browse even without internet' },
                   { icon: Bell, text: 'Notifications — never miss a connection request' },
                 ].map(({ icon: Icon, text }) => (
                   <div key={text} className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-xl bg-[#E8F0EA] flex items-center justify-center shrink-0">
-                      <Icon size={15} className="text-[#236B63]" />
+                    <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(200,255,77,0.1)' }}>
+                      <Icon size={15} style={{ color: '#C8FF4D' }} />
                     </div>
-                    <span className="text-sm text-[#24332F] leading-snug">{text}</span>
+                    <span className="text-sm text-[#F2F0EB] leading-snug">{text}</span>
                   </div>
                 ))}
               </div>
@@ -569,39 +580,40 @@ export default function DiscoverPage() {
                 <button
                   onClick={handleInstallClick}
                   disabled={installing}
-                  className="w-full bg-[#236B63] text-white rounded-2xl py-4 font-manrope font-bold text-base disabled:opacity-60 active:scale-[0.98] transition-transform"
+                  className="w-full rounded-2xl py-4 font-manrope font-bold text-base disabled:opacity-60 active:scale-[0.98] transition-transform"
+                  style={{ background: '#C8FF4D', color: '#0A1A00' }}
                 >
                   {installing ? 'Installing…' : 'Install Now'}
                 </button>
               ) : (
                 <>
-                  <p className="text-sm font-semibold text-[#24332F] mb-3">
+                  <p className="text-sm font-semibold text-[#F2F0EB] mb-3">
                     {isIOS ? 'Install on iPhone / iPad' : 'Install from your browser'}
                   </p>
                   <ol className="space-y-3">
                     {isIOS ? (
                       <>
-                        <li className="flex items-start gap-3 text-sm text-[#24332F]">
-                          <span className="w-6 h-6 rounded-full bg-[#E8F0EA] text-[#236B63] font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">1</span>
-                          <span>Tap the <Share size={13} className="inline text-[#236B63] mb-0.5" /> <strong>Share</strong> button in Safari toolbar.</span>
+                        <li className="flex items-start gap-3 text-sm text-[#F2F0EB]">
+                          <span className="w-6 h-6 rounded-full font-bold text-xs flex items-center justify-center shrink-0 mt-0.5" style={{ background: '#C8FF4D', color: '#0A1A00' }}>1</span>
+                          <span>Tap the <Share size={13} className="inline mb-0.5" style={{ color: '#C8FF4D' }} /> <strong>Share</strong> button in Safari toolbar.</span>
                         </li>
-                        <li className="flex items-start gap-3 text-sm text-[#24332F]">
-                          <span className="w-6 h-6 rounded-full bg-[#E8F0EA] text-[#236B63] font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">2</span>
+                        <li className="flex items-start gap-3 text-sm text-[#F2F0EB]">
+                          <span className="w-6 h-6 rounded-full font-bold text-xs flex items-center justify-center shrink-0 mt-0.5" style={{ background: '#C8FF4D', color: '#0A1A00' }}>2</span>
                           <span>Scroll and tap <strong>"Add to Home Screen"</strong>.</span>
                         </li>
-                        <li className="flex items-start gap-3 text-sm text-[#24332F]">
-                          <span className="w-6 h-6 rounded-full bg-[#E8F0EA] text-[#236B63] font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">3</span>
+                        <li className="flex items-start gap-3 text-sm text-[#F2F0EB]">
+                          <span className="w-6 h-6 rounded-full font-bold text-xs flex items-center justify-center shrink-0 mt-0.5" style={{ background: '#C8FF4D', color: '#0A1A00' }}>3</span>
                           <span>Tap <strong>"Add"</strong> to confirm.</span>
                         </li>
                       </>
                     ) : (
                       <>
-                        <li className="flex items-start gap-3 text-sm text-[#24332F]">
-                          <span className="w-6 h-6 rounded-full bg-[#E8F0EA] text-[#236B63] font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">1</span>
+                        <li className="flex items-start gap-3 text-sm text-[#F2F0EB]">
+                          <span className="w-6 h-6 rounded-full font-bold text-xs flex items-center justify-center shrink-0 mt-0.5" style={{ background: '#C8FF4D', color: '#0A1A00' }}>1</span>
                           <span>Tap the <strong>⋮ menu</strong> in your browser's top-right corner.</span>
                         </li>
-                        <li className="flex items-start gap-3 text-sm text-[#24332F]">
-                          <span className="w-6 h-6 rounded-full bg-[#E8F0EA] text-[#236B63] font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">2</span>
+                        <li className="flex items-start gap-3 text-sm text-[#F2F0EB]">
+                          <span className="w-6 h-6 rounded-full font-bold text-xs flex items-center justify-center shrink-0 mt-0.5" style={{ background: '#C8FF4D', color: '#0A1A00' }}>2</span>
                           <span>Tap <strong>"Add to Home Screen"</strong> or <strong>"Install App"</strong>.</span>
                         </li>
                       </>
