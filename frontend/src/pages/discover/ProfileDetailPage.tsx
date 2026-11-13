@@ -424,7 +424,7 @@ export default function ProfileDetailPage() {
           {tab === 'about' && (
             <div className="space-y-5">
               {!hasAbout && !profile.voice_intro_url && !(profile.prompt_1_q && profile.prompt_1_a) && (
-                <p className="text-[#A1AAA5] text-sm text-center py-8">No profile details yet.</p>
+                <p className="text-[#52525E] text-sm text-center py-8">No profile details yet.</p>
               )}
 
               {/* Voice intro */}
@@ -599,7 +599,7 @@ export default function ProfileDetailPage() {
               )}
 
               {!hasServices ? (
-                <p className="text-[#A1AAA5] text-sm text-center py-8">No services listed yet.</p>
+                <p className="text-[#52525E] text-sm text-center py-8">No services listed yet.</p>
               ) : (
                 <>
                   <p className="text-[10px] font-bold uppercase tracking-widest text-[#52525E] mb-4 flex items-center gap-1.5">

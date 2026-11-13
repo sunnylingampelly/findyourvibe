@@ -34,7 +34,7 @@ export default function SavedProfilesPage() {
           <div className="text-center py-16">
             <div className="text-5xl mb-3">🔖</div>
             <h3 className="font-manrope font-semibold text-[#F2F0EB] mb-1">No saved profiles</h3>
-            <p className="text-sm text-[#A1AAA5]">Save profiles you like to find them easily later</p>
+            <p className="text-sm text-[#8B8B9A]">Save profiles you like to find them easily later</p>
           </div>
         ) : saved.map((item: { id: string; user: PublicProfile }, i: number) => (
           <motion.div key={item.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
