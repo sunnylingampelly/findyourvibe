@@ -663,27 +663,27 @@ export default function ProfileDetailPage() {
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <div className="w-14 h-14 bg-[#E8F0EA] rounded-2xl flex items-center justify-center mx-auto mb-3">
-                    <Star size={22} className="text-[#236B63]" />
+                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3" style={{ background: 'rgba(200,255,77,0.1)' }}>
+                    <Star size={22} style={{ color: '#C8FF4D' }} />
                   </div>
-                  <p className="text-[#A1AAA5] text-sm">No reviews yet</p>
-                  <p className="text-[#A1AAA5] text-xs mt-1">Reviews appear after both parties submit one</p>
+                  <p className="text-[#8B8B9A] text-sm">No reviews yet</p>
+                  <p className="text-[#52525E] text-xs mt-1">Reviews appear after both parties submit one</p>
                 </div>
               )}
               {reviews.length > 0 && (
                 <div className="space-y-3">
                   {reviews.map(r => (
-                    <div key={r.id} className="bg-white rounded-2xl border border-[#E8EAE6] p-4">
+                    <div key={r.id} className="rounded-2xl p-4" style={{ background: '#141418', border: '1px solid #2E2E3A' }}>
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex gap-0.5">
                           {[1,2,3,4,5].map(n => (
-                            <Star key={n} size={13} className={n <= r.rating ? 'text-[#D9A45B] fill-[#D9A45B]' : 'text-[#E8EAE6]'} />
+                            <Star key={n} size={13} className={n <= r.rating ? 'text-[#D9A45B] fill-[#D9A45B]' : 'text-[#2E2E3A]'} />
                           ))}
                         </div>
-                        <span className="text-[10px] text-[#A1AAA5]">{r.created_at}</span>
+                        <span className="text-[10px] text-[#52525E]">{r.created_at}</span>
                       </div>
-                      {r.body && <p className="text-sm text-[#24332F] leading-relaxed mb-2">{r.body}</p>}
-                      <p className="text-[10px] text-[#A1AAA5] capitalize">{r.reviewer_role} · {r.reviewer_name}</p>
+                      {r.body && <p className="text-sm text-[#F2F0EB] leading-relaxed mb-2">{r.body}</p>}
+                      <p className="text-[10px] text-[#52525E] capitalize">{r.reviewer_role} · {r.reviewer_name}</p>
                     </div>
                   ))}
                 </div>
@@ -694,16 +694,15 @@ export default function ProfileDetailPage() {
       </AnimatePresence>
 
       {/* Bottom action bar */}
-      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-white/90 backdrop-blur-xl border-t border-[#E8EAE6] p-4 pb-safe">
+      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] backdrop-blur-xl border-t p-4 pb-safe" style={{ background: 'rgba(13,13,18,0.97)', borderColor: '#2E2E3A' }}>
         <div className="flex gap-3">
           <button
             onClick={() => saveMutation.mutate()}
             disabled={saveMutation.isPending}
-            className={`w-12 h-12 rounded-2xl border flex items-center justify-center shrink-0 transition-all disabled:opacity-60 ${
-              isSaved ? 'bg-[#E8F0EA] border-[#C8DDD2] text-[#236B63]' : 'bg-white border-[#E8EAE6] text-[#A1AAA5]'
-            }`}
+            className="w-12 h-12 rounded-2xl border flex items-center justify-center shrink-0 transition-all disabled:opacity-60"
+            style={isSaved ? { background: 'rgba(200,255,77,0.12)', borderColor: '#C8FF4D', color: '#C8FF4D' } : { background: '#1C1C22', borderColor: '#2E2E3A', color: '#52525E' }}
           >
-            <Heart size={20} fill={isSaved ? '#236B63' : 'none'} />
+            <Heart size={20} fill={isSaved ? '#C8FF4D' : 'none'} />
           </button>
           {connState === 'connected' && (
             <>
@@ -746,9 +745,9 @@ export default function ProfileDetailPage() {
             </>
           )}
           {connState === 'pending' && (
-            <div className="flex-1 h-12 rounded-2xl bg-[#FFF8EE] border border-[#F5D99A] flex items-center justify-center gap-2">
-              <Send size={16} className="text-[#D9A45B]" />
-              <span className="text-[#D9A45B] font-semibold text-sm">Request Sent</span>
+            <div className="flex-1 h-12 rounded-2xl flex items-center justify-center gap-2" style={{ background: 'rgba(255,159,67,0.1)', border: '1px solid rgba(255,159,67,0.3)' }}>
+              <Send size={16} style={{ color: '#FF9F43' }} />
+              <span className="font-semibold text-sm" style={{ color: '#FF9F43' }}>Request Sent</span>
             </div>
           )}
           {connState === 'none' && (
@@ -764,33 +763,34 @@ export default function ProfileDetailPage() {
         <div className="space-y-4">
           {connState === 'pending' ? (
             <div className="text-center py-4">
-              <div className="w-14 h-14 bg-[#FFF8EE] rounded-2xl flex items-center justify-center mx-auto mb-3">
-                <Send size={22} className="text-[#D9A45B]" />
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3" style={{ background: 'rgba(255,159,67,0.1)' }}>
+                <Send size={22} style={{ color: '#FF9F43' }} />
               </div>
-              <p className="font-semibold text-[#24332F] mb-1">Request Already Sent</p>
-              <p className="text-sm text-[#77817C]">
+              <p className="font-semibold text-[#F2F0EB] mb-1">Request Already Sent</p>
+              <p className="text-sm text-[#8B8B9A]">
                 You've already sent a connection request to <strong>{profile.display_name}</strong>. Wait for them to accept.
               </p>
             </div>
           ) : connState === 'connected' ? (
             <div className="text-center py-4">
-              <div className="w-14 h-14 bg-[#E8F0EA] rounded-2xl flex items-center justify-center mx-auto mb-3">
-                <CheckCircle2 size={22} className="text-[#236B63]" />
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3" style={{ background: 'rgba(200,255,77,0.1)' }}>
+                <CheckCircle2 size={22} style={{ color: '#C8FF4D' }} />
               </div>
-              <p className="font-semibold text-[#24332F] mb-1">Already Connected</p>
-              <p className="text-sm text-[#77817C]">You are already connected with {profile.display_name}.</p>
+              <p className="font-semibold text-[#F2F0EB] mb-1">Already Connected</p>
+              <p className="text-sm text-[#8B8B9A]">You are already connected with {profile.display_name}.</p>
             </div>
           ) : (
             <>
-              <p className="text-sm text-[#77817C] leading-relaxed">
-                Add a personal message to increase your chances of connecting with <strong className="text-[#24332F]">{profile.display_name}</strong>.
+              <p className="text-sm text-[#8B8B9A] leading-relaxed">
+                Add a personal message to increase your chances of connecting with <strong className="text-[#F2F0EB]">{profile.display_name}</strong>.
               </p>
               <textarea
                 value={connectMessage}
                 onChange={e => setConnectMessage(e.target.value)}
                 placeholder={`Hey ${profile.display_name.split(' ')[0]}! I'd love to connect…`}
                 rows={4}
-                className="w-full border-[1.5px] border-[#E8EAE6] rounded-2xl px-4 py-3 text-sm text-[#24332F] placeholder:text-[#A1AAA5] focus:outline-none focus:border-[#236B63] resize-none"
+                className="w-full rounded-2xl px-4 py-3 text-sm text-[#F2F0EB] placeholder:text-[#52525E] focus:outline-none resize-none"
+                style={{ background: '#1C1C22', border: '1.5px solid #2E2E3A' }}
               />
               <Button size="lg" loading={connectMutation.isPending} onClick={() => connectMutation.mutate()}>
                 Send Request
@@ -807,7 +807,8 @@ export default function ProfileDetailPage() {
             <button
               key={cat}
               disabled={reportMutation.isPending}
-              className="w-full text-left px-4 py-3 rounded-2xl border border-[#E8EAE6] text-sm text-[#24332F] hover:bg-[#FFF0EE] hover:border-[#D76D6D] transition-colors disabled:opacity-50"
+              className="w-full text-left px-4 py-3 rounded-2xl text-sm text-[#F2F0EB] transition-colors disabled:opacity-50 hover:border-[#FF5C7A]"
+              style={{ background: '#141418', border: '1px solid #2E2E3A' }}
               onClick={() => reportMutation.mutate({
                 category: cat.toLowerCase().replace(/ /g, '_'),
                 description: cat,
@@ -823,14 +824,14 @@ export default function ProfileDetailPage() {
       <BottomSheet open={showBook} onClose={() => { setShowBook(false); setSelectedPackage(null); setBookPlusOneName(''); setBookPlusOnePhone('') }} title={selectedPackage ? `Book: ${selectedPackage.title}` : `Book ${bookingService?.name ?? 'Service'}`}>
         <div className="space-y-4">
           {bookingService && (
-            <div className="bg-[#E8F0EA] rounded-2xl p-3 flex items-center gap-3">
+            <div className="rounded-2xl p-3 flex items-center gap-3" style={{ background: 'rgba(200,255,77,0.08)', border: '1px solid rgba(200,255,77,0.2)' }}>
               <span className="text-2xl">{SERVICE_ICONS[bookingService.slug] || '✨'}</span>
               <div>
-                <p className="font-semibold text-[#24332F] text-sm">{bookingService.name}</p>
+                <p className="font-semibold text-[#F2F0EB] text-sm">{bookingService.name}</p>
                 {bookingService.price_per_session != null && (
-                  <p className="text-[#236B63] text-xs font-semibold flex items-center gap-0.5">
+                  <p className="text-xs font-semibold flex items-center gap-0.5" style={{ color: '#C8FF4D' }}>
                     <IndianRupee size={10} />{Number(bookingService.price_per_session).toLocaleString('en-IN')}
-                    <span className="text-[#77817C] font-normal ml-0.5">
+                    <span className="font-normal ml-0.5 text-[#8B8B9A]">
                       {bookingService.price_unit === 'per_hour' ? '/hr' : bookingService.price_unit === 'negotiable' ? '(negotiable)' : '/session'}
                     </span>
                   </p>
@@ -841,32 +842,35 @@ export default function ProfileDetailPage() {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-semibold text-[#A1AAA5] uppercase tracking-wide mb-1 block">Date *</label>
+              <label className="text-xs font-semibold text-[#52525E] uppercase tracking-wide mb-1 block">Date *</label>
               <input
                 type="date"
                 value={bookDate}
                 min={new Date().toISOString().split('T')[0]}
                 onChange={e => setBookDate(e.target.value)}
-                className="w-full border-[1.5px] border-[#E8EAE6] rounded-xl px-3 py-2.5 text-sm text-[#24332F] focus:outline-none focus:border-[#236B63]"
+                className="w-full rounded-xl px-3 py-2.5 text-sm text-[#F2F0EB] focus:outline-none"
+                style={{ background: '#1C1C22', border: '1.5px solid #2E2E3A' }}
               />
             </div>
             <div>
-              <label className="text-xs font-semibold text-[#A1AAA5] uppercase tracking-wide mb-1 block">Time *</label>
+              <label className="text-xs font-semibold text-[#52525E] uppercase tracking-wide mb-1 block">Time *</label>
               <input
                 type="time"
                 value={bookTime}
                 onChange={e => setBookTime(e.target.value)}
-                className="w-full border-[1.5px] border-[#E8EAE6] rounded-xl px-3 py-2.5 text-sm text-[#24332F] focus:outline-none focus:border-[#236B63]"
+                className="w-full rounded-xl px-3 py-2.5 text-sm text-[#F2F0EB] focus:outline-none"
+                style={{ background: '#1C1C22', border: '1.5px solid #2E2E3A' }}
               />
             </div>
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-[#A1AAA5] uppercase tracking-wide mb-1 block">Duration (hours)</label>
+            <label className="text-xs font-semibold text-[#52525E] uppercase tracking-wide mb-1 block">Duration (hours)</label>
             <select
               value={bookDuration}
               onChange={e => setBookDuration(e.target.value)}
-              className="w-full border-[1.5px] border-[#E8EAE6] rounded-xl px-3 py-2.5 text-sm text-[#24332F] focus:outline-none focus:border-[#236B63] bg-white"
+              className="w-full rounded-xl px-3 py-2.5 text-sm text-[#F2F0EB] focus:outline-none"
+              style={{ background: '#1C1C22', border: '1.5px solid #2E2E3A' }}
             >
               {['1', '2', '3', '4', '5', '6', '8'].map(h => (
                 <option key={h} value={h}>{h} hour{h !== '1' ? 's' : ''}</option>
@@ -876,50 +880,53 @@ export default function ProfileDetailPage() {
 
           {/* Companion's location — not user-selectable */}
           {bookLocation && (
-            <div className="bg-[#F4F9F7] border border-[#C8DDD2] rounded-xl px-4 py-3 flex items-center gap-2.5">
-              <MapPin size={15} className="text-[#236B63] shrink-0" />
+            <div className="rounded-xl px-4 py-3 flex items-center gap-2.5" style={{ background: '#141418', border: '1px solid #2E2E3A' }}>
+              <MapPin size={15} style={{ color: '#C8FF4D' }} className="shrink-0" />
               <div>
-                <p className="text-[10px] font-semibold text-[#A1AAA5] uppercase tracking-wide">Companion's location</p>
-                <p className="text-sm font-medium text-[#24332F]">{bookLocation}</p>
+                <p className="text-[10px] font-semibold text-[#52525E] uppercase tracking-wide">Companion's location</p>
+                <p className="text-sm font-medium text-[#F2F0EB]">{bookLocation}</p>
               </div>
             </div>
           )}
-          <p className="text-xs text-[#77817C] -mt-1 ml-0.5">
+          <p className="text-xs text-[#8B8B9A] -mt-1 ml-0.5">
             The companion operates from their location. You'll arrange the exact meeting spot over chat.
           </p>
 
           <div>
-            <label className="text-xs font-semibold text-[#A1AAA5] uppercase tracking-wide mb-1 block">Your message</label>
+            <label className="text-xs font-semibold text-[#52525E] uppercase tracking-wide mb-1 block">Your message</label>
             <textarea
               value={bookNotes}
               onChange={e => setBookNotes(e.target.value)}
               placeholder="Tell them what you're looking for, any preferences..."
               rows={3}
-              className="w-full border-[1.5px] border-[#E8EAE6] rounded-2xl px-4 py-3 text-sm text-[#24332F] placeholder:text-[#A1AAA5] focus:outline-none focus:border-[#236B63] resize-none"
+              className="w-full rounded-2xl px-4 py-3 text-sm text-[#F2F0EB] placeholder:text-[#52525E] focus:outline-none resize-none"
+              style={{ background: '#1C1C22', border: '1.5px solid #2E2E3A' }}
             />
           </div>
 
           {/* Bring a friend */}
-          <div className="bg-[#FAF9F6] rounded-2xl p-4 border border-[#E8EAE6]">
-            <p className="text-xs font-semibold text-[#A1AAA5] uppercase tracking-wide mb-3">Bringing a friend? (optional)</p>
+          <div className="rounded-2xl p-4" style={{ background: '#141418', border: '1px solid #2E2E3A' }}>
+            <p className="text-xs font-semibold text-[#52525E] uppercase tracking-wide mb-3">Bringing a friend? (optional)</p>
             <div className="space-y-2.5">
               <input
                 value={bookPlusOneName}
                 onChange={e => setBookPlusOneName(e.target.value)}
                 placeholder="Friend's name"
-                className="w-full border-[1.5px] border-[#E8EAE6] rounded-xl px-3 py-2.5 text-sm text-[#24332F] placeholder:text-[#A1AAA5] focus:outline-none focus:border-[#236B63]"
+                className="w-full rounded-xl px-3 py-2.5 text-sm text-[#F2F0EB] placeholder:text-[#52525E] focus:outline-none"
+                style={{ background: '#1C1C22', border: '1.5px solid #2E2E3A' }}
               />
               <input
                 value={bookPlusOnePhone}
                 onChange={e => setBookPlusOnePhone(e.target.value)}
                 placeholder="Friend's phone (optional)"
                 type="tel"
-                className="w-full border-[1.5px] border-[#E8EAE6] rounded-xl px-3 py-2.5 text-sm text-[#24332F] placeholder:text-[#A1AAA5] focus:outline-none focus:border-[#236B63]"
+                className="w-full rounded-xl px-3 py-2.5 text-sm text-[#F2F0EB] placeholder:text-[#52525E] focus:outline-none"
+                style={{ background: '#1C1C22', border: '1.5px solid #2E2E3A' }}
               />
             </div>
           </div>
 
-          <p className="text-xs text-[#A1AAA5] leading-relaxed">
+          <p className="text-xs text-[#52525E] leading-relaxed">
             No payment required. You'll coordinate details directly with {profile.display_name.split(' ')[0]} after they accept.
           </p>
 

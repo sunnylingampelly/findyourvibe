@@ -68,30 +68,30 @@ function CreateGroupSheet({ open, onClose, onCreated }: { open: boolean; onClose
     <BottomSheet open={open} onClose={onClose} title="New Group Vibe">
       <div className="space-y-4">
         <div>
-          <label className="text-xs font-semibold text-[#A1AAA5] uppercase tracking-wide mb-1 block">Title *</label>
+          <label className="text-xs font-semibold text-[#52525E] uppercase tracking-wide mb-1 block">Title *</label>
           <input
             value={title}
             onChange={e => setTitle(e.target.value)}
             placeholder="e.g. Coffee & Conversations"
-            className="w-full border-[1.5px] border-[#E8EAE6] rounded-xl px-3 py-2.5 text-sm text-[#24332F] placeholder:text-[#A1AAA5] focus:outline-none focus:border-[#236B63]"
+            className="w-full border-[1.5px] border-[#2E2E3A] rounded-xl px-3 py-2.5 text-sm text-[#F2F0EB] bg-[#1C1C22] placeholder:text-[#52525E] focus:outline-none focus:border-[#C8FF4D]"
           />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="text-xs font-semibold text-[#A1AAA5] uppercase tracking-wide mb-1 block">Activity</label>
+            <label className="text-xs font-semibold text-[#52525E] uppercase tracking-wide mb-1 block">Activity</label>
             <input
               value={activity}
               onChange={e => setActivity(e.target.value)}
               placeholder="e.g. Hiking"
-              className="w-full border-[1.5px] border-[#E8EAE6] rounded-xl px-3 py-2.5 text-sm text-[#24332F] placeholder:text-[#A1AAA5] focus:outline-none focus:border-[#236B63]"
+              className="w-full border-[1.5px] border-[#2E2E3A] rounded-xl px-3 py-2.5 text-sm text-[#F2F0EB] bg-[#1C1C22] placeholder:text-[#52525E] focus:outline-none focus:border-[#C8FF4D]"
             />
           </div>
           <div>
-            <label className="text-xs font-semibold text-[#A1AAA5] uppercase tracking-wide mb-1 block">Max members</label>
+            <label className="text-xs font-semibold text-[#52525E] uppercase tracking-wide mb-1 block">Max members</label>
             <select
               value={maxMembers}
               onChange={e => setMaxMembers(e.target.value)}
-              className="w-full border-[1.5px] border-[#E8EAE6] rounded-xl px-3 py-2.5 text-sm text-[#24332F] focus:outline-none focus:border-[#236B63] bg-white"
+              className="w-full border-[1.5px] border-[#2E2E3A] rounded-xl px-3 py-2.5 text-sm text-[#F2F0EB] bg-[#1C1C22] focus:outline-none focus:border-[#C8FF4D]"
             >
               {[2, 3, 4, 5, 6, 8, 10].map(n => (
                 <option key={n} value={n}>{n} people</option>
@@ -107,22 +107,22 @@ function CreateGroupSheet({ open, onClose, onCreated }: { open: boolean; onClose
           showLocateButton={true}
         />
         <div>
-          <label className="text-xs font-semibold text-[#A1AAA5] uppercase tracking-wide mb-1 block">When</label>
+          <label className="text-xs font-semibold text-[#52525E] uppercase tracking-wide mb-1 block">When</label>
           <input
             type="datetime-local"
             value={scheduledAt}
             onChange={e => setScheduledAt(e.target.value)}
-            className="w-full border-[1.5px] border-[#E8EAE6] rounded-xl px-3 py-2.5 text-sm text-[#24332F] focus:outline-none focus:border-[#236B63]"
+            className="w-full border-[1.5px] border-[#2E2E3A] rounded-xl px-3 py-2.5 text-sm text-[#F2F0EB] bg-[#1C1C22] focus:outline-none focus:border-[#C8FF4D]"
           />
         </div>
         <div>
-          <label className="text-xs font-semibold text-[#A1AAA5] uppercase tracking-wide mb-1 block">Description</label>
+          <label className="text-xs font-semibold text-[#52525E] uppercase tracking-wide mb-1 block">Description</label>
           <textarea
             value={description}
             onChange={e => setDescription(e.target.value)}
             rows={2}
             placeholder="What's the vibe? Who should join?"
-            className="w-full border-[1.5px] border-[#E8EAE6] rounded-2xl px-3 py-2.5 text-sm text-[#24332F] placeholder:text-[#A1AAA5] focus:outline-none focus:border-[#236B63] resize-none"
+            className="w-full border-[1.5px] border-[#2E2E3A] rounded-2xl px-3 py-2.5 text-sm text-[#F2F0EB] bg-[#1C1C22] placeholder:text-[#52525E] focus:outline-none focus:border-[#C8FF4D] resize-none"
           />
         </div>
         <Button
@@ -162,35 +162,35 @@ function EditGroupSheet({ vibe, open, onClose, onUpdated }: { vibe: GroupVibe; o
     <BottomSheet open={open} onClose={onClose} title="Edit Group Vibe">
       <div className="space-y-4">
         <div>
-          <label className="text-xs font-semibold text-[#A1AAA5] uppercase tracking-wide mb-1 block">Title *</label>
+          <label className="text-xs font-semibold text-[#52525E] uppercase tracking-wide mb-1 block">Title *</label>
           <input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Coffee & Conversations"
-            className="w-full border-[1.5px] border-[#E8EAE6] rounded-xl px-3 py-2.5 text-sm text-[#24332F] placeholder:text-[#A1AAA5] focus:outline-none focus:border-[#236B63]" />
+            className="w-full border-[1.5px] border-[#2E2E3A] rounded-xl px-3 py-2.5 text-sm text-[#F2F0EB] bg-[#1C1C22] placeholder:text-[#52525E] focus:outline-none focus:border-[#C8FF4D]" />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="text-xs font-semibold text-[#A1AAA5] uppercase tracking-wide mb-1 block">Activity</label>
+            <label className="text-xs font-semibold text-[#52525E] uppercase tracking-wide mb-1 block">Activity</label>
             <input value={activity} onChange={e => setActivity(e.target.value)} placeholder="e.g. Hiking"
-              className="w-full border-[1.5px] border-[#E8EAE6] rounded-xl px-3 py-2.5 text-sm text-[#24332F] placeholder:text-[#A1AAA5] focus:outline-none focus:border-[#236B63]" />
+              className="w-full border-[1.5px] border-[#2E2E3A] rounded-xl px-3 py-2.5 text-sm text-[#F2F0EB] bg-[#1C1C22] placeholder:text-[#52525E] focus:outline-none focus:border-[#C8FF4D]" />
           </div>
           <div>
-            <label className="text-xs font-semibold text-[#A1AAA5] uppercase tracking-wide mb-1 block">Max members</label>
+            <label className="text-xs font-semibold text-[#52525E] uppercase tracking-wide mb-1 block">Max members</label>
             <select value={maxMembers} onChange={e => setMaxMembers(e.target.value)}
-              className="w-full border-[1.5px] border-[#E8EAE6] rounded-xl px-3 py-2.5 text-sm text-[#24332F] focus:outline-none focus:border-[#236B63] bg-white">
+              className="w-full border-[1.5px] border-[#2E2E3A] rounded-xl px-3 py-2.5 text-sm text-[#F2F0EB] bg-[#1C1C22] focus:outline-none focus:border-[#C8FF4D]">
               {[2, 3, 4, 5, 6, 8, 10].map(n => <option key={n} value={n}>{n} people</option>)}
             </select>
           </div>
         </div>
         <PlacesAutocomplete label="Location" value={location} onChange={setLocation} placeholder="e.g. MG Road, Bangalore" showLocateButton={true} />
         <div>
-          <label className="text-xs font-semibold text-[#A1AAA5] uppercase tracking-wide mb-1 block">When</label>
+          <label className="text-xs font-semibold text-[#52525E] uppercase tracking-wide mb-1 block">When</label>
           <input type="datetime-local" value={scheduledAt} onChange={e => setScheduledAt(e.target.value)}
-            className="w-full border-[1.5px] border-[#E8EAE6] rounded-xl px-3 py-2.5 text-sm text-[#24332F] focus:outline-none focus:border-[#236B63]" />
+            className="w-full border-[1.5px] border-[#2E2E3A] rounded-xl px-3 py-2.5 text-sm text-[#F2F0EB] bg-[#1C1C22] focus:outline-none focus:border-[#C8FF4D]" />
         </div>
         <div>
-          <label className="text-xs font-semibold text-[#A1AAA5] uppercase tracking-wide mb-1 block">Description</label>
+          <label className="text-xs font-semibold text-[#52525E] uppercase tracking-wide mb-1 block">Description</label>
           <textarea value={description} onChange={e => setDescription(e.target.value)} rows={2}
             placeholder="What's the vibe? Who should join?"
-            className="w-full border-[1.5px] border-[#E8EAE6] rounded-2xl px-3 py-2.5 text-sm text-[#24332F] placeholder:text-[#A1AAA5] focus:outline-none focus:border-[#236B63] resize-none" />
+            className="w-full border-[1.5px] border-[#2E2E3A] rounded-2xl px-3 py-2.5 text-sm text-[#F2F0EB] bg-[#1C1C22] placeholder:text-[#52525E] focus:outline-none focus:border-[#C8FF4D] resize-none" />
         </div>
         <Button loading={update.isPending} disabled={!title.trim()} onClick={() => update.mutate()} className="w-full">Save Changes</Button>
       </div>
@@ -227,7 +227,7 @@ function InviteSheet({ vibe, open, onClose }: { vibe: GroupVibe; open: boolean; 
         {connections.length === 0 ? (
           <div className="text-center py-8">
             <div className="text-4xl mb-2">🤝</div>
-            <p className="text-sm text-[#A1AAA5]">No connections yet to invite.</p>
+            <p className="text-sm text-[#52525E]">No connections yet to invite.</p>
           </div>
         ) : connections.map(conn => {
           const other = conn.other_user
@@ -237,18 +237,19 @@ function InviteSheet({ vibe, open, onClose }: { vibe: GroupVibe; open: boolean; 
             <div key={conn.id} className="flex items-center gap-3 py-2">
               <Avatar src={other.profile_photo_url} name={other.display_name} size="md" />
               <div className="flex-1 min-w-0">
-                <p className="font-manrope font-semibold text-[#24332F] text-sm">{other.display_name}</p>
-                {other.city && <p className="text-xs text-[#A1AAA5]">{other.city.name}</p>}
+                <p className="font-manrope font-semibold text-[#F2F0EB] text-sm">{other.display_name}</p>
+                {other.city && <p className="text-xs text-[#52525E]">{other.city.name}</p>}
               </div>
               {isIn ? (
-                <span className="text-xs text-[#4D9274] font-semibold flex items-center gap-1"><UserCheck size={12} /> Joined</span>
+                <span className="text-xs font-semibold flex items-center gap-1" style={{ color: '#C8FF4D' }}><UserCheck size={12} /> Joined</span>
               ) : wasSent ? (
-                <span className="text-xs text-[#A1AAA5] font-semibold">Invited ✓</span>
+                <span className="text-xs text-[#52525E] font-semibold">Invited ✓</span>
               ) : (
                 <button
                   onClick={() => inviteMutation.mutate(other.id)}
                   disabled={inviteMutation.isPending}
-                  className="text-xs bg-[#236B63] text-white font-semibold px-3 py-1.5 rounded-xl disabled:opacity-60"
+                  className="text-xs font-semibold px-3 py-1.5 rounded-xl disabled:opacity-60"
+                  style={{ background: '#C8FF4D', color: '#0A1A00' }}
                 >
                   Invite
                 </button>
@@ -288,53 +289,53 @@ function GroupVibeCard({ vibe, onAction }: { vibe: GroupVibe; onAction: () => vo
 
   return (
     <>
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-2xl border border-[#E8EAE6] p-4 shadow-sm">
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl p-4" style={{ background: '#141418', border: '1px solid #2E2E3A' }}>
         {/* Header */}
         <div className="flex items-start justify-between gap-2 mb-2">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
-              <p className="font-manrope font-bold text-[#24332F] text-sm">{vibe.title}</p>
-              {vibe.is_host && <span className="text-[9px] font-bold bg-[#E8F0EA] text-[#236B63] px-1.5 py-0.5 rounded-full">HOST</span>}
+              <p className="font-manrope font-bold text-[#F2F0EB] text-sm">{vibe.title}</p>
+              {vibe.is_host && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(200,255,77,0.12)', color: '#C8FF4D' }}>HOST</span>}
             </div>
-            {vibe.activity && <p className="text-xs text-[#A1AAA5]">📌 {vibe.activity}</p>}
+            {vibe.activity && <p className="text-xs text-[#52525E]">📌 {vibe.activity}</p>}
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
             {/* Host actions */}
             {vibe.is_host && (
               <>
-                <button onClick={() => setShowInvite(true)} className="w-7 h-7 flex items-center justify-center rounded-lg bg-[#F4F9F7] text-[#236B63]" title="Invite connections">
+                <button onClick={() => setShowInvite(true)} className="w-7 h-7 flex items-center justify-center rounded-lg" style={{ background: '#252530', color: '#C8FF4D' }} title="Invite connections">
                   <UserPlus size={13} />
                 </button>
-                <button onClick={() => setShowEdit(true)} className="w-7 h-7 flex items-center justify-center rounded-lg bg-[#F4F9F7] text-[#236B63]" title="Edit group">
+                <button onClick={() => setShowEdit(true)} className="w-7 h-7 flex items-center justify-center rounded-lg" style={{ background: '#252530', color: '#C8FF4D' }} title="Edit group">
                   <Pencil size={13} />
                 </button>
               </>
             )}
             {/* Member can also invite */}
             {vibe.is_member && !vibe.is_host && (
-              <button onClick={() => setShowInvite(true)} className="w-7 h-7 flex items-center justify-center rounded-lg bg-[#F4F9F7] text-[#236B63]" title="Invite connections">
+              <button onClick={() => setShowInvite(true)} className="w-7 h-7 flex items-center justify-center rounded-lg" style={{ background: '#252530', color: '#C8FF4D' }} title="Invite connections">
                 <UserPlus size={13} />
               </button>
             )}
-            <div className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl ${full ? 'bg-[#FFF0EE]' : 'bg-[#E8F0EA]'}`}>
-              <Users size={12} className={full ? 'text-[#D76D6D]' : 'text-[#236B63]'} />
-              <span className={`text-xs font-bold ${full ? 'text-[#D76D6D]' : 'text-[#236B63]'}`}>{vibe.member_count}/{vibe.max_members}</span>
+            <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl" style={full ? { background: 'rgba(255,92,122,0.1)' } : { background: 'rgba(200,255,77,0.1)' }}>
+              <Users size={12} style={full ? { color: '#FF5C7A' } : { color: '#C8FF4D' }} />
+              <span className="text-xs font-bold" style={full ? { color: '#FF5C7A' } : { color: '#C8FF4D' }}>{vibe.member_count}/{vibe.max_members}</span>
             </div>
           </div>
         </div>
 
         {/* Meta */}
         <div className="flex flex-wrap gap-x-3 gap-y-1 mb-2">
-          {vibe.location && <p className="text-xs text-[#77817C] flex items-center gap-1"><MapPin size={11} />{vibe.location}</p>}
-          {vibe.scheduled_label && <p className="text-xs text-[#77817C] flex items-center gap-1"><CalendarDays size={11} />{vibe.scheduled_label}</p>}
+          {vibe.location && <p className="text-xs text-[#8B8B9A] flex items-center gap-1"><MapPin size={11} />{vibe.location}</p>}
+          {vibe.scheduled_label && <p className="text-xs text-[#8B8B9A] flex items-center gap-1"><CalendarDays size={11} />{vibe.scheduled_label}</p>}
         </div>
 
-        {vibe.description && <p className="text-xs text-[#77817C] leading-relaxed mb-2 line-clamp-2">{vibe.description}</p>}
+        {vibe.description && <p className="text-xs text-[#8B8B9A] leading-relaxed mb-2 line-clamp-2">{vibe.description}</p>}
 
         {/* Host */}
         <div className="flex items-center gap-2 mb-3">
           <Avatar src={vibe.host.profile_photo_url} name={vibe.host.display_name} size="xs" />
-          <p className="text-xs text-[#A1AAA5]">by <span className="text-[#24332F] font-medium">{vibe.host.display_name}</span></p>
+          <p className="text-xs text-[#52525E]">by <span className="text-[#F2F0EB] font-medium">{vibe.host.display_name}</span></p>
         </div>
 
         {/* Member avatars */}
@@ -343,29 +344,31 @@ function GroupVibeCard({ vibe, onAction }: { vibe: GroupVibe; onAction: () => vo
             <div className="flex -space-x-2">
               {vibe.members.slice(0, 5).map(m => (
                 <button key={m.id} onClick={() => navigate(`/profiles/${m.id}`)} className="shrink-0">
-                  <Avatar src={m.profile_photo_url} name={m.display_name} size="xs" className="border-2 border-white" />
+                  <Avatar src={m.profile_photo_url} name={m.display_name} size="xs" />
                 </button>
               ))}
             </div>
             {vibe.members.length > 5 && (
-              <span className="text-[10px] text-[#A1AAA5] font-medium">+{vibe.members.length - 5} more</span>
+              <span className="text-[10px] text-[#52525E] font-medium">+{vibe.members.length - 5} more</span>
             )}
-            <span className="text-[10px] text-[#A1AAA5]">going</span>
+            <span className="text-[10px] text-[#52525E]">going</span>
           </div>
         )}
 
         {/* Action button */}
         {vibe.is_member || vibe.is_host ? (
           <button onClick={() => leaveMutation.mutate()} disabled={leaveMutation.isPending}
-            className="w-full py-2.5 border border-[#E8EAE6] rounded-xl text-xs font-semibold text-[#D76D6D] flex items-center justify-center gap-1.5 active:scale-[0.98] transition-transform disabled:opacity-50">
+            className="w-full py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 active:scale-[0.98] transition-transform disabled:opacity-50"
+            style={{ border: '1px solid #2E2E3A', color: '#FF5C7A' }}>
             <LogOut size={13} />
             {vibe.is_host ? 'Cancel Vibe' : 'Leave Vibe'}
           </button>
         ) : full ? (
-          <div className="w-full py-2.5 bg-[#F4F5F4] rounded-xl text-xs font-semibold text-[#A1AAA5] text-center">Group Full</div>
+          <div className="w-full py-2.5 rounded-xl text-xs font-semibold text-[#52525E] text-center" style={{ background: '#1C1C22' }}>Group Full</div>
         ) : (
           <button onClick={() => joinMutation.mutate()} disabled={joinMutation.isPending}
-            className="w-full py-2.5 bg-gradient-to-br from-[#4D9274] to-[#236B63] rounded-xl text-xs font-bold text-white flex items-center justify-center gap-1.5 active:scale-[0.98] transition-transform disabled:opacity-70 shadow-sm">
+            className="w-full py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 active:scale-[0.98] transition-transform disabled:opacity-70"
+            style={{ background: '#C8FF4D', color: '#0A1A00' }}>
             <PlusCircle size={13} />
             Join · {spotsLeft} spot{spotsLeft !== 1 ? 's' : ''} left
           </button>
@@ -497,7 +500,7 @@ export default function VibeInboxPage() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex flex-col items-center justify-center px-8"
-            style={{ background: 'linear-gradient(160deg, #1A5750 0%, #236B63 60%, #15453F 100%)' }}
+            style={{ background: 'linear-gradient(160deg, #0D0D12 0%, #141418 60%, #1C1C22 100%)' }}
           >
             <motion.div
               initial={{ scale: 0.6, opacity: 0, y: 40 }}
@@ -505,23 +508,24 @@ export default function VibeInboxPage() {
               transition={{ type: 'spring', stiffness: 260, damping: 22, delay: 0.1 }}
               className="w-full max-w-xs text-center"
             >
-              <div className="text-7xl mb-4">💚</div>
+              <div className="text-7xl mb-4">⚡</div>
               <h2 className="font-manrope font-extrabold text-4xl text-white mb-2 leading-tight">It's a Match!</h2>
               <p className="text-white/70 text-sm mb-8">
                 You and <span className="text-white font-semibold">{matchData.displayName}</span> both vibed!
               </p>
               {matchData.photoUrl ? (
-                <img src={matchData.photoUrl} alt={matchData.displayName} className="w-28 h-28 rounded-full object-cover mx-auto mb-8 border-4 border-white/80 shadow-2xl" />
+                <img src={matchData.photoUrl} alt={matchData.displayName} className="w-28 h-28 rounded-full object-cover mx-auto mb-8 shadow-2xl" style={{ border: '4px solid #C8FF4D' }} />
               ) : (
-                <div className="w-28 h-28 rounded-full mx-auto mb-8 border-4 border-white/80 bg-white/20 flex items-center justify-center shadow-2xl">
-                  <span className="text-3xl font-manrope font-bold text-white">{getInitials(matchData.displayName)}</span>
+                <div className="w-28 h-28 rounded-full mx-auto mb-8 flex items-center justify-center shadow-2xl" style={{ border: '4px solid #C8FF4D', background: 'rgba(200,255,77,0.1)' }}>
+                  <span className="text-3xl font-manrope font-bold" style={{ color: '#C8FF4D' }}>{getInitials(matchData.displayName)}</span>
                 </div>
               )}
               <div className="space-y-3 w-full">
                 <motion.button
                   whileTap={{ scale: 0.96 }}
                   onClick={() => { setMatchData(null); navigate(`/messages/${matchData.conversationId}`) }}
-                  className="w-full py-4 bg-white rounded-2xl font-manrope font-bold text-[#236B63] text-base flex items-center justify-center gap-2 shadow-lg"
+                  className="w-full py-4 rounded-2xl font-manrope font-bold text-base flex items-center justify-center gap-2 shadow-lg"
+                  style={{ background: '#C8FF4D', color: '#0A1A00' }}
                 >
                   💬 Say Hello!
                 </motion.button>
@@ -536,13 +540,14 @@ export default function VibeInboxPage() {
 
       <div className="flex flex-col h-dvh pt-safe pb-[80px]">
         {/* Header */}
-        <div className="shrink-0 bg-[#FAF9F6] border-b border-[#E8EAE6] px-4 pt-3 pb-0">
+        <div className="shrink-0 px-4 pt-3 pb-0 border-b" style={{ background: '#0D0D12', borderColor: '#2E2E3A' }}>
           <div className="flex items-center justify-between mb-3">
-            <h1 className="font-manrope font-bold text-lg text-[#24332F]">Vibes</h1>
+            <h1 className="font-manrope font-bold text-lg text-[#F2F0EB]">Vibes</h1>
             {tab === 'groups' && (
               <button
                 onClick={() => setShowCreate(true)}
-                className="flex items-center gap-1.5 bg-[#236B63] text-white text-xs font-bold px-3 py-1.5 rounded-full"
+                className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full"
+                style={{ background: '#C8FF4D', color: '#0A1A00' }}
               >
                 <PlusCircle size={13} /> New Group
               </button>
@@ -556,13 +561,13 @@ export default function VibeInboxPage() {
                 onClick={() => setTab(key)}
                 className={`flex-1 py-2.5 text-xs font-semibold border-b-2 transition-all ${
                   tab === key
-                    ? 'text-[#236B63] border-[#236B63]'
-                    : 'text-[#A1AAA5] border-transparent'
+                    ? 'text-[#C8FF4D] border-[#C8FF4D]'
+                    : 'text-[#52525E] border-transparent'
                 }`}
               >
                 {label}
                 {key === 'connect' && received.length > 0 && (
-                  <span className="ml-1 inline-flex items-center justify-center min-w-[16px] h-[16px] bg-[#D76D6D] text-white text-[9px] font-bold rounded-full px-1">{received.length > 9 ? '9+' : received.length}</span>
+                  <span className="ml-1 inline-flex items-center justify-center min-w-[16px] h-[16px] text-white text-[9px] font-bold rounded-full px-1" style={{ background: '#FF5C7A' }}>{received.length > 9 ? '9+' : received.length}</span>
                 )}
               </button>
             ))}
@@ -584,8 +589,8 @@ export default function VibeInboxPage() {
               ) : vibers.length === 0 ? (
                 <div className="flex-1 flex flex-col items-center justify-center text-center px-6 py-20">
                   <div className="text-6xl mb-4">💚</div>
-                  <h3 className="font-manrope font-semibold text-[#24332F] mb-2">No vibes yet</h3>
-                  <p className="text-[#77817C] text-sm leading-relaxed">When someone vibes with your profile, they'll appear here.</p>
+                  <h3 className="font-manrope font-semibold text-[#F2F0EB] mb-2">No vibes yet</h3>
+                  <p className="text-[#8B8B9A] text-sm leading-relaxed">When someone vibes with your profile, they'll appear here.</p>
                 </div>
               ) : (
                 <div className="p-4 space-y-3">
@@ -594,35 +599,37 @@ export default function VibeInboxPage() {
                       key={vibe.id}
                       initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="bg-white rounded-2xl border border-[#E8EAE6] p-4 flex items-center gap-3 shadow-sm"
+                      className="rounded-2xl p-4 flex items-center gap-3"
+                      style={{ background: '#141418', border: '1px solid #2E2E3A' }}
                     >
                       <button onClick={() => navigate(`/profiles/${vibe.id}`)} className="shrink-0">
-                        <Avatar src={vibe.profile_photo_url} name={vibe.display_name} size="lg" className="border-2 border-white shadow" />
+                        <Avatar src={vibe.profile_photo_url} name={vibe.display_name} size="lg" />
                       </button>
 
                       <button onClick={() => navigate(`/profiles/${vibe.id}`)} className="flex-1 min-w-0 text-left">
                         <div className="flex items-center gap-1.5 mb-0.5">
-                          <span className="font-manrope font-semibold text-[#24332F] text-sm truncate">
+                          <span className="font-manrope font-semibold text-[#F2F0EB] text-sm truncate">
                             {vibe.display_name}{vibe.age ? `, ${vibe.age}` : ''}
                           </span>
-                          {vibe.identity_verified && <ShieldCheck size={13} className="text-[#236B63] shrink-0" />}
+                          {vibe.identity_verified && <ShieldCheck size={13} style={{ color: '#8B7CFF' }} className="shrink-0" />}
                         </div>
                         {vibe.city && (
-                          <p className="text-xs text-[#A1AAA5] flex items-center gap-1 mb-0.5">
+                          <p className="text-xs text-[#52525E] flex items-center gap-1 mb-0.5">
                             <MapPin size={10} />{vibe.city.name}
                           </p>
                         )}
-                        {vibe.bio && <p className="text-xs text-[#77817C] line-clamp-1">{vibe.bio}</p>}
-                        {vibe.vibed_at && <p className="text-[10px] text-[#A1AAA5] mt-0.5">{vibe.vibed_at}</p>}
+                        {vibe.bio && <p className="text-xs text-[#8B8B9A] line-clamp-1">{vibe.bio}</p>}
+                        {vibe.vibed_at && <p className="text-[10px] text-[#52525E] mt-0.5">{vibe.vibed_at}</p>}
                       </button>
 
                       <motion.button
                         whileTap={{ scale: 0.85 }}
                         onClick={() => handleVibeBack(vibe)}
                         disabled={pendingIds.has(vibe.id)}
-                        className="shrink-0 w-11 h-11 rounded-full bg-gradient-to-br from-[#4D9274] to-[#236B63] flex items-center justify-center shadow disabled:opacity-50"
+                        className="shrink-0 w-11 h-11 rounded-full flex items-center justify-center shadow disabled:opacity-50"
+                        style={{ background: '#C8FF4D' }}
                       >
-                        <Heart size={18} className="text-white fill-white" />
+                        <Heart size={18} style={{ color: '#0A1A00', fill: '#0A1A00' }} />
                       </motion.button>
                     </motion.div>
                   ))}
@@ -640,11 +647,8 @@ export default function VibeInboxPage() {
                   <button
                     key={f}
                     onClick={() => setConnectTab(f)}
-                    className={`px-4 py-1.5 rounded-full text-xs font-semibold border transition-all ${
-                      connectTab === f
-                        ? 'bg-[#236B63] text-white border-[#236B63]'
-                        : 'bg-white text-[#77817C] border-[#E8EAE6]'
-                    }`}
+                    className={`px-4 py-1.5 rounded-full text-xs font-semibold border transition-all`}
+                    style={connectTab === f ? { background: '#C8FF4D', color: '#0A1A00', borderColor: '#C8FF4D' } : { background: '#1C1C22', color: '#8B8B9A', borderColor: '#2E2E3A' }}
                   >
                     {f === 'requests' ? `Requests${received.length > 0 ? ` (${received.length})` : ''}` : `Connected${connections.length > 0 ? ` (${connections.length})` : ''}`}
                   </button>
@@ -656,32 +660,33 @@ export default function VibeInboxPage() {
                 received.length === 0 ? (
                   <div className="flex flex-col items-center text-center py-16">
                     <div className="text-5xl mb-3">💌</div>
-                    <h3 className="font-manrope font-semibold text-[#24332F] mb-1">No pending requests</h3>
-                    <p className="text-sm text-[#A1AAA5]">When someone wants to connect, they'll appear here.</p>
+                    <h3 className="font-manrope font-semibold text-[#F2F0EB] mb-1">No pending requests</h3>
+                    <p className="text-sm text-[#52525E]">When someone wants to connect, they'll appear here.</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
                     {received.map((req, i) => (
                       <motion.div key={req.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-                        className="bg-white rounded-2xl border border-[#E8EAE6] p-4 shadow-sm"
+                        className="rounded-2xl p-4"
+                        style={{ background: '#141418', border: '1px solid #2E2E3A' }}
                       >
                         <div className="flex items-center gap-3 mb-3">
                           <button onClick={() => navigate(`/profiles/${req.sender.id}`)} className="shrink-0">
                             <Avatar src={req.sender.profile_photo_url} name={req.sender.display_name} size="lg" />
                           </button>
                           <button onClick={() => navigate(`/profiles/${req.sender.id}`)} className="flex-1 min-w-0 text-left">
-                            <p className="font-manrope font-semibold text-[#24332F] text-sm">{req.sender.display_name}</p>
-                            <p className="text-xs text-[#A1AAA5]">{req.sender.city?.name ? `${req.sender.city.name} · ` : ''}{timeAgo(req.created_at)}</p>
-                            {req.message && <p className="text-xs text-[#77817C] mt-1 line-clamp-2 italic">"{req.message}"</p>}
+                            <p className="font-manrope font-semibold text-[#F2F0EB] text-sm">{req.sender.display_name}</p>
+                            <p className="text-xs text-[#52525E]">{req.sender.city?.name ? `${req.sender.city.name} · ` : ''}{timeAgo(req.created_at)}</p>
+                            {req.message && <p className="text-xs text-[#8B8B9A] mt-1 line-clamp-2 italic">"{req.message}"</p>}
                           </button>
                         </div>
                         <div className="flex gap-2">
                           <button onClick={() => declineMutation.mutate(req.id)} disabled={declineMutation.isPending}
-                            className="flex-1 py-2.5 rounded-2xl border border-[#E8EAE6] text-sm text-[#77817C] font-medium flex items-center justify-center gap-1.5 disabled:opacity-50">
+                            className="flex-1 py-2.5 rounded-2xl border text-sm text-[#8B8B9A] font-medium flex items-center justify-center gap-1.5 disabled:opacity-50" style={{ borderColor: '#2E2E3A' }}>
                             <X size={14} /> Decline
                           </button>
                           <button onClick={() => acceptMutation.mutate(req.id)} disabled={acceptMutation.isPending}
-                            className="flex-1 py-2.5 rounded-2xl bg-[#236B63] text-white text-sm font-semibold flex items-center justify-center gap-1.5 disabled:opacity-70">
+                            className="flex-1 py-2.5 rounded-2xl text-sm font-semibold flex items-center justify-center gap-1.5 disabled:opacity-70" style={{ background: '#C8FF4D', color: '#0A1A00' }}>
                             <Check size={14} /> Accept
                           </button>
                         </div>
@@ -696,8 +701,8 @@ export default function VibeInboxPage() {
                 connections.length === 0 ? (
                   <div className="flex flex-col items-center text-center py-16">
                     <div className="text-5xl mb-3">🤝</div>
-                    <h3 className="font-manrope font-semibold text-[#24332F] mb-1">No connections yet</h3>
-                    <p className="text-sm text-[#A1AAA5]">Accept a request or send one to start connecting.</p>
+                    <h3 className="font-manrope font-semibold text-[#F2F0EB] mb-1">No connections yet</h3>
+                    <p className="text-sm text-[#52525E]">Accept a request or send one to start connecting.</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -705,19 +710,21 @@ export default function VibeInboxPage() {
                       const other = conn.other_user
                       return (
                         <motion.div key={conn.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-                          className="bg-white rounded-2xl border border-[#E8EAE6] p-4 flex items-center gap-3 shadow-sm"
+                          className="rounded-2xl p-4 flex items-center gap-3"
+                          style={{ background: '#141418', border: '1px solid #2E2E3A' }}
                         >
                           <button onClick={() => navigate(`/profiles/${other.id}`)} className="shrink-0">
                             <Avatar src={other?.profile_photo_url} name={other?.display_name ?? 'User'} size="md" />
                           </button>
                           <button onClick={() => navigate(`/profiles/${other.id}`)} className="flex-1 min-w-0 text-left">
-                            <p className="font-manrope font-semibold text-[#24332F] text-sm">{other?.display_name}</p>
-                            <p className="text-xs text-[#4D9274] flex items-center gap-1 mt-0.5"><UserCheck size={11} /> Connected</p>
+                            <p className="font-manrope font-semibold text-[#F2F0EB] text-sm">{other?.display_name}</p>
+                            <p className="text-xs text-[#C8FF4D] flex items-center gap-1 mt-0.5"><UserCheck size={11} /> Connected</p>
                           </button>
                           <button
                             onClick={() => openChat(conn)}
                             disabled={openingConv === conn.id}
-                            className="flex items-center gap-1.5 text-xs bg-[#236B63] text-white font-semibold px-3 py-2 rounded-xl disabled:opacity-60 shrink-0"
+                            className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl disabled:opacity-60 shrink-0"
+                            style={{ background: '#C8FF4D', color: '#0A1A00' }}
                           >
                             {openingConv === conn.id ? <Loader2 size={12} className="animate-spin" /> : <MessageCircle size={12} />}
                             Message
@@ -740,11 +747,8 @@ export default function VibeInboxPage() {
                   <button
                     key={f}
                     onClick={() => setGroupFilter(f)}
-                    className={`px-4 py-1.5 rounded-full text-xs font-semibold border transition-all ${
-                      groupFilter === f
-                        ? 'bg-[#236B63] text-white border-[#236B63]'
-                        : 'bg-white text-[#77817C] border-[#E8EAE6]'
-                    }`}
+                    className="px-4 py-1.5 rounded-full text-xs font-semibold border transition-all"
+                    style={groupFilter === f ? { background: '#C8FF4D', color: '#0A1A00', borderColor: '#C8FF4D' } : { background: '#1C1C22', color: '#8B8B9A', borderColor: '#2E2E3A' }}
                   >
                     {f === 'all' ? 'Browse All' : 'My Vibes'}
                   </button>
@@ -760,17 +764,18 @@ export default function VibeInboxPage() {
               ) : displayGroups.length === 0 ? (
                 <div className="flex flex-col items-center justify-center text-center py-16">
                   <div className="text-5xl mb-4">🤝</div>
-                  <h3 className="font-manrope font-semibold text-[#24332F] mb-2">
+                  <h3 className="font-manrope font-semibold text-[#F2F0EB] mb-2">
                     {groupFilter === 'mine' ? 'No group vibes yet' : 'No upcoming group vibes'}
                   </h3>
-                  <p className="text-[#77817C] text-sm leading-relaxed mb-5 max-w-[240px]">
+                  <p className="text-[#8B8B9A] text-sm leading-relaxed mb-5 max-w-[240px]">
                     {groupFilter === 'mine'
                       ? 'Create a group vibe and invite people to join!'
                       : 'Be the first to create a group hangout!'}
                   </p>
                   <button
                     onClick={() => setShowCreate(true)}
-                    className="flex items-center gap-2 bg-[#236B63] text-white text-sm font-semibold px-5 py-2.5 rounded-2xl active:scale-95 transition-transform"
+                    className="flex items-center gap-2 text-sm font-semibold px-5 py-2.5 rounded-2xl active:scale-95 transition-transform"
+                    style={{ background: '#C8FF4D', color: '#0A1A00' }}
                   >
                     <PlusCircle size={15} /> Create Group Vibe
                   </button>
