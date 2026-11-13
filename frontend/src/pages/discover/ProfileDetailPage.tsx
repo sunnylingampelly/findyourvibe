@@ -473,8 +473,8 @@ export default function ProfileDetailPage() {
                     </p>
                   </div>
                   {availInfo.is_available_now && (
-                    <span className="ml-auto flex items-center gap-1 text-[10px] font-bold bg-[#4ADE80]/15 text-[#16A34A] px-2.5 py-1 rounded-full">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#4ADE80] animate-pulse" />
+                    <span className="ml-auto flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full" style={{ background: 'rgba(200,255,77,0.15)', color: '#C8FF4D' }}>
+                      <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#C8FF4D' }} />
                       LIVE
                     </span>
                   )}
