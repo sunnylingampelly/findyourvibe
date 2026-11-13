@@ -23,12 +23,14 @@ const SERVICE_ICONS: Record<string, string> = {
 }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-  pending:   { label: 'Pending',   color: '#D9A45B', bg: '#FFF5E6' },
-  accepted:  { label: 'Confirmed', color: '#236B63', bg: '#E8F0EA' },
-  declined:  { label: 'Declined',  color: '#D76D6D', bg: '#FFF0EE' },
-  cancelled: { label: 'Cancelled', color: '#A1AAA5', bg: '#F4F6F8' },
-  completed: { label: 'Completed', color: '#4D9274', bg: '#E8F0EA' },
+  pending:   { label: 'Pending',   color: '#FF9F43', bg: 'rgba(255,159,67,0.12)' },
+  accepted:  { label: 'Confirmed', color: '#C8FF4D', bg: 'rgba(200,255,77,0.12)' },
+  declined:  { label: 'Declined',  color: '#FF5C7A', bg: 'rgba(255,92,122,0.12)' },
+  cancelled: { label: 'Cancelled', color: '#52525E', bg: 'rgba(82,82,94,0.15)'   },
+  completed: { label: 'Completed', color: '#8B7CFF', bg: 'rgba(139,124,255,0.12)' },
 }
+
+const inputStyle = { background: '#1C1C22', border: '1px solid #2E2E3A', color: '#F2F0EB' }
 
 export default function BookingsPage() {
   const { user } = useAuthStore()
@@ -42,12 +44,10 @@ export default function BookingsPage() {
   const [selected, setSelected] = useState<Booking | null>(null)
   const [responseNote, setResponseNote] = useState('')
 
-  // Review state
   const [reviewBooking, setReviewBooking] = useState<Booking | null>(null)
   const [reviewRating, setReviewRating] = useState(5)
   const [reviewBody, setReviewBody] = useState('')
 
-  // Safe Meet state
   const [safeMeetBooking, setSafeMeetBooking] = useState<Booking | null>(null)
   const [safeMeetData, setSafeMeetData] = useState<SafeMeet | null>(null)
   const [trustedName, setTrustedName] = useState('')
@@ -116,7 +116,7 @@ export default function BookingsPage() {
 
   return (
     <AppShell>
-      <div className="screen-scroll overflow-y-auto h-dvh bg-[#FAF9F6]">
+      <div className="screen-scroll overflow-y-auto h-dvh bg-[#0D0D12]">
         <PageHeader title="My Bookings" />
 
         {/* Tabs */}
@@ -126,9 +126,11 @@ export default function BookingsPage() {
               <button
                 key={t}
                 onClick={() => setTab(t)}
-                className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
-                  tab === t ? 'bg-[#236B63] text-white' : 'bg-white text-[#77817C] border border-[#E8EAE6]'
-                }`}
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-colors"
+                style={tab === t
+                  ? { background: '#C8FF4D', color: '#0A1A00' }
+                  : { background: '#141418', color: '#8B8B9A', border: '1px solid #2E2E3A' }
+                }
               >
                 {t === 'sent' ? 'My Requests' : 'Incoming'}
               </button>
@@ -139,7 +141,7 @@ export default function BookingsPage() {
         {isLoading ? (
           <div className="space-y-3 px-4">
             {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="bg-white rounded-2xl p-4 border border-[#E8EAE6]">
+              <div key={i} className="rounded-2xl p-4" style={{ background: '#141418', border: '1px solid #2E2E3A' }}>
                 <div className="skeleton h-4 w-32 rounded mb-2" />
                 <div className="skeleton h-3 w-48 rounded" />
               </div>
@@ -148,16 +150,18 @@ export default function BookingsPage() {
         ) : bookings.length === 0 ? (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
             className="flex flex-col items-center justify-center py-20 px-8 text-center">
-            <div className="w-16 h-16 bg-[#E8F0EA] rounded-2xl flex items-center justify-center mb-4">
-              <Calendar size={24} className="text-[#236B63]" />
+            <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background: 'rgba(200,255,77,0.1)' }}>
+              <Calendar size={24} style={{ color: '#C8FF4D' }} />
             </div>
-            <h3 className="font-manrope font-bold text-[#24332F] mb-2">No bookings yet</h3>
-            <p className="text-[#A1AAA5] text-sm leading-relaxed max-w-[220px]">
+            <h3 className="font-manrope font-bold text-[#F2F0EB] mb-2">No bookings yet</h3>
+            <p className="text-[#8B8B9A] text-sm leading-relaxed max-w-[220px]">
               {tab === 'sent' ? 'Browse companions and send a booking request' : 'Booking requests from users will appear here'}
             </p>
             {tab === 'sent' && (
               <button onClick={() => navigate('/discover')}
-                className="mt-5 flex items-center gap-2 bg-[#236B63] text-white text-sm font-semibold px-5 py-3 rounded-2xl">
+                className="mt-5 flex items-center gap-2 text-sm font-semibold px-5 py-3 rounded-2xl"
+                style={{ background: '#C8FF4D', color: '#0A1A00' }}
+              >
                 Discover Companions <ChevronRight size={16} />
               </button>
             )}
@@ -176,63 +180,64 @@ export default function BookingsPage() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.05 }}
-                    className="bg-white rounded-2xl border border-[#E8EAE6] overflow-hidden"
+                    className="rounded-2xl overflow-hidden"
+                    style={{ background: '#141418', border: '1px solid #2E2E3A' }}
                   >
                     <div className="p-4">
                       <div className="flex items-start gap-3">
                         <Avatar src={other?.profile_photo_url} name={other?.display_name ?? 'U'} size="md" className="shrink-0" />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-2">
-                            <p className="font-semibold text-[#24332F] text-sm truncate">{other?.display_name}</p>
+                            <p className="font-semibold text-[#F2F0EB] text-sm truncate">{other?.display_name}</p>
                             <span className="text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0"
                               style={{ color: st.color, background: st.bg }}>
                               {st.label}
                             </span>
                           </div>
-                          <p className="text-xs text-[#77817C] mt-0.5">{icon} {booking.service?.name}</p>
+                          <p className="text-xs text-[#8B8B9A] mt-0.5">{icon} {booking.service?.name}</p>
                         </div>
                       </div>
 
                       <div className="mt-3 flex flex-wrap gap-3">
-                        <div className="flex items-center gap-1.5 text-xs text-[#77817C]">
-                          <Calendar size={12} className="text-[#A1AAA5]" />
+                        <div className="flex items-center gap-1.5 text-xs text-[#8B8B9A]">
+                          <Calendar size={12} className="text-[#52525E]" />
                           {new Date(booking.proposed_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                         </div>
-                        <div className="flex items-center gap-1.5 text-xs text-[#77817C]">
-                          <Clock size={12} className="text-[#A1AAA5]" />
+                        <div className="flex items-center gap-1.5 text-xs text-[#8B8B9A]">
+                          <Clock size={12} className="text-[#52525E]" />
                           {booking.proposed_time}{booking.duration_hours ? ` · ${booking.duration_hours}h` : ''}
                         </div>
                         {booking.location_notes && (
-                          <div className="flex items-center gap-1.5 text-xs text-[#77817C]">
-                            <MapPin size={12} className="text-[#A1AAA5]" />
+                          <div className="flex items-center gap-1.5 text-xs text-[#8B8B9A]">
+                            <MapPin size={12} className="text-[#52525E]" />
                             {booking.location_notes}
                           </div>
                         )}
                         {booking.agreed_rate && (
-                          <span className="text-xs font-bold text-[#236B63]">
+                          <span className="text-xs font-bold" style={{ color: '#C8FF4D' }}>
                             ₹{Number(booking.agreed_rate).toLocaleString('en-IN')}
                           </span>
                         )}
                       </div>
 
                       {booking.package && (
-                        <div className="mt-2 flex items-center gap-1.5 text-xs text-[#236B63] bg-[#E8F0EA] rounded-xl px-3 py-2 font-semibold">
+                        <div className="mt-2 flex items-center gap-1.5 text-xs rounded-xl px-3 py-2 font-semibold" style={{ color: '#C8FF4D', background: 'rgba(200,255,77,0.08)' }}>
                           ✨ {booking.package.title}
                           {booking.package.duration_hours && ` · ${booking.package.duration_hours}h`}
                         </div>
                       )}
                       {booking.plus_one_name && (
-                        <div className="mt-2 flex items-center gap-1.5 text-xs text-[#77817C] bg-[#FAF9F6] rounded-xl px-3 py-2">
+                        <div className="mt-2 flex items-center gap-1.5 text-xs text-[#8B8B9A] rounded-xl px-3 py-2" style={{ background: '#252530' }}>
                           👥 Bringing {booking.plus_one_name}{booking.plus_one_phone ? ` (${booking.plus_one_phone})` : ''}
                         </div>
                       )}
                       {booking.notes && (
-                        <p className="mt-2 text-xs text-[#77817C] italic bg-[#FAF9F6] rounded-xl px-3 py-2 leading-relaxed">
+                        <p className="mt-2 text-xs text-[#8B8B9A] italic rounded-xl px-3 py-2 leading-relaxed" style={{ background: '#252530' }}>
                           "{booking.notes}"
                         </p>
                       )}
                       {booking.companion_response_note && (
-                        <p className="mt-2 text-xs text-[#236B63] bg-[#E8F0EA] rounded-xl px-3 py-2 leading-relaxed">
+                        <p className="mt-2 text-xs rounded-xl px-3 py-2 leading-relaxed" style={{ color: '#C8FF4D', background: 'rgba(200,255,77,0.08)' }}>
                           Response: "{booking.companion_response_note}"
                         </p>
                       )}
@@ -240,12 +245,13 @@ export default function BookingsPage() {
 
                     {/* Pending actions */}
                     {booking.status === 'pending' && (
-                      <div className="border-t border-[#F4F1EA] px-4 py-2.5 flex gap-2">
+                      <div className="border-t px-4 py-2.5 flex gap-2" style={{ borderColor: '#2E2E3A' }}>
                         {tab === 'received' ? (
                           <>
                             <button
                               onClick={() => { setSelected(booking); setResponseNote('') }}
-                              className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-[#236B63] text-white rounded-xl text-xs font-bold"
+                              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold"
+                              style={{ background: '#C8FF4D', color: '#0A1A00' }}
                             >
                               <CheckCircle size={13} /> Respond
                             </button>
@@ -260,7 +266,9 @@ export default function BookingsPage() {
                                   else navigate('/messages')
                                 } catch { navigate('/messages') }
                               }}
-                              className="flex items-center justify-center gap-1.5 py-2 px-4 border border-[#E8EAE6] text-[#236B63] rounded-xl text-xs font-semibold">
+                              className="flex items-center justify-center gap-1.5 py-2 px-4 rounded-xl text-xs font-semibold"
+                              style={{ border: '1px solid #2E2E3A', color: '#C8FF4D', background: 'transparent' }}
+                            >
                               <MessageCircle size={13} /> Chat
                             </button>
                           </>
@@ -268,7 +276,8 @@ export default function BookingsPage() {
                           <button
                             onClick={() => cancelBooking.mutate(booking.id)}
                             disabled={cancelBooking.isPending}
-                            className="flex items-center gap-1.5 py-2 px-4 border border-[#E8EAE6] text-[#A1AAA5] rounded-xl text-xs font-semibold disabled:opacity-50"
+                            className="flex items-center gap-1.5 py-2 px-4 rounded-xl text-xs font-semibold disabled:opacity-50"
+                            style={{ border: '1px solid #2E2E3A', color: '#8B8B9A', background: 'transparent' }}
                           >
                             <XCircle size={13} /> Cancel Request
                           </button>
@@ -278,7 +287,7 @@ export default function BookingsPage() {
 
                     {/* Safe Meet button for accepted bookings */}
                     {booking.status === 'accepted' && (
-                      <div className="border-t border-[#F4F1EA] px-4 py-2.5 flex gap-2">
+                      <div className="border-t px-4 py-2.5 flex gap-2" style={{ borderColor: '#2E2E3A' }}>
                         <button
                           onClick={() => {
                             setSafeMeetBooking(booking)
@@ -286,7 +295,8 @@ export default function BookingsPage() {
                             setTrustedPhone('')
                             setSafeMeetData(null)
                           }}
-                          className="flex items-center gap-1.5 py-2 px-4 bg-[#E8F0EA] text-[#236B63] rounded-xl text-xs font-semibold"
+                          className="flex items-center gap-1.5 py-2 px-4 rounded-xl text-xs font-semibold"
+                          style={{ background: 'rgba(139,124,255,0.12)', color: '#8B7CFF' }}
                         >
                           <Shield size={13} /> Safe Meet
                         </button>
@@ -295,10 +305,11 @@ export default function BookingsPage() {
 
                     {/* Leave Review for completed bookings */}
                     {booking.status === 'completed' && (
-                      <div className="border-t border-[#F4F1EA] px-4 py-2.5 flex gap-2">
+                      <div className="border-t px-4 py-2.5 flex gap-2" style={{ borderColor: '#2E2E3A' }}>
                         <button
                           onClick={() => { setReviewBooking(booking); setReviewRating(5); setReviewBody('') }}
-                          className="flex items-center gap-1.5 py-2 px-4 bg-[#FFF5E6] text-[#D9A45B] rounded-xl text-xs font-semibold"
+                          className="flex items-center gap-1.5 py-2 px-4 rounded-xl text-xs font-semibold"
+                          style={{ background: 'rgba(255,159,67,0.12)', color: '#FF9F43' }}
                         >
                           <Star size={13} /> Leave Review
                         </button>
@@ -316,20 +327,21 @@ export default function BookingsPage() {
       <BottomSheet open={!!selected} onClose={() => setSelected(null)} title="Respond to Booking">
         {selected && (
           <div className="space-y-4">
-            <div className="bg-[#FAF9F6] rounded-xl p-3 text-sm text-[#24332F]">
-              <p className="font-semibold mb-1">{selected.requester?.display_name} wants to book {selected.service?.name}</p>
-              <p className="text-xs text-[#77817C]">
+            <div className="rounded-xl p-3 text-sm" style={{ background: '#1C1C22', border: '1px solid #2E2E3A' }}>
+              <p className="font-semibold mb-1 text-[#F2F0EB]">{selected.requester?.display_name} wants to book {selected.service?.name}</p>
+              <p className="text-xs text-[#8B8B9A]">
                 {new Date(selected.proposed_date).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })} at {selected.proposed_time}
                 {selected.duration_hours ? ` · ${selected.duration_hours}h` : ''}
               </p>
-              {selected.location_notes && <p className="text-xs text-[#77817C] mt-0.5">📍 {selected.location_notes}</p>}
-              {selected.notes && <p className="text-xs text-[#77817C] mt-1 italic">"{selected.notes}"</p>}
+              {selected.location_notes && <p className="text-xs text-[#8B8B9A] mt-0.5">📍 {selected.location_notes}</p>}
+              {selected.notes && <p className="text-xs text-[#8B8B9A] mt-1 italic">"{selected.notes}"</p>}
             </div>
             <div>
-              <label className="text-xs font-semibold text-[#77817C] block mb-1">Your response (optional)</label>
+              <label className="text-xs font-semibold text-[#52525E] block mb-1">Your response (optional)</label>
               <textarea value={responseNote} onChange={e => setResponseNote(e.target.value)} rows={3}
                 placeholder="Add a note — confirm a meetup spot, ask a question…"
-                className="w-full border border-[#E8EAE6] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#236B63] resize-none" />
+                className="w-full rounded-xl px-3 py-2.5 text-sm placeholder:text-[#52525E] focus:outline-none resize-none"
+                style={inputStyle} />
             </div>
             <div className="flex gap-3">
               <Button className="flex-1" loading={updateBooking.isPending} onClick={() => updateBooking.mutate({ status: 'accepted' })}>
@@ -338,7 +350,8 @@ export default function BookingsPage() {
               <button
                 onClick={() => updateBooking.mutate({ status: 'declined' })}
                 disabled={updateBooking.isPending}
-                className="flex-1 py-3 bg-white border border-[#D76D6D] text-[#D76D6D] rounded-2xl text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-50"
+                className="flex-1 py-3 rounded-2xl text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-50"
+                style={{ border: '1px solid #FF5C7A', color: '#FF5C7A', background: 'transparent' }}
               >
                 <XCircle size={15} /> Decline
               </button>
@@ -351,13 +364,13 @@ export default function BookingsPage() {
       <BottomSheet open={!!reviewBooking} onClose={() => setReviewBooking(null)} title="Leave a Review">
         {reviewBooking && (
           <div className="space-y-4">
-            <p className="text-sm text-[#77817C]">
+            <p className="text-sm text-[#8B8B9A]">
               Rate your experience with {tab === 'sent' ? reviewBooking.companion?.display_name : reviewBooking.requester?.display_name}
             </p>
             <div className="flex gap-2 justify-center py-2">
               {[1, 2, 3, 4, 5].map(n => (
                 <button key={n} onClick={() => setReviewRating(n)}>
-                  <Star size={32} className={n <= reviewRating ? 'text-[#D9A45B] fill-[#D9A45B]' : 'text-[#E8EAE6]'} />
+                  <Star size={32} style={n <= reviewRating ? { color: '#FF9F43', fill: '#FF9F43' } : { color: '#2E2E3A' }} />
                 </button>
               ))}
             </div>
@@ -366,9 +379,10 @@ export default function BookingsPage() {
               onChange={e => setReviewBody(e.target.value)}
               rows={3}
               placeholder="Share your experience (optional)…"
-              className="w-full border border-[#E8EAE6] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#236B63] resize-none"
+              className="w-full rounded-xl px-3 py-2.5 text-sm placeholder:text-[#52525E] focus:outline-none resize-none"
+              style={inputStyle}
             />
-            <p className="text-xs text-[#A1AAA5]">Your review will only be visible once both parties have submitted theirs.</p>
+            <p className="text-xs text-[#52525E]">Your review will only be visible once both parties have submitted theirs.</p>
             <Button loading={submitReview.isPending} onClick={() => submitReview.mutate()} className="w-full">
               Submit Review
             </Button>
@@ -382,26 +396,28 @@ export default function BookingsPage() {
           <div className="space-y-4">
             {!safeMeetData ? (
               <>
-                <p className="text-sm text-[#77817C]">
+                <p className="text-sm text-[#8B8B9A]">
                   Enter a trusted contact who should be alerted if you trigger SOS during this meet.
                 </p>
                 <div>
-                  <label className="text-xs font-semibold text-[#77817C] block mb-1">Contact Name</label>
+                  <label className="text-xs font-semibold text-[#52525E] block mb-1">Contact Name</label>
                   <input
                     value={trustedName}
                     onChange={e => setTrustedName(e.target.value)}
                     placeholder="e.g. Mom, Best Friend"
-                    className="w-full border border-[#E8EAE6] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#236B63]"
+                    className="w-full rounded-xl px-3 py-2.5 text-sm placeholder:text-[#52525E] focus:outline-none"
+                    style={inputStyle}
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-[#77817C] block mb-1">Contact Phone</label>
+                  <label className="text-xs font-semibold text-[#52525E] block mb-1">Contact Phone</label>
                   <input
                     value={trustedPhone}
                     onChange={e => setTrustedPhone(e.target.value)}
                     placeholder="+91 98765 43210"
                     type="tel"
-                    className="w-full border border-[#E8EAE6] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#236B63]"
+                    className="w-full rounded-xl px-3 py-2.5 text-sm placeholder:text-[#52525E] focus:outline-none"
+                    style={inputStyle}
                   />
                 </div>
                 <Button
@@ -415,9 +431,9 @@ export default function BookingsPage() {
               </>
             ) : (
               <>
-                <div className="bg-[#E8F0EA] rounded-xl p-3">
-                  <p className="text-xs text-[#236B63] font-semibold">Safe Meet Active ✓</p>
-                  <p className="text-xs text-[#77817C] mt-0.5">
+                <div className="rounded-xl p-3" style={{ background: 'rgba(139,124,255,0.1)', border: '1px solid rgba(139,124,255,0.2)' }}>
+                  <p className="text-xs font-semibold" style={{ color: '#8B7CFF' }}>Safe Meet Active ✓</p>
+                  <p className="text-xs text-[#8B8B9A] mt-0.5">
                     Trusted contact: {safeMeetData.trusted_name} ({safeMeetData.trusted_phone})
                   </p>
                 </div>
@@ -429,20 +445,21 @@ export default function BookingsPage() {
                   )}
                   {safeMeetData.checkin_at && !safeMeetData.checkout_at && (
                     <>
-                      <div className="bg-[#E8F0EA] rounded-xl px-3 py-2 text-xs text-[#236B63]">
+                      <div className="rounded-xl px-3 py-2 text-xs" style={{ background: 'rgba(200,255,77,0.08)', color: '#C8FF4D' }}>
                         ✓ Checked in at {new Date(safeMeetData.checkin_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
                       </div>
                       <button
                         onClick={() => safeMeetAction.mutate('checkout')}
                         disabled={safeMeetAction.isPending}
-                        className="w-full py-3 bg-[#E8F0EA] text-[#236B63] rounded-2xl text-sm font-semibold disabled:opacity-50"
+                        className="w-full py-3 rounded-2xl text-sm font-semibold disabled:opacity-50"
+                        style={{ background: 'rgba(200,255,77,0.08)', color: '#C8FF4D', border: '1px solid rgba(200,255,77,0.2)' }}
                       >
                         Check Out — End Meet ✓
                       </button>
                     </>
                   )}
                   {safeMeetData.checkout_at && (
-                    <div className="bg-[#E8F0EA] rounded-xl px-3 py-2 text-xs text-[#236B63] text-center">
+                    <div className="rounded-xl px-3 py-2 text-xs text-center" style={{ background: 'rgba(200,255,77,0.08)', color: '#C8FF4D' }}>
                       Meet completed ✓
                     </div>
                   )}
@@ -450,13 +467,14 @@ export default function BookingsPage() {
                     <button
                       onClick={() => safeMeetAction.mutate('sos')}
                       disabled={safeMeetAction.isPending}
-                      className="w-full py-3 bg-[#D76D6D] text-white rounded-2xl text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50"
+                      className="w-full py-3 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50"
+                      style={{ background: '#FF5C7A', color: 'white' }}
                     >
                       <AlertTriangle size={15} /> SOS — Send Emergency Alert
                     </button>
                   )}
                   {safeMeetData.sos_triggered_at && (
-                    <div className="bg-[#FFF0EE] rounded-xl px-3 py-2 text-xs text-[#D76D6D] font-semibold text-center">
+                    <div className="rounded-xl px-3 py-2 text-xs font-semibold text-center" style={{ background: 'rgba(255,92,122,0.12)', color: '#FF5C7A' }}>
                       🚨 SOS triggered at {new Date(safeMeetData.sos_triggered_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
                     </div>
                   )}

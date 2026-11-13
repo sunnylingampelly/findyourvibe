@@ -759,16 +759,16 @@ export default function ChatPage() {
               const st = liveBooking.status
               const isCompRole = userBookingRole === 'companion'
               const cfg = ({
-                pending:   { bg: '#FFF8EE', border: '#F5D99A', accent: '#D9A45B',
+                pending:   { bg: '#1C1A10', border: '#3D3010', accent: '#C8FF4D',
                              label: isCompRole ? 'New Booking Request!' : 'Awaiting Response', step: 1 },
-                accepted:  { bg: '#E8F0EA', border: '#C8DDD2', accent: '#236B63',
+                accepted:  { bg: '#0E1C14', border: '#1A3022', accent: '#C8FF4D',
                              label: 'Booking Confirmed ✓', step: 2 },
-                declined:  { bg: '#FFF0EE', border: '#F5B8B8', accent: '#D76D6D',
+                declined:  { bg: '#1C0E10', border: '#3D1518', accent: '#FF5C7A',
                              label: 'Booking Declined', step: 2 },
-                completed: { bg: '#F0F7F4', border: '#B8D8CE', accent: '#4D9274',
+                completed: { bg: '#141418', border: '#252530', accent: '#8B7CFF',
                              label: 'Experience Done!', step: 3 },
               } as Record<string, { bg: string; border: string; accent: string; label: string; step: number }>)[st]
-                ?? { bg: '#F4F6F8', border: '#E8EAE6', accent: '#A1AAA5', label: st, step: 0 }
+                ?? { bg: '#141418', border: '#2E2E3A', accent: '#52525E', label: st, step: 0 }
 
               const steps = st === 'completed'
                 ? ['Requested', 'Confirmed', 'Done ✓']
@@ -786,7 +786,7 @@ export default function ChatPage() {
                       <span className="text-xl shrink-0">{SERVICE_ICONS[liveBooking.service?.slug ?? ''] ?? '✨'}</span>
                       <div className="flex-1 min-w-0">
                         <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: cfg.accent }}>{cfg.label}</p>
-                        <p className="font-manrope font-semibold text-[#24332F] text-sm truncate">{liveBooking.service?.name}</p>
+                        <p className="font-manrope font-semibold text-[#F2F0EB] text-sm truncate">{liveBooking.service?.name}</p>
                       </div>
                       {st === 'pending' && (
                         <span className="relative flex h-2 w-2 shrink-0">
@@ -804,11 +804,11 @@ export default function ChatPage() {
                         return (
                           <div key={s} className="flex items-center gap-1.5 flex-1 min-w-0">
                             <div className="w-2 h-2 rounded-full shrink-0 transition-all"
-                              style={{ background: done || active ? cfg.accent : '#E8EAE6', boxShadow: active ? `0 0 0 3px ${cfg.accent}30` : 'none' }}
+                              style={{ background: done || active ? cfg.accent : '#2E2E3A', boxShadow: active ? `0 0 0 3px ${cfg.accent}30` : 'none' }}
                             />
                             <span className="text-[9px] font-semibold truncate" style={{ color: done || active ? cfg.accent : '#B8BDB9' }}>{s}</span>
                             {i < steps.length - 1 && (
-                              <div className="flex-1 h-px mx-0.5" style={{ background: i < cfg.step - 1 ? cfg.accent : '#E8EAE6' }} />
+                              <div className="flex-1 h-px mx-0.5" style={{ background: i < cfg.step - 1 ? cfg.accent : '#2E2E3A' }} />
                             )}
                           </div>
                         )
@@ -816,7 +816,7 @@ export default function ChatPage() {
                     </div>
 
                     {/* Details */}
-                    <div className="flex flex-wrap gap-x-4 gap-y-1 px-4 pb-3 text-xs text-[#77817C]">
+                    <div className="flex flex-wrap gap-x-4 gap-y-1 px-4 pb-3 text-xs text-[#8B8B9A]">
                       {liveBooking.proposed_date && (
                         <span className="flex items-center gap-1">
                           <CalendarDays size={11} style={{ color: cfg.accent }} />
@@ -834,7 +834,7 @@ export default function ChatPage() {
                     </div>
 
                     {liveBooking.companion_response_note && (
-                      <div className="mx-3 mb-3 px-3 py-2 rounded-xl bg-white/60 text-xs text-[#77817C] italic">
+                      <div className="mx-3 mb-3 px-3 py-2 rounded-xl text-xs text-[#8B8B9A] italic" style={{ background: 'rgba(255,255,255,0.05)' }}>
                         "{liveBooking.companion_response_note}"
                       </div>
                     )}
@@ -848,15 +848,16 @@ export default function ChatPage() {
                       <button
                         onClick={() => bookingActionMutation.mutate('declined')}
                         disabled={bookingActionMutation.isPending}
-                        className="flex-1 py-2.5 rounded-xl border-2 text-sm font-semibold text-[#D76D6D] border-[#F5B8B8] bg-white active:scale-95 transition-all disabled:opacity-50"
+                        className="flex-1 py-2.5 rounded-xl border-2 text-sm font-semibold active:scale-95 transition-all disabled:opacity-50"
+                        style={{ color: '#FF5C7A', borderColor: 'rgba(255,92,122,0.3)', background: 'rgba(255,92,122,0.08)' }}
                       >
                         ✕ Decline
                       </button>
                       <button
                         onClick={() => bookingActionMutation.mutate('accepted')}
                         disabled={bookingActionMutation.isPending}
-                        className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white active:scale-95 transition-all disabled:opacity-50"
-                        style={{ background: 'linear-gradient(135deg, #236B63, #4D9274)' }}
+                        className="flex-1 py-2.5 rounded-xl text-sm font-semibold active:scale-95 transition-all disabled:opacity-50"
+                        style={{ background: '#C8FF4D', color: '#0A1A00' }}
                       >
                         ✓ Accept
                       </button>
@@ -869,8 +870,8 @@ export default function ChatPage() {
                       <button
                         onClick={() => bookingActionMutation.mutate('completed')}
                         disabled={bookingActionMutation.isPending}
-                        className="w-full py-2.5 rounded-xl text-sm font-semibold text-white active:scale-95 transition-all disabled:opacity-50"
-                        style={{ background: 'linear-gradient(135deg, #236B63, #4D9274)' }}
+                        className="w-full py-2.5 rounded-xl text-sm font-semibold active:scale-95 transition-all disabled:opacity-50"
+                        style={{ background: '#C8FF4D', color: '#0A1A00' }}
                       >
                         {bookingActionMutation.isPending ? 'Updating…' : '✓ Mark as Done'}
                       </button>
@@ -883,7 +884,8 @@ export default function ChatPage() {
                       <button
                         onClick={() => bookingActionMutation.mutate('cancelled')}
                         disabled={bookingActionMutation.isPending}
-                        className="w-full py-2.5 rounded-xl border-2 text-sm font-semibold text-[#D76D6D] border-[#F5B8B8] bg-white active:scale-95 transition-all disabled:opacity-50"
+                        className="w-full py-2.5 rounded-xl border-2 text-sm font-semibold active:scale-95 transition-all disabled:opacity-50"
+                        style={{ color: '#FF5C7A', borderColor: 'rgba(255,92,122,0.3)', background: 'rgba(255,92,122,0.08)' }}
                       >
                         {bookingActionMutation.isPending ? 'Cancelling…' : 'Cancel Booking'}
                       </button>
@@ -895,8 +897,8 @@ export default function ChatPage() {
                     <div className="px-3 pb-3 pt-1 border-t" style={{ borderColor: cfg.border }} onClick={e => e.stopPropagation()}>
                       <button
                         onClick={() => setShowRating(true)}
-                        className="w-full py-2.5 rounded-xl text-sm font-semibold text-white active:scale-95 transition-all"
-                        style={{ background: 'linear-gradient(135deg, #D9A45B, #E8C47A)' }}
+                        className="w-full py-2.5 rounded-xl text-sm font-semibold active:scale-95 transition-all"
+                        style={{ background: '#C8FF4D', color: '#0A1A00' }}
                       >
                         ⭐ Rate Your Experience
                       </button>
@@ -1413,14 +1415,15 @@ export default function ChatPage() {
             </button>
           ) : (
             <div className="space-y-4 px-1">
-              <div className="bg-red-50 rounded-2xl p-4 text-center">
-                <p className="text-sm font-semibold text-[#24332F]">Clear all messages?</p>
-                <p className="text-xs text-[#77817C] mt-1">This permanently deletes every message in this chat for both people. This cannot be undone.</p>
+              <div className="rounded-2xl p-4 text-center" style={{ background: 'rgba(255,92,122,0.1)', border: '1px solid rgba(255,92,122,0.2)' }}>
+                <p className="text-sm font-semibold text-[#F2F0EB]">Clear all messages?</p>
+                <p className="text-xs text-[#8B8B9A] mt-1">This permanently deletes every message in this chat for both people. This cannot be undone.</p>
               </div>
               <div className="flex gap-3">
                 <button
                   onClick={() => setConfirmClear(false)}
-                  className="flex-1 py-3 rounded-2xl border-2 border-[#E8EAE6] text-sm font-semibold text-[#77817C] active:scale-95 transition-all"
+                  className="flex-1 py-3 rounded-2xl border-2 text-sm font-semibold text-[#8B8B9A] active:scale-95 transition-all"
+                  style={{ borderColor: '#2E2E3A' }}
                 >
                   Cancel
                 </button>
@@ -1428,7 +1431,7 @@ export default function ChatPage() {
                   onClick={() => clearMutation.mutate()}
                   disabled={clearMutation.isPending}
                   className="flex-1 py-3 rounded-2xl text-sm font-semibold text-white active:scale-95 transition-all disabled:opacity-50"
-                  style={{ background: 'linear-gradient(135deg, #D76D6D, #C45555)' }}
+                  style={{ background: '#FF5C7A' }}
                 >
                   {clearMutation.isPending ? 'Clearing…' : 'Clear Chat'}
                 </button>
@@ -1445,8 +1448,8 @@ export default function ChatPage() {
         title="Rate Your Experience"
       >
         <div className="pt-2 space-y-5">
-          <p className="text-sm text-[#77817C] text-center">
-            How was your experience with <span className="font-semibold text-[#24332F]">{otherUser?.display_name}</span>?
+          <p className="text-sm text-[#8B8B9A] text-center">
+            How was your experience with <span className="font-semibold text-[#F2F0EB]">{otherUser?.display_name}</span>?
           </p>
 
           {/* Star picker */}
@@ -1459,8 +1462,8 @@ export default function ChatPage() {
               >
                 <Star
                   size={40}
-                  className={star <= ratingValue ? 'text-[#D9A45B]' : 'text-[#E8EAE6]'}
-                  fill={star <= ratingValue ? '#D9A45B' : 'none'}
+                  className={star <= ratingValue ? 'text-[#C8FF4D]' : 'text-[#2E2E3A]'}
+                  fill={star <= ratingValue ? '#C8FF4D' : 'none'}
                   strokeWidth={1.5}
                 />
               </button>
@@ -1468,7 +1471,7 @@ export default function ChatPage() {
           </div>
 
           {ratingValue > 0 && (
-            <p className="text-center text-xs font-semibold text-[#D9A45B]">
+            <p className="text-center text-xs font-semibold text-[#C8FF4D]">
               {['', 'Poor', 'Fair', 'Good', 'Great', 'Excellent!'][ratingValue]}
             </p>
           )}
@@ -1478,14 +1481,15 @@ export default function ChatPage() {
             onChange={e => setRatingText(e.target.value)}
             placeholder="Share your experience (optional)…"
             rows={3}
-            className="w-full border-[1.5px] border-[#E8EAE6] rounded-2xl px-4 py-3 text-sm text-[#24332F] placeholder:text-[#A1AAA5] focus:outline-none focus:border-[#236B63] resize-none"
+            className="w-full rounded-2xl px-4 py-3 text-sm text-[#F2F0EB] placeholder:text-[#52525E] focus:outline-none resize-none"
+            style={{ background: '#1C1C22', border: '1.5px solid #2E2E3A' }}
           />
 
           <button
             onClick={() => rateMutation.mutate()}
             disabled={!ratingValue || rateMutation.isPending}
-            className="w-full py-3.5 rounded-2xl text-sm font-bold text-white disabled:opacity-40 transition-all active:scale-95"
-            style={{ background: 'linear-gradient(135deg, #236B63, #4D9274)' }}
+            className="w-full py-3.5 rounded-2xl text-sm font-bold disabled:opacity-40 transition-all active:scale-95"
+            style={{ background: '#C8FF4D', color: '#0A1A00' }}
           >
             {rateMutation.isPending ? 'Submitting…' : 'Submit Review'}
           </button>

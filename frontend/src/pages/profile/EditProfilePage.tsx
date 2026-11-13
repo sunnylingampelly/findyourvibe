@@ -525,10 +525,10 @@ export default function EditProfilePage() {
           </div>
 
           {/* Specialty tags */}
-          <div className="rounded-2xl border-[1.5px] border-[#E8EAE6] bg-white p-4 space-y-3">
+          <div className="rounded-2xl p-4 space-y-3" style={{ background: '#141418', border: '1.5px solid #2E2E3A' }}>
             <div>
-              <label className="block text-sm font-semibold text-[#24332F] font-manrope mb-0.5">Specialty Tags</label>
-              <p className="text-xs text-[#A1AAA5] leading-relaxed">Pick tags that describe your vibe — these show on your profile card.</p>
+              <label className="block text-sm font-semibold text-[#F2F0EB] font-manrope mb-0.5">Specialty Tags</label>
+              <p className="text-xs text-[#52525E] leading-relaxed">Pick tags that describe your vibe — these show on your profile card.</p>
             </div>
             <div className="flex flex-wrap gap-2">
               {[
@@ -544,11 +544,10 @@ export default function EditProfilePage() {
                     onClick={() => setSpecialtyTags(prev =>
                       selected ? prev.filter(t => t !== tag) : prev.length < 5 ? [...prev, tag] : prev
                     )}
-                    className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all active:scale-95 ${
-                      selected
-                        ? 'bg-[#236B63] border-[#236B63] text-white'
-                        : 'bg-white border-[#E8EAE6] text-[#77817C]'
-                    }`}
+                    className="px-3 py-1.5 rounded-full text-xs font-semibold border transition-all active:scale-95"
+                    style={selected
+                      ? { background: 'rgba(200,255,77,0.15)', borderColor: '#C8FF4D', color: '#C8FF4D' }
+                      : { background: '#1C1C22', borderColor: '#2E2E3A', color: '#8B8B9A' }}
                   >
                     {tag}
                   </button>
@@ -556,7 +555,7 @@ export default function EditProfilePage() {
               })}
             </div>
             {specialtyTags.length >= 5 && (
-              <p className="text-xs text-[#A1AAA5]">Maximum 5 tags selected</p>
+              <p className="text-xs text-[#52525E]">Maximum 5 tags selected</p>
             )}
           </div>
 
