@@ -88,12 +88,13 @@ export default function ProfilePage() {
       <div className="screen-scroll overflow-y-auto h-dvh">
         {/* Header banner */}
         <div className="relative">
-          <div className="h-28 bg-gradient-to-br from-[#194E49] via-[#236B63] to-[#4D9274]" />
+          <div className="h-28" style={{ background: 'linear-gradient(135deg, #0D1A00 0%, #1A2E00 50%, rgba(200,255,77,0.15) 100%)' }} />
 
           {/* Edit button */}
           <button
             onClick={() => navigate('/profile/edit')}
-            className="absolute top-4 right-4 flex items-center gap-1.5 text-xs font-semibold text-white bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/30"
+            className="absolute top-4 right-4 flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border"
+            style={{ background: 'rgba(200,255,77,0.15)', borderColor: 'rgba(200,255,77,0.3)', color: '#C8FF4D', backdropFilter: 'blur(8px)' }}
           >
             <Edit2 size={12} /> Edit
           </button>
@@ -106,23 +107,23 @@ export default function ProfilePage() {
                   src={profile?.profile_photo_url}
                   name={profile?.display_name || user?.name || 'U'}
                   size="2xl"
-                  className="border-4 border-white shadow-lg"
+                  className="border-4 shadow-lg border-[#0D0D12]"
                 />
                 {profile?.companion_verification_status === 'approved' && (
-                  <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-[#236B63] rounded-full border-2 border-white flex items-center justify-center">
+                  <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full border-2 flex items-center justify-center" style={{ background: '#8B7CFF', borderColor: '#0D0D12' }}>
                     <ShieldCheck size={14} className="text-white" />
                   </div>
                 )}
               </div>
             </div>
 
-            <h1 className="font-manrope font-extrabold text-[1.5rem] text-[#24332F] tracking-tight leading-tight">
+            <h1 className="font-manrope font-extrabold text-[1.5rem] text-[#F2F0EB] tracking-tight leading-tight">
               {profile?.display_name || user?.name}
             </h1>
-            <p className="text-[#77817C] text-sm mt-0.5">{user?.email}</p>
+            <p className="text-[#8B8B9A] text-sm mt-0.5">{user?.email}</p>
 
             {profile?.bio && (
-              <p className="text-[#77817C] text-sm mt-3 leading-relaxed line-clamp-2">{profile.bio}</p>
+              <p className="text-[#8B8B9A] text-sm mt-3 leading-relaxed line-clamp-2">{profile.bio}</p>
             )}
 
             <div className="flex gap-2 mt-3 flex-wrap">
@@ -149,10 +150,10 @@ export default function ProfilePage() {
                   sub: '',
                 },
               ].map(({ value, label, sub }) => (
-                <div key={label} className="bg-[#F4F1EA] rounded-2xl px-3 py-3 text-center">
-                  <div className="font-manrope font-extrabold text-xl text-[#24332F]">{value}</div>
-                  <div className="text-[11px] text-[#A1AAA5] mt-0.5 leading-tight">{label}</div>
-                  {sub && <div className="text-[10px] text-[#A1AAA5]">{sub}</div>}
+                <div key={label} className="rounded-2xl px-3 py-3 text-center" style={{ background: '#1C1C22', border: '1px solid #2E2E3A' }}>
+                  <div className="font-manrope font-extrabold text-xl text-[#F2F0EB]">{value}</div>
+                  <div className="text-[11px] text-[#52525E] mt-0.5 leading-tight">{label}</div>
+                  {sub && <div className="text-[10px] text-[#52525E]">{sub}</div>}
                 </div>
               ))}
             </div>
@@ -163,26 +164,28 @@ export default function ProfilePage() {
         <div className="px-4 pb-10 space-y-5">
           {menuSections.map(section => (
             <div key={section.label}>
-              <p className="text-[11px] font-bold uppercase tracking-widest text-[#A1AAA5] px-1 mb-2">
+              <p className="text-[11px] font-bold uppercase tracking-widest text-[#52525E] px-1 mb-2">
                 {section.label}
               </p>
-              <div className="bg-white rounded-2xl border border-[#E8EAE6] overflow-hidden">
+              <div className="rounded-2xl overflow-hidden" style={{ background: '#141418', border: '1px solid #2E2E3A' }}>
                 {section.items.map(({ icon: Icon, label, to, highlight }, idx) => (
                   <motion.button
                     key={to}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => navigate(to)}
-                    className={`w-full flex items-center gap-3 px-4 py-3.5 transition-colors
-                      ${idx < section.items.length - 1 ? 'border-b border-[#F4F1EA]' : ''}
-                      ${highlight ? 'bg-gradient-to-r from-[#236B63] to-[#4D9274]' : 'hover:bg-[#FAF9F6]'}`}
+                    className="w-full flex items-center gap-3 px-4 py-3.5 transition-colors"
+                    style={highlight
+                      ? { background: 'linear-gradient(90deg, rgba(200,255,77,0.15) 0%, rgba(200,255,77,0.05) 100%)', borderBottom: idx < section.items.length - 1 ? '1px solid #2E2E3A' : undefined }
+                      : { borderBottom: idx < section.items.length - 1 ? '1px solid #2E2E3A' : undefined }}
                   >
-                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${highlight ? 'bg-white/20' : 'bg-[#E8F0EA]'}`}>
-                      <Icon size={16} className={highlight ? 'text-white' : 'text-[#236B63]'} />
+                    <div className="w-8 h-8 rounded-xl flex items-center justify-center"
+                      style={highlight ? { background: 'rgba(200,255,77,0.2)' } : { background: '#252530' }}>
+                      <Icon size={16} style={{ color: highlight ? '#C8FF4D' : '#8B8B9A' }} />
                     </div>
-                    <span className={`flex-1 text-left font-medium text-sm ${highlight ? 'text-white font-semibold' : 'text-[#24332F]'}`}>
+                    <span className="flex-1 text-left font-medium text-sm" style={{ color: highlight ? '#C8FF4D' : '#F2F0EB' }}>
                       {label}
                     </span>
-                    <ChevronRight size={16} className={highlight ? 'text-white/60' : 'text-[#C8CCC9]'} />
+                    <ChevronRight size={16} style={{ color: highlight ? 'rgba(200,255,77,0.5)' : '#52525E' }} />
                   </motion.button>
                 ))}
               </div>
@@ -192,15 +195,16 @@ export default function ProfilePage() {
           {/* Sign out */}
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-3.5 bg-white rounded-2xl border border-[#E8EAE6] text-[#D76D6D] hover:bg-[#FFF5F5] transition-colors"
+            className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-colors"
+            style={{ background: '#141418', border: '1px solid #2E2E3A' }}
           >
-            <div className="w-8 h-8 rounded-xl bg-[#FDE8E8] flex items-center justify-center">
-              <LogOut size={16} className="text-[#D76D6D]" />
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: 'rgba(255,92,122,0.15)' }}>
+              <LogOut size={16} style={{ color: '#FF5C7A' }} />
             </div>
-            <span className="flex-1 text-left font-medium text-sm">Sign Out</span>
+            <span className="flex-1 text-left font-medium text-sm" style={{ color: '#FF5C7A' }}>Sign Out</span>
           </button>
 
-          <p className="text-center text-[#A1AAA5] text-xs pt-2">FindYourVibe v1.0</p>
+          <p className="text-center text-[#52525E] text-xs pt-2">FindYourVibe v1.0</p>
         </div>
       </div>
     </AppShell>

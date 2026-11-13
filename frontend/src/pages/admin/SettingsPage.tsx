@@ -62,13 +62,14 @@ export default function SettingsPage() {
       <div className="p-8">
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h1 className="font-manrope font-bold text-2xl text-[#24332F]">Platform Settings</h1>
-            <p className="text-[#77817C] text-sm mt-1">Configure global platform behaviour</p>
+            <h1 className="font-manrope font-bold text-2xl" style={{ color: '#F2F0EB' }}>Platform Settings</h1>
+            <p className="text-sm mt-1" style={{ color: '#8B8B9A' }}>Configure global platform behaviour</p>
           </div>
           <button
             onClick={() => updateSettings.mutate()}
             disabled={!hasChanges || updateSettings.isPending}
-            className="flex items-center gap-2 px-5 py-2.5 bg-[#236B63] text-white rounded-xl text-sm font-semibold disabled:opacity-40 hover:bg-[#194E49] transition-colors"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-40 transition-colors"
+            style={{ background: '#C8FF4D', color: '#0A1A00' }}
           >
             {updateSettings.isPending ? (
               <RefreshCw size={15} className="animate-spin" />
@@ -82,51 +83,58 @@ export default function SettingsPage() {
         {isLoading ? (
           <div className="space-y-6">
             {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="bg-white rounded-2xl border border-[#E8EAE6] p-6">
-                <div className="skeleton h-5 w-32 rounded mb-4" />
+              <div key={i} className="rounded-2xl p-6" style={{ background: '#141418', border: '1px solid #2E2E3A' }}>
+                <div className="h-5 w-32 rounded mb-4 animate-pulse" style={{ background: '#1C1C22' }} />
                 <div className="space-y-3">
                   {Array.from({ length: 3 }).map((_, j) => (
-                    <div key={j} className="skeleton h-10 rounded-xl" />
+                    <div key={j} className="h-10 rounded-xl animate-pulse" style={{ background: '#1C1C22' }} />
                   ))}
                 </div>
               </div>
             ))}
           </div>
         ) : Object.keys(rawGroups).length === 0 ? (
-          <div className="bg-white rounded-2xl border border-[#E8EAE6] p-12 text-center">
-            <p className="text-[#A1AAA5]">No settings configured yet.</p>
+          <div className="rounded-2xl p-12 text-center" style={{ background: '#141418', border: '1px solid #2E2E3A' }}>
+            <p style={{ color: '#52525E' }}>No settings configured yet.</p>
           </div>
         ) : (
           <div className="space-y-6">
             {Object.entries(rawGroups).map(([group, settings]) => (
-              <div key={group} className="bg-white rounded-2xl border border-[#E8EAE6]">
-                <div className="px-6 py-4 border-b border-[#E8EAE6]">
-                  <h2 className="font-manrope font-semibold text-[#24332F]">{groupLabel(group)}</h2>
+              <div key={group} className="rounded-2xl" style={{ background: '#141418', border: '1px solid #2E2E3A' }}>
+                <div className="px-6 py-4" style={{ borderBottom: '1px solid #2E2E3A' }}>
+                  <h2 className="font-manrope font-semibold" style={{ color: '#F2F0EB' }}>{groupLabel(group)}</h2>
                 </div>
                 <div className="p-6 space-y-4">
                   {settings.map((s) => (
                     <div key={s.key} className="grid grid-cols-[1fr_auto] gap-4 items-start">
                       <div>
-                        <label className="text-sm font-medium text-[#24332F] block mb-0.5">
+                        <label className="text-sm font-medium block mb-0.5" style={{ color: '#F2F0EB' }}>
                           {s.label || s.key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
                         </label>
                         {s.description && (
-                          <p className="text-xs text-[#A1AAA5]">{s.description}</p>
+                          <p className="text-xs" style={{ color: '#52525E' }}>{s.description}</p>
                         )}
                       </div>
                       {s.type === 'boolean' ? (
                         <button
                           onClick={() => setLocal(prev => ({ ...prev, [s.key]: prev[s.key] === '1' ? '0' : '1' }))}
-                          className={`relative w-11 h-6 rounded-full transition-colors mt-0.5 ${local[s.key] === '1' ? 'bg-[#236B63]' : 'bg-[#E8EAE6]'}`}
+                          className="relative w-11 h-6 rounded-full transition-colors mt-0.5"
+                          style={{ background: local[s.key] === '1' ? '#C8FF4D' : '#2E2E3A' }}
                         >
-                          <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all ${local[s.key] === '1' ? 'left-6' : 'left-1'}`} />
+                          <span className="absolute top-1 w-4 h-4 rounded-full shadow transition-all"
+                            style={{
+                              background: local[s.key] === '1' ? '#0A1A00' : '#52525E',
+                              left: local[s.key] === '1' ? '1.5rem' : '0.25rem',
+                            }}
+                          />
                         </button>
                       ) : (
                         <input
                           type={s.type === 'number' ? 'number' : 'text'}
                           value={local[s.key] ?? ''}
                           onChange={e => setLocal(prev => ({ ...prev, [s.key]: e.target.value }))}
-                          className="w-48 border border-[#E8EAE6] rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#236B63] text-right"
+                          className="w-48 rounded-xl px-3 py-2 text-sm text-right"
+                          style={{ background: '#1C1C22', border: '1px solid #2E2E3A', color: '#F2F0EB', outline: 'none' }}
                         />
                       )}
                     </div>

@@ -52,11 +52,11 @@ const KIND_ICON: Record<AlertKind, React.ElementType> = {
 }
 
 const KIND_COLOR: Record<AlertKind, [string, string]> = {
-  message:      ['#1A4A6B', '#2563EB'],
-  vibe:         ['#4A1A3A', '#9D3A6A'],
-  connect:      ['#133D38', '#236B63'],
-  group:        ['#133D38', '#236B63'],
-  notification: ['#2D3340', '#4A5568'],
+  message:      ['#0F1E3D', '#1E3A8A'],
+  vibe:         ['#2D0A17', '#FF5C7A'],
+  connect:      ['#141A07', '#7FB800'],
+  group:        ['#0E1A07', '#C8FF4D'],
+  notification: ['#1C1C22', '#252530'],
 }
 
 // ── component ─────────────────────────────────────────────────────────────────

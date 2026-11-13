@@ -15,19 +15,20 @@ export function GenderPicker({ value, onChange }: { value: string; onChange: (v:
 
   return (
     <div className="relative">
-      <label className="block text-sm font-semibold text-[#24332F] font-manrope mb-1.5">Gender</label>
+      <label className="block text-sm font-semibold text-[#8B8B9A] font-manrope mb-1.5">Gender</label>
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
-        className={`w-full flex items-center justify-between px-4 py-3 border-[1.5px] rounded-2xl bg-white text-left transition-colors ${
-          open ? 'border-[#236B63]' : 'border-[#E8EAE6]'
+        className={`w-full flex items-center justify-between px-4 py-3 border-[1.5px] rounded-2xl text-left transition-colors ${
+          open ? 'border-[#C8FF4D]' : 'border-[#2E2E3A]'
         }`}
+        style={{ background: '#1C1C22' }}
       >
-        <span className={`text-sm ${selected ? 'text-[#24332F]' : 'text-[#A1AAA5]'}`}>
+        <span className={`text-sm ${selected ? 'text-[#F2F0EB]' : 'text-[#52525E]'}`}>
           {selected?.label ?? 'Select your gender'}
         </span>
         <motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2 }}>
-          <ChevronDown size={16} className="text-[#A1AAA5]" />
+          <ChevronDown size={16} className="text-[#52525E]" />
         </motion.div>
       </button>
 
@@ -38,17 +39,19 @@ export function GenderPicker({ value, onChange }: { value: string; onChange: (v:
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -6, scale: 0.98 }}
             transition={{ duration: 0.15 }}
-            className="absolute top-full left-0 right-0 mt-1.5 bg-white border border-[#E8EAE6] rounded-2xl shadow-elevated z-50 overflow-hidden"
+            className="absolute top-full left-0 right-0 mt-1.5 rounded-2xl z-50 overflow-hidden"
+            style={{ background: '#141418', border: '1px solid #2E2E3A', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}
           >
             {GENDERS.map(g => (
               <button
                 key={g.value}
                 type="button"
                 onClick={() => { onChange(g.value); setOpen(false) }}
-                className="w-full flex items-center justify-between px-4 py-3.5 text-sm text-left hover:bg-[#FAF9F6] transition-colors border-b border-[#F4F1EA] last:border-0"
+                className="w-full flex items-center justify-between px-4 py-3.5 text-sm text-left transition-colors"
+                style={{ borderBottom: '1px solid #2E2E3A' }}
               >
-                <span className={value === g.value ? 'font-semibold text-[#236B63]' : 'text-[#24332F]'}>{g.label}</span>
-                {value === g.value && <Check size={15} className="text-[#236B63]" />}
+                <span className={value === g.value ? 'font-semibold' : ''} style={{ color: value === g.value ? '#C8FF4D' : '#F2F0EB' }}>{g.label}</span>
+                {value === g.value && <Check size={15} style={{ color: '#C8FF4D' }} />}
               </button>
             ))}
           </motion.div>
@@ -164,34 +167,35 @@ export function DobPicker({
 
   return (
     <div>
-      <label className="block text-sm font-semibold text-[#24332F] font-manrope mb-1.5">
-        Date of Birth <span className="text-[#A1AAA5] font-normal text-xs">(18+ only)</span>
+      <label className="block text-sm font-semibold text-[#8B8B9A] font-manrope mb-1.5">
+        Date of Birth <span className="text-[#52525E] font-normal text-xs">(18+ only)</span>
       </label>
 
       {/* Trigger */}
       <button
         type="button"
         onClick={() => { setOpen(true); setMode('cal') }}
-        className={`w-full flex items-center justify-between px-4 py-3 border-[1.5px] rounded-2xl bg-white text-left transition-colors ${
-          open ? 'border-[#236B63]' : error ? 'border-[#D76D6D]' : 'border-[#E8EAE6]'
+        className={`w-full flex items-center justify-between px-4 py-3 border-[1.5px] rounded-2xl text-left transition-colors ${
+          open ? 'border-[#C8FF4D]' : error ? 'border-[#FF5C7A]' : 'border-[#2E2E3A]'
         }`}
+        style={{ background: '#1C1C22' }}
       >
-        <span className={`text-sm ${selected ? 'text-[#24332F]' : 'text-[#A1AAA5]'}`}>
+        <span className={`text-sm ${selected ? 'text-[#F2F0EB]' : 'text-[#52525E]'}`}>
           {selected ? formatDisplay(selected) : 'Select your date of birth'}
         </span>
-        <Calendar size={16} className="text-[#A1AAA5] shrink-0" />
+        <Calendar size={16} className="text-[#52525E] shrink-0" />
       </button>
 
       {/* Inline validation message */}
       {selected && !isValidAge && (
-        <p className="text-xs text-[#D76D6D] mt-1.5">You must be between 18 and 100 years old.</p>
+        <p className="text-xs text-[#FF5C7A] mt-1.5">You must be between 18 and 100 years old.</p>
       )}
       {selected && isValidAge && (
-        <p className="text-xs text-[#4D9274] mt-1.5 flex items-center gap-1">
+        <p className="text-xs text-[#C8FF4D] mt-1.5 flex items-center gap-1">
           <Check size={11} /> Age: {today.getFullYear() - selected.getFullYear()} years
         </p>
       )}
-      {error && <p className="text-xs text-[#D76D6D] mt-1.5">{error}</p>}
+      {error && <p className="text-xs text-[#FF5C7A] mt-1.5">{error}</p>}
 
       {/* Calendar bottom sheet */}
       <AnimatePresence>
@@ -205,37 +209,39 @@ export function DobPicker({
             <motion.div
               initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 30, stiffness: 340 }}
-              className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-white rounded-t-3xl z-50 px-5 pt-4 pb-8"
+              className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] rounded-t-3xl z-50 px-5 pt-4 pb-8"
+              style={{ background: '#141418', borderTop: '1px solid #2E2E3A' }}
             >
               {/* Handle */}
-              <div className="w-10 h-1 bg-[#E8EAE6] rounded-full mx-auto mb-4" />
+              <div className="w-10 h-1 bg-[#2E2E3A] rounded-full mx-auto mb-4" />
 
               {mode === 'cal' ? (
                 <>
                   {/* Month navigation */}
                   <div className="flex items-center justify-between mb-4">
-                    <button onClick={prevMonth} className="w-9 h-9 rounded-xl bg-[#F4F9F7] flex items-center justify-center active:bg-[#E8F0EA]">
-                      <ChevronLeft size={18} className="text-[#236B63]" />
+                    <button onClick={prevMonth} className="w-9 h-9 rounded-xl flex items-center justify-center transition-colors" style={{ background: '#1C1C22' }}>
+                      <ChevronLeft size={18} style={{ color: '#C8FF4D' }} />
                     </button>
                     <button
                       onClick={() => setMode('year')}
-                      className="font-manrope font-bold text-[#24332F] text-base px-3 py-1 rounded-xl hover:bg-[#F4F9F7] active:bg-[#E8F0EA] transition-colors"
+                      className="font-manrope font-bold text-[#F2F0EB] text-base px-3 py-1 rounded-xl transition-colors hover:bg-[#1C1C22]"
                     >
                       {MONTH_NAMES[viewMonth]} {viewYear}
                     </button>
                     <button
                       onClick={nextMonth}
                       disabled={new Date(viewYear, viewMonth + 1, 1) > maxDate}
-                      className="w-9 h-9 rounded-xl bg-[#F4F9F7] flex items-center justify-center active:bg-[#E8F0EA] disabled:opacity-30"
+                      className="w-9 h-9 rounded-xl flex items-center justify-center transition-colors disabled:opacity-30"
+                      style={{ background: '#1C1C22' }}
                     >
-                      <ChevronRight size={18} className="text-[#236B63]" />
+                      <ChevronRight size={18} style={{ color: '#C8FF4D' }} />
                     </button>
                   </div>
 
                   {/* Day headers */}
                   <div className="grid grid-cols-7 mb-1">
                     {DAY_LABELS.map(d => (
-                      <div key={d} className="text-center text-[11px] font-semibold text-[#A1AAA5] py-1">{d}</div>
+                      <div key={d} className="text-center text-[11px] font-semibold text-[#52525E] py-1">{d}</div>
                     ))}
                   </div>
 
@@ -251,13 +257,12 @@ export function DobPicker({
                           type="button"
                           disabled={disabled}
                           onClick={() => selectDay(day)}
-                          className={`aspect-square flex items-center justify-center rounded-xl text-sm font-medium transition-all mx-0.5 ${
-                            isSelected
-                              ? 'bg-[#236B63] text-white font-bold shadow-sm'
-                              : disabled
-                              ? 'text-[#D0D5D2] cursor-not-allowed'
-                              : 'text-[#24332F] hover:bg-[#E8F0EA] active:bg-[#A8C5B5]'
-                          }`}
+                          className="aspect-square flex items-center justify-center rounded-xl text-sm font-medium transition-all mx-0.5"
+                          style={isSelected
+                            ? { background: '#C8FF4D', color: '#0A1A00', fontWeight: 700 }
+                            : disabled
+                            ? { color: '#2E2E3A', cursor: 'not-allowed' }
+                            : { color: '#F2F0EB' }}
                         >
                           {day}
                         </button>
@@ -265,16 +270,16 @@ export function DobPicker({
                     })}
                   </div>
 
-                  <p className="text-center text-xs text-[#A1AAA5] mt-4">
-                    Tap <span className="font-semibold text-[#236B63]">{MONTH_NAMES[viewMonth]} {viewYear}</span> to change year quickly
+                  <p className="text-center text-xs text-[#52525E] mt-4">
+                    Tap <span className="font-semibold" style={{ color: '#C8FF4D' }}>{MONTH_NAMES[viewMonth]} {viewYear}</span> to change year quickly
                   </p>
                 </>
               ) : (
                 <>
                   {/* Year picker */}
                   <div className="flex items-center justify-between mb-3">
-                    <span className="font-manrope font-bold text-[#24332F] text-base">Select Year</span>
-                    <button onClick={() => setMode('cal')} className="text-sm text-[#236B63] font-semibold px-3 py-1 rounded-xl bg-[#E8F0EA]">
+                    <span className="font-manrope font-bold text-[#F2F0EB] text-base">Select Year</span>
+                    <button onClick={() => setMode('cal')} className="text-sm font-semibold px-3 py-1 rounded-xl" style={{ color: '#C8FF4D', background: 'rgba(200,255,77,0.1)' }}>
                       Back
                     </button>
                   </div>
@@ -285,11 +290,10 @@ export function DobPicker({
                           key={y}
                           data-selected={y === viewYear ? 'true' : undefined}
                           onClick={() => selectYear(y)}
-                          className={`py-2.5 rounded-2xl text-sm font-semibold transition-all ${
-                            y === viewYear
-                              ? 'bg-[#236B63] text-white shadow-sm'
-                              : 'bg-[#F4F9F7] text-[#24332F] hover:bg-[#E8F0EA]'
-                          }`}
+                          className="py-2.5 rounded-2xl text-sm font-semibold transition-all"
+                          style={y === viewYear
+                            ? { background: '#C8FF4D', color: '#0A1A00' }
+                            : { background: '#1C1C22', color: '#F2F0EB' }}
                         >
                           {y}
                         </button>

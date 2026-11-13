@@ -33,7 +33,7 @@ export default function SavedProfilesPage() {
         ) : saved.length === 0 ? (
           <div className="text-center py-16">
             <div className="text-5xl mb-3">🔖</div>
-            <h3 className="font-manrope font-semibold text-[#24332F] mb-1">No saved profiles</h3>
+            <h3 className="font-manrope font-semibold text-[#F2F0EB] mb-1">No saved profiles</h3>
             <p className="text-sm text-[#A1AAA5]">Save profiles you like to find them easily later</p>
           </div>
         ) : saved.map((item: { id: string; user: PublicProfile }, i: number) => (

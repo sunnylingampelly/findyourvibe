@@ -163,14 +163,14 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="app-container min-h-dvh bg-[#FAF9F6] flex flex-col">
+    <div className="app-container min-h-dvh bg-[#0D0D12] flex flex-col">
       {/* Progress */}
       <div className="px-6 pt-safe pt-6 pb-4">
         <div className="mb-3">
-          <div className="h-1.5 bg-[#E8EAE6] rounded-full overflow-hidden">
+          <div className="h-1.5 bg-[#2E2E3A] rounded-full overflow-hidden">
             <motion.div
               className="h-full rounded-full"
-              style={{ background: 'linear-gradient(90deg, #194E49 0%, #4D9274 100%)' }}
+              style={{ background: '#C8FF4D' }}
               initial={false}
               animate={{ width: `${(step / TOTAL_STEPS) * 100}%` }}
               transition={{ duration: 0.35, ease: 'easeOut' }}
@@ -178,9 +178,9 @@ export default function OnboardingPage() {
           </div>
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-xs text-[#A1AAA5] font-medium">Step {step} of {TOTAL_STEPS}</span>
+          <span className="text-xs text-[#52525E] font-medium">Step {step} of {TOTAL_STEPS}</span>
           {step > 1 && (
-            <button onClick={() => setStep(s => s - 1)} className="text-xs text-[#77817C] flex items-center gap-1">
+            <button onClick={() => setStep(s => s - 1)} className="text-xs text-[#8B8B9A] flex items-center gap-1">
               <ArrowLeft size={12} /> Back
             </button>
           )}
@@ -201,8 +201,8 @@ export default function OnboardingPage() {
           {step === 1 && (
             <div className="space-y-5">
               <div>
-                <h2 className="font-manrope font-bold text-2xl text-[#24332F] mb-1">Basic Info</h2>
-                <p className="text-[#77817C] text-sm">Let people know who you are</p>
+                <h2 className="font-manrope font-bold text-2xl text-[#F2F0EB] mb-1">Basic Info</h2>
+                <p className="text-[#8B8B9A] text-sm">Let people know who you are</p>
               </div>
               <Input label="Display Name" placeholder="How you want to be known" value={form.display_name} onChange={e => update('display_name', e.target.value)} />
               <DobPicker value={form.date_of_birth} onChange={v => update('date_of_birth', v)} />
@@ -214,13 +214,13 @@ export default function OnboardingPage() {
           {step === 2 && (
             <div className="space-y-6">
               <div>
-                <h2 className="font-manrope font-bold text-2xl text-[#24332F] mb-1">Your Location</h2>
-                <p className="text-[#77817C] text-sm">Help companions and users find you. This will appear on your profile.</p>
+                <h2 className="font-manrope font-bold text-2xl text-[#F2F0EB] mb-1">Your Location</h2>
+                <p className="text-[#8B8B9A] text-sm">Help companions and users find you. This will appear on your profile.</p>
               </div>
 
-              <div className="bg-[#E8F0EA] rounded-2xl p-4 flex items-start gap-3">
-                <MapPin size={18} className="text-[#236B63] mt-0.5 shrink-0" />
-                <p className="text-sm text-[#24332F] leading-relaxed">
+              <div className="rounded-2xl p-4 flex items-start gap-3" style={{ background: 'rgba(200,255,77,0.08)', border: '1px solid rgba(200,255,77,0.2)' }}>
+                <MapPin size={18} style={{ color: '#C8FF4D' }} className="mt-0.5 shrink-0" />
+                <p className="text-sm text-[#F2F0EB] leading-relaxed">
                   Your city or area is shown publicly so people know where you're based. It helps match you with nearby companions and experiences.
                 </p>
               </div>
@@ -235,8 +235,8 @@ export default function OnboardingPage() {
               />
 
               {form.location && (
-                <div className="flex items-center gap-2 text-sm text-[#236B63] font-medium">
-                  <Check size={16} className="text-[#236B63]" />
+                <div className="flex items-center gap-2 text-sm font-medium" style={{ color: '#C8FF4D' }}>
+                  <Check size={16} style={{ color: '#C8FF4D' }} />
                   <span>{form.location}</span>
                 </div>
               )}
@@ -247,20 +247,20 @@ export default function OnboardingPage() {
           {step === 3 && (
             <div className="space-y-4">
               <div>
-                <h2 className="font-manrope font-bold text-2xl text-[#24332F] mb-1">Your Photos</h2>
-                <p className="text-[#77817C] text-sm">Upload 2–5 photos. The first becomes your main photo.</p>
+                <h2 className="font-manrope font-bold text-2xl text-[#F2F0EB] mb-1">Your Photos</h2>
+                <p className="text-[#8B8B9A] text-sm">Upload 2–5 photos. The first becomes your main photo.</p>
               </div>
 
               {/* Photo grid */}
               <div className="grid grid-cols-3 gap-2">
                 {photos.map((photo, i) => (
-                  <div key={photo.id} className="relative aspect-square rounded-2xl overflow-hidden bg-[#E8F0EA]">
+                  <div key={photo.id} className="relative aspect-square rounded-2xl overflow-hidden bg-[#1C1C22]">
                     <img src={photo.url} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
                     {/* Primary badge */}
                     {photo.is_primary && (
-                      <div className="absolute top-1.5 left-1.5 bg-[#236B63] rounded-full px-2 py-0.5 flex items-center gap-1">
-                        <Star size={9} className="text-white fill-white" />
-                        <span className="text-[9px] text-white font-semibold">Main</span>
+                      <div className="absolute top-1.5 left-1.5 rounded-full px-2 py-0.5 flex items-center gap-1" style={{ background: '#C8FF4D' }}>
+                        <Star size={9} style={{ color: '#0A1A00', fill: '#0A1A00' }} />
+                        <span className="text-[9px] font-semibold" style={{ color: '#0A1A00' }}>Main</span>
                       </div>
                     )}
                     {/* Actions */}
@@ -282,14 +282,15 @@ export default function OnboardingPage() {
                   <button
                     onClick={() => fileInputRef.current?.click()}
                     disabled={uploadingPhoto}
-                    className="aspect-square rounded-2xl border-2 border-dashed border-[#A8C5B5] flex flex-col items-center justify-center gap-1.5 bg-[#F4F9F7] active:bg-[#E8F0EA] transition-colors"
+                    className="aspect-square rounded-2xl border-2 border-dashed flex flex-col items-center justify-center gap-1.5 transition-colors"
+                    style={{ borderColor: 'rgba(200,255,77,0.3)', background: 'rgba(200,255,77,0.05)' }}
                   >
                     {uploadingPhoto ? (
-                      <div className="w-5 h-5 border-2 border-[#236B63] border-t-transparent rounded-full animate-spin" />
+                      <div className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: '#C8FF4D', borderTopColor: 'transparent' }} />
                     ) : (
                       <>
-                        <Camera size={20} className="text-[#236B63]" />
-                        <span className="text-[10px] text-[#77817C] font-medium">Add photo</span>
+                        <Camera size={20} style={{ color: '#C8FF4D' }} />
+                        <span className="text-[10px] text-[#8B8B9A] font-medium">Add photo</span>
                       </>
                     )}
                   </button>
@@ -298,10 +299,10 @@ export default function OnboardingPage() {
 
               <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoAdd} />
 
-              <p className="text-xs text-[#A1AAA5]">
+              <p className="text-xs text-[#52525E]">
                 {photos.length}/5 photos · {Math.max(0, 2 - photos.length) > 0 ? `${2 - photos.length} more required` : 'Minimum met ✓'}
               </p>
-              <p className="text-xs text-[#A1AAA5]">Tap ★ on any photo to set it as your main photo.</p>
+              <p className="text-xs text-[#52525E]">Tap ★ on any photo to set it as your main photo.</p>
             </div>
           )}
 
@@ -309,16 +310,16 @@ export default function OnboardingPage() {
           {step === 4 && (
             <div className="space-y-5">
               <div>
-                <h2 className="font-manrope font-bold text-2xl text-[#24332F] mb-1">About You</h2>
-                <p className="text-[#77817C] text-sm">Write a short introduction to help others connect with you</p>
+                <h2 className="font-manrope font-bold text-2xl text-[#F2F0EB] mb-1">About You</h2>
+                <p className="text-[#8B8B9A] text-sm">Write a short introduction to help others connect with you</p>
               </div>
               <div>
-                <label className="text-sm font-medium text-[#24332F] font-manrope">Introduction</label>
-                <textarea value={form.introduction} onChange={e => update('introduction', e.target.value)} placeholder="Hi! I'm someone who loves exploring new places…" rows={3} className="mt-1.5 w-full border-[1.5px] border-[#E8EAE6] rounded-[12px] px-4 py-3 text-sm text-[#24332F] placeholder:text-[#A1AAA5] focus:outline-none focus:border-[#236B63] resize-none" />
+                <label className="text-sm font-medium text-[#8B8B9A] font-manrope">Introduction</label>
+                <textarea value={form.introduction} onChange={e => update('introduction', e.target.value)} placeholder="Hi! I'm someone who loves exploring new places…" rows={3} className="mt-1.5 w-full border-[1.5px] border-[#2E2E3A] rounded-[12px] px-4 py-3 text-sm text-[#F2F0EB] placeholder:text-[#52525E] focus:outline-none focus:border-[#C8FF4D] resize-none bg-[#1C1C22]" />
               </div>
               <div>
-                <label className="text-sm font-medium text-[#24332F] font-manrope">About Me</label>
-                <textarea value={form.bio} onChange={e => update('bio', e.target.value)} placeholder="Share more about your personality and hobbies…" rows={5} className="mt-1.5 w-full border-[1.5px] border-[#E8EAE6] rounded-[12px] px-4 py-3 text-sm text-[#24332F] placeholder:text-[#A1AAA5] focus:outline-none focus:border-[#236B63] resize-none" />
+                <label className="text-sm font-medium text-[#8B8B9A] font-manrope">About Me</label>
+                <textarea value={form.bio} onChange={e => update('bio', e.target.value)} placeholder="Share more about your personality and hobbies…" rows={5} className="mt-1.5 w-full border-[1.5px] border-[#2E2E3A] rounded-[12px] px-4 py-3 text-sm text-[#F2F0EB] placeholder:text-[#52525E] focus:outline-none focus:border-[#C8FF4D] resize-none bg-[#1C1C22]" />
               </div>
             </div>
           )}
@@ -327,18 +328,23 @@ export default function OnboardingPage() {
           {step === 5 && (
             <div className="space-y-4">
               <div>
-                <h2 className="font-manrope font-bold text-2xl text-[#24332F] mb-1">Your Interests</h2>
-                <p className="text-[#77817C] text-sm">Pick what you're passionate about</p>
+                <h2 className="font-manrope font-bold text-2xl text-[#F2F0EB] mb-1">Your Interests</h2>
+                <p className="text-[#8B8B9A] text-sm">Pick what you're passionate about</p>
               </div>
               <div className="flex flex-wrap gap-2">
-                {interests.map(interest => (
-                  <button key={interest.id} onClick={() => toggle('interest_ids', interest.id)} className={`px-4 py-2 rounded-2xl text-sm font-medium transition-all ${form.interest_ids.includes(interest.id) ? 'bg-[#236B63] text-white' : 'bg-white border border-[#E8EAE6] text-[#77817C]'}`}>
-                    {form.interest_ids.includes(interest.id) && <Check size={12} className="inline mr-1" />}
-                    {interest.name}
-                  </button>
-                ))}
+                {interests.map(interest => {
+                  const sel = form.interest_ids.includes(interest.id)
+                  return (
+                    <button key={interest.id} onClick={() => toggle('interest_ids', interest.id)}
+                      className="px-4 py-2 rounded-2xl text-sm font-medium transition-all border"
+                      style={sel ? { background: 'rgba(200,255,77,0.15)', borderColor: '#C8FF4D', color: '#C8FF4D' } : { background: '#1C1C22', borderColor: '#2E2E3A', color: '#8B8B9A' }}>
+                      {sel && <Check size={12} className="inline mr-1" />}
+                      {interest.name}
+                    </button>
+                  )
+                })}
               </div>
-              <p className="text-xs text-[#A1AAA5]">{form.interest_ids.length} selected</p>
+              <p className="text-xs text-[#52525E]">{form.interest_ids.length} selected</p>
             </div>
           )}
 
@@ -346,16 +352,21 @@ export default function OnboardingPage() {
           {step === 6 && (
             <div className="space-y-4">
               <div>
-                <h2 className="font-manrope font-bold text-2xl text-[#24332F] mb-1">Languages</h2>
-                <p className="text-[#77817C] text-sm">What languages do you speak?</p>
+                <h2 className="font-manrope font-bold text-2xl text-[#F2F0EB] mb-1">Languages</h2>
+                <p className="text-[#8B8B9A] text-sm">What languages do you speak?</p>
               </div>
               <div className="flex flex-wrap gap-2">
-                {languages.map(lang => (
-                  <button key={lang.id} onClick={() => toggle('language_ids', lang.id)} className={`px-4 py-2 rounded-2xl text-sm font-medium transition-all ${form.language_ids.includes(lang.id) ? 'bg-[#236B63] text-white' : 'bg-white border border-[#E8EAE6] text-[#77817C]'}`}>
-                    {form.language_ids.includes(lang.id) && <Check size={12} className="inline mr-1" />}
-                    {lang.name}
-                  </button>
-                ))}
+                {languages.map(lang => {
+                  const sel = form.language_ids.includes(lang.id)
+                  return (
+                    <button key={lang.id} onClick={() => toggle('language_ids', lang.id)}
+                      className="px-4 py-2 rounded-2xl text-sm font-medium transition-all border"
+                      style={sel ? { background: 'rgba(200,255,77,0.15)', borderColor: '#C8FF4D', color: '#C8FF4D' } : { background: '#1C1C22', borderColor: '#2E2E3A', color: '#8B8B9A' }}>
+                      {sel && <Check size={12} className="inline mr-1" />}
+                      {lang.name}
+                    </button>
+                  )
+                })}
               </div>
             </div>
           )}
@@ -364,18 +375,20 @@ export default function OnboardingPage() {
           {step === 7 && (
             <div className="space-y-4">
               <div>
-                <h2 className="font-manrope font-bold text-2xl text-[#24332F] mb-1">Experience Preferences</h2>
-                <p className="text-[#77817C] text-sm">What kind of experiences are you open to?</p>
+                <h2 className="font-manrope font-bold text-2xl text-[#F2F0EB] mb-1">Experience Preferences</h2>
+                <p className="text-[#8B8B9A] text-sm">What kind of experiences are you open to?</p>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 {services.map(service => {
                   const icon = ServiceIcons[service.slug] || '✨'
                   const selected = form.service_ids.includes(service.id)
                   return (
-                    <button key={service.id} onClick={() => toggle('service_ids', service.id)} className={`flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all text-center ${selected ? 'border-[#236B63] bg-[#E8F0EA]' : 'border-[#E8EAE6] bg-white'}`}>
+                    <button key={service.id} onClick={() => toggle('service_ids', service.id)}
+                      className="flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all text-center"
+                      style={selected ? { borderColor: '#C8FF4D', background: 'rgba(200,255,77,0.1)' } : { borderColor: '#2E2E3A', background: '#1C1C22' }}>
                       <span className="text-2xl">{icon}</span>
-                      <span className={`text-xs font-semibold leading-tight ${selected ? 'text-[#236B63]' : 'text-[#77817C]'}`}>{service.name}</span>
-                      {selected && <Check size={14} className="text-[#236B63]" />}
+                      <span className="text-xs font-semibold leading-tight" style={{ color: selected ? '#C8FF4D' : '#8B8B9A' }}>{service.name}</span>
+                      {selected && <Check size={14} style={{ color: '#C8FF4D' }} />}
                     </button>
                   )
                 })}
@@ -387,24 +400,24 @@ export default function OnboardingPage() {
           {step === 8 && (
             <div className="space-y-6">
               <div>
-                <h2 className="font-manrope font-bold text-2xl text-[#24332F] mb-1">Almost done!</h2>
-                <p className="text-[#77817C] text-sm">Review your profile before getting started</p>
+                <h2 className="font-manrope font-bold text-2xl text-[#F2F0EB] mb-1">Almost done!</h2>
+                <p className="text-[#8B8B9A] text-sm">Review your profile before getting started</p>
               </div>
-              <div className="bg-white rounded-3xl border border-[#E8EAE6] p-5 space-y-4">
+              <div className="rounded-3xl p-5 space-y-4" style={{ background: '#141418', border: '1px solid #2E2E3A' }}>
                 {photos.length > 0 ? (
                   <img src={photos.find(p => p.is_primary)?.url ?? photos[0].url} alt="Profile" className="w-20 h-20 rounded-full object-cover mx-auto" />
                 ) : (
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#A8C5B5] to-[#236B63] flex items-center justify-center mx-auto">
-                    <span className="font-manrope font-bold text-2xl text-white">{form.display_name ? form.display_name[0].toUpperCase() : '?'}</span>
+                  <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto" style={{ background: '#1C1C22', border: '2px solid #C8FF4D' }}>
+                    <span className="font-manrope font-bold text-2xl" style={{ color: '#C8FF4D' }}>{form.display_name ? form.display_name[0].toUpperCase() : '?'}</span>
                   </div>
                 )}
                 <div className="text-center">
-                  <h3 className="font-manrope font-bold text-xl text-[#24332F]">{form.display_name || 'Your Name'}</h3>
+                  <h3 className="font-manrope font-bold text-xl text-[#F2F0EB]">{form.display_name || 'Your Name'}</h3>
                 </div>
-                {form.bio && <p className="text-sm text-[#77817C] text-center">{form.bio}</p>}
+                {form.bio && <p className="text-sm text-[#8B8B9A] text-center">{form.bio}</p>}
                 {photos.length > 0 && (
                   <div>
-                    <p className="text-xs text-[#A1AAA5] mb-2">Photos ({photos.length})</p>
+                    <p className="text-xs text-[#52525E] mb-2">Photos ({photos.length})</p>
                     <div className="flex gap-1.5">
                       {photos.slice(0, 5).map(p => (
                         <img key={p.id} src={p.url} alt="" className="w-10 h-10 rounded-lg object-cover" />
@@ -414,11 +427,11 @@ export default function OnboardingPage() {
                 )}
                 {form.interest_ids.length > 0 && (
                   <div>
-                    <p className="text-xs text-[#A1AAA5] mb-2">Interests ({form.interest_ids.length})</p>
+                    <p className="text-xs text-[#52525E] mb-2">Interests ({form.interest_ids.length})</p>
                     <div className="flex flex-wrap gap-1.5">
                       {form.interest_ids.slice(0, 6).map(id => {
                         const interest = interests.find(i => i.id === id)
-                        return interest ? <span key={id} className="text-xs bg-[#E8F0EA] text-[#236B63] px-2.5 py-1 rounded-full">{interest.name}</span> : null
+                        return interest ? <span key={id} className="text-xs px-2.5 py-1 rounded-full" style={{ background: 'rgba(200,255,77,0.15)', color: '#C8FF4D' }}>{interest.name}</span> : null
                       })}
                     </div>
                   </div>

@@ -44,18 +44,19 @@ function VoicePlayer({ url }: { url: string }) {
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-[#E8EAE6] p-4 flex items-center gap-3">
+    <div className="rounded-2xl p-4 flex items-center gap-3" style={{ background: '#141418', border: '1px solid #2E2E3A' }}>
       <button
         onClick={toggle}
-        className="w-10 h-10 rounded-full bg-[#236B63] flex items-center justify-center shrink-0"
+        className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+        style={{ background: '#C8FF4D' }}
       >
-        {playing ? <Pause size={16} className="text-white" /> : <Play size={16} className="text-white ml-0.5" />}
+        {playing ? <Pause size={16} style={{ color: '#0A1A00' }} /> : <Play size={16} style={{ color: '#0A1A00', marginLeft: '2px' }} />}
       </button>
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-semibold text-[#24332F] font-manrope flex items-center gap-1.5">
-          <Mic size={11} className="text-[#236B63]" /> Voice Intro
+        <p className="text-xs font-semibold text-[#F2F0EB] font-manrope flex items-center gap-1.5">
+          <Mic size={11} style={{ color: '#C8FF4D' }} /> Voice Intro
         </p>
-        <p className="text-[10px] text-[#A1AAA5] mt-0.5">Tap to listen</p>
+        <p className="text-[10px] text-[#52525E] mt-0.5">Tap to listen</p>
       </div>
       <audio
         ref={audioRef}
@@ -241,7 +242,7 @@ export default function ProfileDetailPage() {
 
   if (isLoading || !profile) {
     return (
-      <div className="app-container min-h-dvh bg-[#FAF9F6]">
+      <div className="app-container min-h-dvh bg-[#0D0D12]">
         <div className="h-[55vh] skeleton" />
         <div className="p-5 space-y-3">
           <Skeleton className="h-7 w-48" />
@@ -260,13 +261,13 @@ export default function ProfileDetailPage() {
   const hasServices = !!(profile.services && profile.services.length > 0)
 
   return (
-    <div className="app-container min-h-dvh bg-[#FAF9F6] overflow-y-auto screen-scroll">
+    <div className="app-container min-h-dvh bg-[#0D0D12] overflow-y-auto screen-scroll">
       {/* Full-bleed hero */}
       <div className="relative" style={{ height: '62vh', minHeight: 320 }}>
         {profile.profile_photo_url ? (
           <img src={profile.profile_photo_url} alt={profile.display_name} className="w-full h-full object-cover" />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-[#A8C5B5] to-[#194E49] flex items-center justify-center">
+          <div className="w-full h-full bg-gradient-to-br from-[#1C1C22] to-[#252530] flex items-center justify-center">
             <span className="font-manrope font-extrabold text-7xl text-white">{getInitials(profile.display_name)}</span>
           </div>
         )}
@@ -286,7 +287,8 @@ export default function ProfileDetailPage() {
             <button
               onClick={() => saveMutation.mutate()}
               disabled={saveMutation.isPending}
-              className={`w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-md border transition-opacity disabled:opacity-60 ${isSaved ? 'bg-[#236B63] border-[#236B63] text-white' : 'bg-black/35 border-white/10 text-white'}`}
+              className={`w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-md border transition-opacity disabled:opacity-60 ${isSaved ? 'border-[#C8FF4D] text-[#0A1A00]' : 'bg-black/35 border-white/10 text-white'}`}
+              style={isSaved ? { background: '#C8FF4D' } : {}}
             >
               <Bookmark size={18} fill={isSaved ? 'white' : 'none'} />
             </button>
@@ -335,7 +337,7 @@ export default function ProfileDetailPage() {
                   {profile.display_name}{profile.age ? `, ${profile.age}` : ''}
                 </h1>
                 {profile.companion_verification_status === 'approved' && (
-                  <CheckCircle2 size={20} className="text-[#4D9274] fill-white shrink-0" />
+                  <CheckCircle2 size={20} className="shrink-0" style={{ color: '#8B7CFF', fill: 'white' }} />
                 )}
                 {profile.identity_verified && (
                   <span className="text-[9px] font-bold bg-white/20 backdrop-blur-sm text-white px-2 py-0.5 rounded-full border border-white/30 shrink-0">
@@ -386,21 +388,22 @@ export default function ProfileDetailPage() {
       </div>
 
       {/* Tabs */}
-      <div className="sticky top-0 z-30 bg-white border-b border-[#E8EAE6]">
+      <div className="sticky top-0 z-30 border-b" style={{ background: '#0D0D12', borderColor: '#2E2E3A' }}>
         <div className="flex">
           {(['about', 'services', 'reviews'] as Tab[]).map(t => (
             <button
               key={t}
               onClick={() => setTab(t)}
               className={`flex-1 py-3.5 text-sm font-semibold font-manrope capitalize relative transition-colors ${
-                tab === t ? 'text-[#236B63]' : 'text-[#A1AAA5]'
+                tab === t ? 'text-[#C8FF4D]' : 'text-[#52525E]'
               }`}
             >
               {t}
               {tab === t && (
                 <motion.div
                   layoutId="tab-indicator"
-                  className="absolute bottom-0 left-1/4 right-1/4 h-0.5 bg-[#236B63] rounded-full"
+                  className="absolute bottom-0 left-1/4 right-1/4 h-0.5 rounded-full"
+                  style={{ background: '#C8FF4D' }}
                 />
               )}
             </button>
@@ -435,37 +438,37 @@ export default function ProfileDetailPage() {
                 { q: profile.prompt_2_q, a: profile.prompt_2_a },
                 { q: profile.prompt_3_q, a: profile.prompt_3_a },
               ] as Array<{ q?: string; a?: string }>).filter(p => p.q && p.a).map((p, i) => (
-                <div key={i} className="bg-white rounded-2xl border border-[#E8EAE6] p-4">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-[#A1AAA5] mb-1">{p.q}</p>
-                  <p className="text-[#24332F] leading-relaxed text-[0.925rem]">{p.a}</p>
+                <div key={i} className="rounded-2xl p-4" style={{ background: '#141418', border: '1px solid #2E2E3A' }}>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-[#52525E] mb-1">{p.q}</p>
+                  <p className="text-[#F2F0EB] leading-relaxed text-[0.925rem]">{p.a}</p>
                 </div>
               ))}
 
               {profile.introduction && (
-                <div className="bg-white rounded-2xl p-4 border border-[#E8EAE6]">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-[#A1AAA5] mb-2">Introduction</p>
-                  <p className="text-[#24332F] leading-relaxed text-[0.925rem]">{profile.introduction}</p>
+                <div className="rounded-2xl p-4" style={{ background: '#141418', border: '1px solid #2E2E3A' }}>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-[#52525E] mb-2">Introduction</p>
+                  <p className="text-[#F2F0EB] leading-relaxed text-[0.925rem]">{profile.introduction}</p>
                 </div>
               )}
 
               {profile.bio && (
-                <div className="bg-white rounded-2xl p-4 border border-[#E8EAE6]">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-[#A1AAA5] mb-2">About</p>
-                  <p className="text-[#24332F] leading-relaxed text-[0.925rem]">{profile.bio}</p>
+                <div className="rounded-2xl p-4" style={{ background: '#141418', border: '1px solid #2E2E3A' }}>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-[#52525E] mb-2">About</p>
+                  <p className="text-[#F2F0EB] leading-relaxed text-[0.925rem]">{profile.bio}</p>
                 </div>
               )}
 
               {/* Availability banner */}
               {availInfo?.today_slot && (
-                <div className={`rounded-2xl p-4 flex items-center gap-3 ${availInfo.is_available_now ? 'bg-[#E8F8F0] border border-[#A3DFBF]' : 'bg-[#F4F9F7] border border-[#C8DDD2]'}`}>
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${availInfo.is_available_now ? 'bg-[#4ADE80]/20' : 'bg-[#E8F0EA]'}`}>
-                    <CalendarDays size={18} className={availInfo.is_available_now ? 'text-[#16A34A]' : 'text-[#236B63]'} />
+                <div className="rounded-2xl p-4 flex items-center gap-3" style={{ background: availInfo.is_available_now ? 'rgba(74,222,128,0.08)' : '#141418', border: `1px solid ${availInfo.is_available_now ? 'rgba(74,222,128,0.3)' : '#2E2E3A'}` }}>
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: availInfo.is_available_now ? 'rgba(74,222,128,0.15)' : '#1C1C22' }}>
+                    <CalendarDays size={18} style={{ color: availInfo.is_available_now ? '#4ADE80' : '#C8FF4D' }} />
                   </div>
                   <div>
-                    <p className={`text-sm font-semibold font-manrope ${availInfo.is_available_now ? 'text-[#16A34A]' : 'text-[#24332F]'}`}>
+                    <p className="text-sm font-semibold font-manrope" style={{ color: availInfo.is_available_now ? '#4ADE80' : '#F2F0EB' }}>
                       {availInfo.is_available_now ? 'Available now' : 'Available today'}
                     </p>
-                    <p className="text-xs text-[#77817C]">
+                    <p className="text-xs text-[#8B8B9A]">
                       {availInfo.today_slot.start_time.slice(0, 5)} – {availInfo.today_slot.end_time.slice(0, 5)}
                     </p>
                   </div>
@@ -480,10 +483,10 @@ export default function ProfileDetailPage() {
 
               {profile.specialty_tags && profile.specialty_tags.length > 0 && (
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-[#A1AAA5] mb-3">What I'm great at</p>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-[#52525E] mb-3">What I'm great at</p>
                   <div className="flex flex-wrap gap-2">
                     {profile.specialty_tags.map(tag => (
-                      <span key={tag} className="px-3.5 py-1.5 bg-[#1A2822] text-white rounded-full text-xs font-semibold">
+                      <span key={tag} className="px-3.5 py-1.5 rounded-full text-xs font-semibold" style={{ background: '#1C1C22', color: '#F2F0EB', border: '1px solid #2E2E3A' }}>
                         {tag}
                       </span>
                     ))}
@@ -493,10 +496,10 @@ export default function ProfileDetailPage() {
 
               {profile.interests && profile.interests.length > 0 && (
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-[#A1AAA5] mb-3">Interests</p>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-[#52525E] mb-3">Interests</p>
                   <div className="flex flex-wrap gap-2">
                     {profile.interests.map(i => (
-                      <span key={i.id} className="px-3.5 py-1.5 bg-[#E8F0EA] text-[#236B63] rounded-full text-sm font-medium border border-[#C8DDD2]">
+                      <span key={i.id} className="px-3.5 py-1.5 rounded-full text-sm font-medium" style={{ background: 'rgba(200,255,77,0.1)', color: '#C8FF4D', border: '1px solid rgba(200,255,77,0.2)' }}>
                         {i.name}
                       </span>
                     ))}
@@ -506,12 +509,12 @@ export default function ProfileDetailPage() {
 
               {profile.languages && profile.languages.length > 0 && (
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-[#A1AAA5] mb-3 flex items-center gap-1.5">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-[#52525E] mb-3 flex items-center gap-1.5">
                     <Languages size={11} /> Languages
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {profile.languages.map(l => (
-                      <span key={l.id} className="px-3.5 py-1.5 bg-[#F4F1EA] text-[#77817C] rounded-full text-sm border border-[#E8E5DC]">
+                      <span key={l.id} className="px-3.5 py-1.5 rounded-full text-sm" style={{ background: '#1C1C22', color: '#8B8B9A', border: '1px solid #2E2E3A' }}>
                         {l.name}
                       </span>
                     ))}
@@ -522,10 +525,10 @@ export default function ProfileDetailPage() {
               {/* City location map */}
               {profile.city && (
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-[#A1AAA5] mb-3 flex items-center gap-1.5">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-[#52525E] mb-3 flex items-center gap-1.5">
                     <MapPin size={11} /> Location
                   </p>
-                  <div className="rounded-2xl overflow-hidden border border-[#E8EAE6] relative">
+                  <div className="rounded-2xl overflow-hidden relative" style={{ border: '1px solid #2E2E3A' }}>
                     <img
                       src={staticMapUrl(profile.city.name, profile.country?.name)}
                       alt={`Map of ${profile.city.name}`}
@@ -548,29 +551,29 @@ export default function ProfileDetailPage() {
               {/* Experience packages */}
               {packages.length > 0 && (
                 <div className="mb-2">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-[#A1AAA5] mb-3 flex items-center gap-1.5">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-[#52525E] mb-3 flex items-center gap-1.5">
                     ✨ Experience Packages
                   </p>
                   <div className="space-y-3">
                     {packages.map(pkg => (
-                      <div key={pkg.id} className="bg-gradient-to-br from-[#E8F0EA] to-[#F4F9F7] rounded-2xl p-4 border border-[#C8DDD2]">
+                      <div key={pkg.id} className="rounded-2xl p-4" style={{ background: 'linear-gradient(135deg, #1C1C22 0%, #252530 100%)', border: '1px solid #2E2E3A' }}>
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex-1 min-w-0">
-                            <p className="font-manrope font-semibold text-[#24332F] text-sm">{pkg.title}</p>
+                            <p className="font-manrope font-semibold text-[#F2F0EB] text-sm">{pkg.title}</p>
                             {pkg.description && (
-                              <p className="text-[#77817C] text-xs mt-0.5 leading-relaxed">{pkg.description}</p>
+                              <p className="text-[#8B8B9A] text-xs mt-0.5 leading-relaxed">{pkg.description}</p>
                             )}
                             <div className="flex flex-wrap gap-2 mt-2">
-                              <span className="text-[#236B63] text-xs font-bold">
+                              <span className="text-[#C8FF4D] text-xs font-bold">
                                 {pkg.currency === 'INR' ? '₹' : pkg.currency}{Number(pkg.price).toLocaleString('en-IN')}
                               </span>
                               {pkg.duration_hours && (
-                                <span className="text-[#77817C] text-xs flex items-center gap-0.5">
+                                <span className="text-[#8B8B9A] text-xs flex items-center gap-0.5">
                                   <Clock size={10} /> {pkg.duration_hours}h
                                 </span>
                               )}
                               {pkg.location_type && (
-                                <span className="text-[#77817C] text-xs">{pkg.location_type}</span>
+                                <span className="text-[#8B8B9A] text-xs">{pkg.location_type}</span>
                               )}
                             </div>
                           </div>
@@ -583,7 +586,8 @@ export default function ProfileDetailPage() {
                               setBookingService(profile.services?.[0] ?? null)
                               setShowBook(true)
                             }}
-                            className="mt-3 w-full py-2 rounded-xl bg-[#236B63] text-white text-sm font-semibold flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
+                            className="mt-3 w-full py-2 rounded-xl text-sm font-semibold flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
+                            style={{ background: '#C8FF4D', color: '#0A1A00' }}
                           >
                             <CalendarDays size={15} /> Book this package
                           </button>
@@ -598,27 +602,27 @@ export default function ProfileDetailPage() {
                 <p className="text-[#A1AAA5] text-sm text-center py-8">No services listed yet.</p>
               ) : (
                 <>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-[#A1AAA5] mb-4 flex items-center gap-1.5">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-[#52525E] mb-4 flex items-center gap-1.5">
                     <Clock size={11} /> Available For
                   </p>
                   {profile.services!.map(s => (
-                    <div key={s.id} className="bg-white rounded-2xl p-4 border border-[#E8EAE6]">
+                    <div key={s.id} className="rounded-2xl p-4" style={{ background: '#141418', border: '1px solid #2E2E3A' }}>
                       <div className="flex items-center gap-4">
-                        <div className="w-11 h-11 bg-[#E8F0EA] rounded-xl flex items-center justify-center text-xl shrink-0">
+                        <div className="w-11 h-11 rounded-xl flex items-center justify-center text-xl shrink-0" style={{ background: 'rgba(200,255,77,0.1)' }}>
                           {SERVICE_ICONS[s.slug] || '✨'}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-manrope font-semibold text-[#24332F] text-sm">{s.name}</p>
+                          <p className="font-manrope font-semibold text-[#F2F0EB] text-sm">{s.name}</p>
                           {s.price_per_session != null && (
-                            <p className="text-[#236B63] text-xs font-semibold mt-0.5 flex items-center gap-0.5">
+                            <p className="text-xs font-semibold mt-0.5 flex items-center gap-0.5" style={{ color: '#C8FF4D' }}>
                               <IndianRupee size={11} />{Number(s.price_per_session).toLocaleString('en-IN')}
-                              <span className="text-[#A1AAA5] font-normal ml-0.5">
+                              <span className="text-[#52525E] font-normal ml-0.5">
                                 {s.price_unit === 'per_hour' ? '/hr' : s.price_unit === 'negotiable' ? '(negotiable)' : '/session'}
                               </span>
                             </p>
                           )}
                           {s.description && (
-                            <p className="text-[#A1AAA5] text-xs mt-0.5 leading-relaxed">{s.description}</p>
+                            <p className="text-[#52525E] text-xs mt-0.5 leading-relaxed">{s.description}</p>
                           )}
                         </div>
                       </div>
@@ -626,14 +630,15 @@ export default function ProfileDetailPage() {
                         myConnection ? (
                           <button
                             onClick={() => { setBookingService(s); setSelectedPackage(null); setShowBook(true) }}
-                            className="mt-3 w-full py-2 rounded-xl bg-[#E8F0EA] text-[#236B63] text-sm font-semibold flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
+                            className="mt-3 w-full py-2 rounded-xl text-sm font-semibold flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
+                            style={{ background: 'rgba(200,255,77,0.12)', color: '#C8FF4D', border: '1px solid rgba(200,255,77,0.2)' }}
                           >
                             <CalendarDays size={15} /> Book this service
                           </button>
                         ) : (
-                          <div className="mt-3 w-full py-2 rounded-xl bg-[#F4F1EA] border border-[#E8EAE6] flex items-center justify-center gap-1.5">
-                            <Lock size={13} className="text-[#A1AAA5]" />
-                            <span className="text-[#A1AAA5] text-xs font-semibold">Connect first to book</span>
+                          <div className="mt-3 w-full py-2 rounded-xl flex items-center justify-center gap-1.5" style={{ background: '#1C1C22', border: '1px solid #2E2E3A' }}>
+                            <Lock size={13} className="text-[#52525E]" />
+                            <span className="text-[#52525E] text-xs font-semibold">Connect first to book</span>
                           </div>
                         )
                       )}
@@ -647,14 +652,14 @@ export default function ProfileDetailPage() {
           {tab === 'reviews' && (
             <div className="space-y-4">
               {profile.avg_rating && profile.avg_rating > 0 ? (
-                <div className="bg-white rounded-2xl p-5 border border-[#E8EAE6] text-center">
-                  <div className="font-manrope font-extrabold text-5xl text-[#24332F] mb-1">{Number(profile.avg_rating).toFixed(1)}</div>
+                <div className="rounded-2xl p-5 text-center" style={{ background: '#141418', border: '1px solid #2E2E3A' }}>
+                  <div className="font-manrope font-extrabold text-5xl text-[#F2F0EB] mb-1">{Number(profile.avg_rating).toFixed(1)}</div>
                   <div className="flex justify-center gap-1 mb-2">
                     {[1,2,3,4,5].map(n => (
-                      <Star key={n} size={16} className={Number(profile.avg_rating) >= n ? 'text-[#D9A45B] fill-[#D9A45B]' : 'text-[#E8EAE6]'} />
+                      <Star key={n} size={16} className={Number(profile.avg_rating) >= n ? 'text-[#D9A45B] fill-[#D9A45B]' : 'text-[#2E2E3A]'} />
                     ))}
                   </div>
-                  <p className="text-[#A1AAA5] text-sm">{profile.rating_count ?? 0} reviews</p>
+                  <p className="text-[#52525E] text-sm">{profile.rating_count ?? 0} reviews</p>
                 </div>
               ) : (
                 <div className="text-center py-8">

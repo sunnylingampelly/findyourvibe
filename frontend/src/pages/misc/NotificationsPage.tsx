@@ -22,11 +22,11 @@ function timeAgo(iso: string): string {
 
 function notifIcon(type: string) {
   switch (type) {
-    case 'connection_request': return { Icon: UserPlus, color: '#236B63', bg: '#E8F0EA' }
-    case 'connection_accepted': return { Icon: Users, color: '#4D9274', bg: '#DFF0E8' }
-    case 'profile_saved': return { Icon: Heart, color: '#D98D7A', bg: '#FDE8E0' }
-    case 'message': return { Icon: MessageCircle, color: '#4D9274', bg: '#DFF0E8' }
-    default: return { Icon: Bell, color: '#236B63', bg: '#E8F0EA' }
+    case 'connection_request': return { Icon: UserPlus, color: '#C8FF4D', bg: 'rgba(200,255,77,0.1)' }
+    case 'connection_accepted': return { Icon: Users, color: '#8B7CFF', bg: 'rgba(139,124,255,0.1)' }
+    case 'profile_saved': return { Icon: Heart, color: '#FF5C7A', bg: 'rgba(255,92,122,0.1)' }
+    case 'message': return { Icon: MessageCircle, color: '#C8FF4D', bg: 'rgba(200,255,77,0.1)' }
+    default: return { Icon: Bell, color: '#8B8B9A', bg: 'rgba(139,139,154,0.1)' }
   }
 }
 
@@ -79,17 +79,17 @@ export default function NotificationsPage() {
 
   return (
     <AppShell>
-      <div className="screen-scroll h-dvh overflow-y-auto bg-[#FAF9F6]">
+      <div className="screen-scroll h-dvh overflow-y-auto bg-[#0D0D12]">
         <PageHeader title="Notifications" back />
 
         <div className="px-4 pb-10 space-y-2">
           {isLoading ? (
             Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="flex items-center gap-3 p-4 rounded-2xl bg-white border border-[#E8EAE6] animate-pulse">
-                <div className="w-11 h-11 rounded-2xl bg-[#E8EAE6] shrink-0" />
+              <div key={i} className="flex items-center gap-3 p-4 rounded-2xl bg-[#141418] border border-[#2E2E3A] animate-pulse">
+                <div className="w-11 h-11 rounded-2xl bg-[#252530] shrink-0" />
                 <div className="flex-1 space-y-2">
-                  <div className="h-3 bg-[#E8EAE6] rounded w-3/4" />
-                  <div className="h-2.5 bg-[#E8EAE6] rounded w-1/3" />
+                  <div className="h-3 bg-[#252530] rounded w-3/4" />
+                  <div className="h-2.5 bg-[#252530] rounded w-1/3" />
                 </div>
               </div>
             ))
@@ -99,11 +99,11 @@ export default function NotificationsPage() {
               animate={{ opacity: 1, y: 0 }}
               className="flex flex-col items-center justify-center py-24 text-center"
             >
-              <div className="w-16 h-16 bg-[#E8F0EA] rounded-2xl flex items-center justify-center mb-4">
-                <Bell size={24} className="text-[#236B63]" />
+              <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background: 'rgba(200,255,77,0.1)' }}>
+                <Bell size={24} style={{ color: '#C8FF4D' }} />
               </div>
-              <h3 className="font-manrope font-bold text-[#24332F] mb-2">All caught up</h3>
-              <p className="text-[#A1AAA5] text-sm">No notifications yet</p>
+              <h3 className="font-manrope font-bold text-[#F2F0EB] mb-2">All caught up</h3>
+              <p className="text-[#52525E] text-sm">No notifications yet</p>
             </motion.div>
           ) : (
             <AnimatePresence initial={false}>
@@ -116,7 +116,7 @@ export default function NotificationsPage() {
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 12 }}
                     transition={{ delay: i * 0.03 }}
-                    className={`flex items-center gap-3 p-4 rounded-2xl border ${!n.read ? 'bg-white border-[#E8EAE6]' : 'bg-transparent border-transparent'}`}
+                    className={`flex items-center gap-3 p-4 rounded-2xl border ${!n.read ? 'bg-[#141418] border-[#2E2E3A]' : 'bg-transparent border-transparent'}`}
                   >
                     <div className="relative shrink-0">
                       {n.actor?.photo_url ? (
@@ -131,18 +131,18 @@ export default function NotificationsPage() {
                         </div>
                       )}
                       {n.actor?.photo_url && (
-                        <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center border-2 border-white" style={{ background: bg }}>
+                        <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center border-2 border-[#0D0D12]" style={{ background: bg }}>
                           <Icon size={10} style={{ color }} />
                         </div>
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className={`text-sm leading-snug ${!n.read ? 'font-semibold text-[#24332F]' : 'text-[#77817C]'}`}>
+                      <p className={`text-sm leading-snug ${!n.read ? 'font-semibold text-[#F2F0EB]' : 'text-[#8B8B9A]'}`}>
                         {n.message}
                       </p>
-                      <p className="text-xs text-[#A1AAA5] mt-0.5">{timeAgo(n.created_at)}</p>
+                      <p className="text-xs text-[#52525E] mt-0.5">{timeAgo(n.created_at)}</p>
                     </div>
-                    {!n.read && <div className="w-2 h-2 bg-[#236B63] rounded-full shrink-0" />}
+                    {!n.read && <div className="w-2 h-2 rounded-full shrink-0" style={{ background: '#C8FF4D' }} />}
                   </motion.div>
                 )
               })}

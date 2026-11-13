@@ -21,7 +21,7 @@ const sizes = {
 export default function Avatar({ src, name, size = 'md', className, online }: AvatarProps) {
   return (
     <div className={cn('relative shrink-0', className)}>
-      <div className={cn('rounded-full overflow-hidden bg-[#A8C5B5] flex items-center justify-center font-manrope font-semibold text-white', sizes[size])}>
+      <div className={cn('rounded-full overflow-hidden bg-[#1C1C22] flex items-center justify-center font-manrope font-semibold', sizes[size])} style={{ color: '#C8FF4D' }}>
         {src ? (
           <img src={src} alt={name} className="w-full h-full object-cover" />
         ) : (
@@ -30,9 +30,9 @@ export default function Avatar({ src, name, size = 'md', className, online }: Av
       </div>
       {online !== undefined && (
         <span className={cn(
-          'absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-white',
-          online ? 'bg-[#4D9274]' : 'bg-[#A1AAA5]'
-        )} />
+          'absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2',
+          online ? 'bg-[#C8FF4D]' : 'bg-[#52525E]'
+        )} style={{ borderColor: '#0D0D12' }} />
       )}
     </div>
   )

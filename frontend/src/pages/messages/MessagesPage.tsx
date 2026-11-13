@@ -94,24 +94,27 @@ export default function MessagesPage() {
   return (
     <AppShell>
       {/* Header */}
-      <div className="sticky top-0 z-50 bg-[#FAF9F6] border-b border-[#E8EAE6]/60 px-4 pt-safe pt-4 pb-3">
+      <div className="sticky top-0 z-50 border-b px-4 pt-safe pt-4 pb-3" style={{ background: 'rgba(13,13,18,0.97)', borderColor: '#2E2E3A', backdropFilter: 'blur(20px)' }}>
         <div className="flex items-center justify-between mb-3">
-          <h1 className="font-manrope font-extrabold text-[1.4rem] text-[#24332F] tracking-tight">
+          <h1 className="font-manrope font-extrabold text-[1.4rem] text-[#F2F0EB] tracking-tight">
             Messages
             {totalUnread > 0 && (
-              <span className="ml-2 text-sm font-bold text-[#236B63] bg-[#E8F0EA] px-2 py-0.5 rounded-full align-middle">
+              <span className="ml-2 text-sm font-bold px-2 py-0.5 rounded-full align-middle" style={{ background: '#C8FF4D', color: '#0A1A00' }}>
                 {totalUnread}
               </span>
             )}
           </h1>
         </div>
         <div className="relative">
-          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#A1AAA5] pointer-events-none" />
+          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#52525E] pointer-events-none" />
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search conversations…"
-            className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#E8EAE6] rounded-2xl text-sm placeholder:text-[#A1AAA5] focus:outline-none focus:border-[#236B63] transition-colors"
+            className="w-full pl-10 pr-4 py-2.5 rounded-2xl text-sm text-[#F2F0EB] placeholder:text-[#52525E] focus:outline-none transition-colors"
+            style={{ background: '#1C1C22', border: '1.5px solid #2E2E3A' }}
+            onFocus={e => (e.target.style.borderColor = '#C8FF4D')}
+            onBlur={e => (e.target.style.borderColor = '#2E2E3A')}
           />
         </div>
       </div>
@@ -131,14 +134,15 @@ export default function MessagesPage() {
           </div>
         ) : sorted.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 px-8 text-center">
-            <div className="w-20 h-20 bg-gradient-to-br from-[#E8F0EA] to-[#C8DDD2] rounded-3xl flex items-center justify-center mb-5 shadow-sm">
-              <MessageCircle size={30} className="text-[#236B63]" />
+            <div className="w-20 h-20 rounded-3xl flex items-center justify-center mb-5" style={{ background: 'rgba(200,255,77,0.1)' }}>
+              <MessageCircle size={30} style={{ color: '#C8FF4D' }} />
             </div>
-            <h3 className="font-manrope font-bold text-[#24332F] text-lg mb-2">No conversations yet</h3>
-            <p className="text-[#A1AAA5] text-sm leading-relaxed mb-6">Connect with companions to start chatting</p>
+            <h3 className="font-manrope font-bold text-[#F2F0EB] text-lg mb-2">No conversations yet</h3>
+            <p className="text-[#52525E] text-sm leading-relaxed mb-6">Connect with companions to start chatting</p>
             <button
               onClick={() => navigate('/discover')}
-              className="px-6 py-3 bg-[#236B63] text-white rounded-2xl text-sm font-semibold font-manrope active:scale-95 transition-transform"
+              className="px-6 py-3 rounded-2xl text-sm font-semibold font-manrope active:scale-95 transition-transform"
+              style={{ background: '#C8FF4D', color: '#0A1A00' }}
             >
               Browse Companions
             </button>
@@ -155,7 +159,7 @@ export default function MessagesPage() {
                   initial={{ opacity: 0, x: -8 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.03 }}
-                  className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-[#F4F1EA] active:bg-[#EEE9E0] transition-colors border-b border-[#E8EAE6]/50 last:border-0"
+                  className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-[#141418] active:bg-[#1C1C22] transition-colors border-b border-[#2E2E3A]/50 last:border-0"
                   onClick={() => openChat(conn, conv)}
                 >
                   <div className="relative shrink-0">
@@ -165,7 +169,7 @@ export default function MessagesPage() {
                       size="md"
                     />
                     {hasUnread && (
-                      <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-[#236B63] text-white text-[9px] font-bold rounded-full flex items-center justify-center border-2 border-[#FAF9F6]">
+                      <span className="absolute -top-0.5 -right-0.5 w-4 h-4 text-[9px] font-bold rounded-full flex items-center justify-center border-2" style={{ background: '#C8FF4D', color: '#0A1A00', borderColor: '#0D0D12' }}>
                         {conv!.unread_count > 9 ? '9+' : conv!.unread_count}
                       </span>
                     )}
@@ -173,16 +177,16 @@ export default function MessagesPage() {
 
                   <div className="flex-1 min-w-0 text-left">
                     <div className="flex items-baseline justify-between gap-2">
-                      <span className={`font-manrope text-sm truncate ${hasUnread ? 'font-bold text-[#24332F]' : 'font-semibold text-[#24332F]'}`}>
+                      <span className={`font-manrope text-sm truncate ${hasUnread ? 'font-bold text-[#F2F0EB]' : 'font-semibold text-[#F2F0EB]'}`}>
                         {other?.display_name ?? 'User'}
                       </span>
                       {lastMsg && (
-                        <span className={`text-[11px] shrink-0 ${hasUnread ? 'text-[#236B63] font-semibold' : 'text-[#A1AAA5]'}`}>
+                        <span className={`text-[11px] shrink-0 ${hasUnread ? 'font-semibold text-[#C8FF4D]' : 'text-[#52525E]'}`}>
                           {timeAgo(lastMsg.created_at)}
                         </span>
                       )}
                     </div>
-                    <p className={`text-xs truncate mt-0.5 ${hasUnread ? 'text-[#24332F] font-medium' : 'text-[#A1AAA5]'}`}>
+                    <p className={`text-xs truncate mt-0.5 ${hasUnread ? 'text-[#F2F0EB] font-medium' : 'text-[#52525E]'}`}>
                       {lastMsg
                         ? (lastMsg.deleted ? '🚫 Message deleted' : truncate(lastMsg.body ?? '📷 Photo', 52))
                         : 'Say hello! 👋'}
@@ -190,7 +194,7 @@ export default function MessagesPage() {
                   </div>
 
                   {hasUnread && (
-                    <div className="w-2 h-2 bg-[#236B63] rounded-full shrink-0" />
+                    <div className="w-2 h-2 rounded-full shrink-0" style={{ background: '#C8FF4D' }} />
                   )}
                 </motion.button>
               )

@@ -8,12 +8,12 @@ interface BadgeProps {
 }
 
 const variants = {
-  default: 'bg-[#E8F0EA] text-[#236B63]',
-  verified: 'bg-gradient-to-r from-[#236B63] to-[#4D9274] text-white',
-  warning: 'bg-orange-100 text-orange-700',
-  error: 'bg-red-100 text-[#D76D6D]',
-  success: 'bg-green-100 text-[#4D9274]',
-  muted: 'bg-[#F4F1EA] text-[#77817C]',
+  default:  'bg-[#1C1C22] text-[#8B8B9A]',
+  verified: 'bg-[#8B7CFF]/15 text-[#8B7CFF]',
+  warning:  'bg-[#FF9F43]/15 text-[#FF9F43]',
+  error:    'bg-[#FF5C7A]/15 text-[#FF5C7A]',
+  success:  'bg-[#C8FF4D]/15 text-[#C8FF4D]',
+  muted:    'bg-[#1C1C22] text-[#52525E]',
 }
 
 export default function Badge({ children, variant = 'default', className }: BadgeProps) {

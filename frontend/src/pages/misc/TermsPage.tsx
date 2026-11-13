@@ -4,8 +4,8 @@ import PageHeader from '../../components/layout/PageHeader'
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="mb-6">
-      <h2 className="font-manrope font-bold text-[#24332F] text-base mb-2">{title}</h2>
-      <div className="text-sm text-[#77817C] leading-relaxed space-y-2">{children}</div>
+      <h2 className="font-manrope font-bold text-[#F2F0EB] text-base mb-2">{title}</h2>
+      <div className="text-sm text-[#8B8B9A] leading-relaxed space-y-2">{children}</div>
     </div>
   )
 }
@@ -13,12 +13,12 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 export default function TermsPage() {
   return (
     <AppShell>
-      <div className="screen-scroll h-dvh overflow-y-auto bg-[#FAF9F6]">
+      <div className="screen-scroll h-dvh overflow-y-auto bg-[#0D0D12]">
         <PageHeader title="Terms & Privacy" back />
 
         <div className="px-4 pb-10">
-          <div className="bg-white rounded-2xl border border-[#E8EAE6] p-5">
-            <p className="text-xs text-[#A1AAA5] mb-5">Last updated: January 2026</p>
+          <div className="bg-[#141418] rounded-2xl border border-[#2E2E3A] p-5">
+            <p className="text-xs text-[#52525E] mb-5">Last updated: January 2026</p>
 
             <Section title="1. Acceptance of Terms">
               <p>By using FindYourVibe, you agree to these Terms of Service. If you do not agree, please do not use our platform.</p>

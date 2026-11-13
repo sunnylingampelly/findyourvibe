@@ -86,11 +86,12 @@ function formatTime(dateStr: string): string {
 
 function TypingDots() {
   return (
-    <div className="flex items-center gap-1 px-4 py-3 bg-white rounded-[18px] rounded-bl-[5px] shadow-sm w-fit" style={{ boxShadow: '0 1px 1px rgba(0,0,0,0.08)' }}>
+    <div className="flex items-center gap-1 px-4 py-3 rounded-[18px] rounded-bl-[5px] w-fit" style={{ background: '#1C1C22' }}>
       {[0, 1, 2].map(i => (
         <motion.div
           key={i}
-          className="w-2 h-2 rounded-full bg-[#A1AAA5]"
+          className="w-2 h-2 rounded-full"
+          style={{ background: '#52525E' }}
           animate={{ y: [0, -4, 0] }}
           transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.15, ease: 'easeInOut' }}
         />
@@ -100,9 +101,9 @@ function TypingDots() {
 }
 
 function ReadReceipt({ msg, isOptimistic }: { msg: Message; isOptimistic: boolean }) {
-  if (isOptimistic) return <Check size={11} style={{ color: '#9BB5AE' }} />
-  if (msg.read_at) return <CheckCheck size={11} style={{ color: '#53BDEB' }} />
-  return <CheckCheck size={11} style={{ color: '#9BB5AE' }} />
+  if (isOptimistic) return <Check size={11} style={{ color: 'rgba(10,26,0,0.45)' }} />
+  if (msg.read_at) return <CheckCheck size={11} style={{ color: '#8B7CFF' }} />
+  return <CheckCheck size={11} style={{ color: 'rgba(10,26,0,0.45)' }} />
 }
 
 const MAPS_KEY = import.meta.env.VITE_GOOGLE_MAPS_KEY as string | undefined
@@ -130,10 +131,10 @@ function LocationMessage({ body, isMe }: { body: string; isMe: boolean }) {
         <img src={mapImg} alt="Map" className="w-full rounded-xl" style={{ height: 110, objectFit: 'cover', display: 'block' }} />
       )}
       <div className="flex items-center gap-1.5 pt-1.5 pb-0.5">
-        <MapPin size={13} style={{ color: isMe ? '#236B63' : '#236B63', flexShrink: 0 }} />
-        <span className="text-xs font-semibold text-[#24332F] truncate">{address}</span>
+        <MapPin size={13} style={{ color: '#C8FF4D', flexShrink: 0 }} />
+        <span className="text-xs font-semibold truncate" style={{ color: isMe ? '#0A1A00' : '#F2F0EB' }}>{address}</span>
       </div>
-      <span style={{ color: '#236B63', fontSize: 10 }}>Tap to open in Maps ↗</span>
+      <span style={{ color: isMe ? 'rgba(10,26,0,0.6)' : '#8B8B9A', fontSize: 10 }}>Tap to open in Maps ↗</span>
     </a>
   )
 }
@@ -172,11 +173,11 @@ function AudioMessage({ url, isMe }: { url: string; isMe: boolean }) {
       <button
         onClick={toggle}
         className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-all active:scale-90"
-        style={{ background: isMe ? '#1A5750' : '#236B63' }}
+        style={{ background: isMe ? '#0A1A00' : '#C8FF4D' }}
       >
         {playing
-          ? <Pause size={14} className="text-white" />
-          : <Play size={14} className="text-white ml-0.5" />}
+          ? <Pause size={14} style={{ color: isMe ? '#C8FF4D' : '#0A1A00' }} />
+          : <Play size={14} className="ml-0.5" style={{ color: isMe ? '#C8FF4D' : '#0A1A00' }} />}
       </button>
       <div className="flex-1 flex flex-col gap-1">
         <div className="flex items-end gap-[2px]" style={{ height: 20 }}>
@@ -188,13 +189,13 @@ function AudioMessage({ url, isMe }: { url: string; isMe: boolean }) {
                 width: 3,
                 height: h,
                 background: i / WAVEFORM_BARS.length <= progress
-                  ? (isMe ? '#1A5750' : '#236B63')
-                  : (isMe ? '#9BCFC8' : '#C0D4D1'),
+                  ? (isMe ? '#0A1A00' : '#C8FF4D')
+                  : (isMe ? 'rgba(10,26,0,0.3)' : '#2E2E3A'),
               }}
             />
           ))}
         </div>
-        <span className="text-[10px] leading-none" style={{ color: isMe ? '#6C8A85' : '#9BA8A3' }}>
+        <span className="text-[10px] leading-none" style={{ color: isMe ? 'rgba(10,26,0,0.5)' : '#52525E' }}>
           {currentTime > 0.5 ? fmt(currentTime) : fmt(duration)}
         </span>
       </div>
@@ -700,15 +701,15 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="app-container flex flex-col h-dvh" style={{ background: '#ECE5DD' }}>
+    <div className="app-container flex flex-col h-dvh" style={{ background: '#0D0D12' }}>
 
-      {/* Header — dark teal, modern WhatsApp style */}
-      <div className="flex items-center gap-3 px-3 py-2.5 pt-safe shrink-0" style={{ background: '#236B63' }}>
+      {/* Header */}
+      <div className="flex items-center gap-3 px-3 py-2.5 pt-safe shrink-0 border-b" style={{ background: 'rgba(13,13,18,0.96)', borderColor: '#2E2E3A', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}>
         <button
           onClick={() => navigate(-1)}
           className="w-9 h-9 flex items-center justify-center rounded-xl active:bg-white/10 transition-colors"
         >
-          <ArrowLeft size={20} className="text-white" />
+          <ArrowLeft size={20} className="text-[#F2F0EB]" />
         </button>
 
         {otherUser ? (
@@ -718,21 +719,21 @@ export default function ChatPage() {
           >
             <div className="relative shrink-0">
               <Avatar src={otherUser.profile_photo_url} name={otherUser.display_name} size="sm" />
-              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-[#A8E6CF] rounded-full border-2 border-[#236B63]" />
+              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2" style={{ background: '#C8FF4D', borderColor: '#0D0D12' }} />
             </div>
             <div className="min-w-0">
-              <h2 className="font-semibold text-white text-sm truncate">{otherUser.display_name}</h2>
-              <p className="text-[11px] text-white/60">
+              <h2 className="font-semibold text-[#F2F0EB] text-sm truncate">{otherUser.display_name}</h2>
+              <p className="text-[11px] text-[#52525E]">
                 {otherTyping ? 'typing…' : 'View profile →'}
               </p>
             </div>
           </button>
         ) : (
           <div className="flex items-center gap-2.5 flex-1 min-w-0">
-            <div className="w-8 h-8 rounded-full bg-white/20 animate-pulse shrink-0" />
+            <div className="w-8 h-8 rounded-full bg-[#2E2E3A] animate-pulse shrink-0" />
             <div className="space-y-1.5 flex-1">
-              <div className="h-3 w-28 rounded-full bg-white/20 animate-pulse" />
-              <div className="h-2.5 w-16 rounded-full bg-white/15 animate-pulse" />
+              <div className="h-3 w-28 rounded-full bg-[#2E2E3A] animate-pulse" />
+              <div className="h-2.5 w-16 rounded-full bg-[#252530] animate-pulse" />
             </div>
           </div>
         )}
@@ -741,7 +742,7 @@ export default function ChatPage() {
           onClick={() => { setShowChatOptions(true); setConfirmClear(false) }}
           className="w-9 h-9 flex items-center justify-center rounded-xl active:bg-white/10 transition-colors"
         >
-          <Info size={18} className="text-white/80" />
+          <Info size={18} className="text-[#8B8B9A]" />
         </button>
       </div>
 
@@ -913,11 +914,7 @@ export default function ChatPage() {
         ref={scrollRef}
         onScroll={handleScroll}
         className="flex-1 overflow-y-auto px-3 py-3"
-        style={{
-          scrollbarWidth: 'none',
-          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Ccircle cx='40' cy='40' r='1.2' fill='%23B8B0A6' opacity='0.25'/%3E%3C/svg%3E")`,
-          backgroundRepeat: 'repeat',
-        }}
+        style={{ scrollbarWidth: 'none', background: '#0D0D12' }}
       >
         {isLoading ? (
           <div className="flex flex-col gap-3 pt-6">
@@ -935,17 +932,18 @@ export default function ChatPage() {
             className="flex flex-col items-center justify-center h-full py-20 text-center"
           >
             <div className="relative mb-5">
-              <Avatar src={otherUser?.profile_photo_url} name={otherUser?.display_name ?? '?'} size="xl" className="shadow-lg ring-4 ring-white" />
-              <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-[#4D9274] rounded-full flex items-center justify-center border-2 border-white text-sm">👋</div>
+              <Avatar src={otherUser?.profile_photo_url} name={otherUser?.display_name ?? '?'} size="xl" className="shadow-lg ring-4 ring-[#2E2E3A]" />
+              <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full flex items-center justify-center border-2 text-sm" style={{ background: '#C8FF4D', borderColor: '#0D0D12' }}>👋</div>
             </div>
-            <h3 className="font-manrope font-bold text-[#24332F] mb-1 text-base">{otherUser?.display_name ?? 'Your connection'}</h3>
-            <p className="text-sm text-[#A1AAA5] max-w-[200px] leading-relaxed">Say hello and start the conversation!</p>
+            <h3 className="font-manrope font-bold text-[#F2F0EB] mb-1 text-base">{otherUser?.display_name ?? 'Your connection'}</h3>
+            <p className="text-sm text-[#8B8B9A] max-w-[200px] leading-relaxed">Say hello and start the conversation!</p>
             <div className="flex gap-2 mt-5 flex-wrap justify-center">
               {['👋 Say hi!', '😊 Hello!', '🎉 Hey there!', '☕ Coffee?'].map(q => (
                 <button
                   key={q}
                   onClick={() => { setText(q); inputRef.current?.focus() }}
-                  className="text-xs px-3.5 py-1.5 rounded-full bg-white border border-[#E8EAE6] text-[#77817C] hover:border-[#236B63] hover:text-[#236B63] transition-colors shadow-sm"
+                  className="text-xs px-3.5 py-1.5 rounded-full text-[#8B8B9A] hover:text-[#C8FF4D] transition-colors"
+                  style={{ background: '#1C1C22', border: '1px solid #2E2E3A' }}
                 >
                   {q}
                 </button>
@@ -958,7 +956,7 @@ export default function ChatPage() {
               <div key={group.date}>
                 {/* Date divider */}
                 <div className="flex justify-center mb-2.5">
-                  <span className="text-[11px] font-medium text-[#8A7A6A] px-3.5 py-1 bg-white/85 rounded-full shadow-sm">
+                  <span className="text-[11px] font-medium text-[#52525E] px-3.5 py-1 rounded-full" style={{ background: 'rgba(37,37,48,0.9)' }}>
                     {group.date}
                   </span>
                 </div>
@@ -997,8 +995,8 @@ export default function ChatPage() {
                             className="flex items-center justify-center shrink-0 self-center"
                             style={{ opacity: Math.min(dx / 55, 1) }}
                           >
-                            <div className="w-7 h-7 rounded-full bg-[#E8F0EA] flex items-center justify-center">
-                              <CornerUpLeft size={14} className="text-[#236B63]" />
+                            <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: 'rgba(200,255,77,0.15)' }}>
+                              <CornerUpLeft size={14} style={{ color: '#C8FF4D' }} />
                             </div>
                           </div>
                         )}
@@ -1013,11 +1011,11 @@ export default function ChatPage() {
                             {isLastInChain && (
                               <div style={isMe ? {
                                 position: 'absolute', bottom: 0, right: -8, width: 0, height: 0,
-                                borderLeft: `9px solid ${msg.deleted ? '#CDEEE2' : '#C9F9D3'}`,
+                                borderLeft: `9px solid ${msg.deleted ? '#1C1C22' : '#C8FF4D'}`,
                                 borderBottom: '9px solid transparent',
                               } : {
                                 position: 'absolute', bottom: 0, left: -8, width: 0, height: 0,
-                                borderRight: '9px solid #FFFFFF',
+                                borderRight: '9px solid #1C1C22',
                                 borderBottom: '9px solid transparent',
                               }} />
                             )}
@@ -1026,19 +1024,19 @@ export default function ChatPage() {
                                 'px-3 pt-1.5 text-sm leading-snug transition-opacity select-none',
                                 isLastInChain ? 'pb-1' : 'pb-1.5',
                                 isOptimistic ? 'opacity-70' : 'opacity-100',
-                                msg.deleted
-                                  ? (isMe ? 'text-[#5A8A7A] italic' : 'bg-white text-[#A1AAA5] italic')
-                                  : isMe ? 'text-[#111B21]' : 'bg-white text-[#111B21]',
                                 isMe
                                   ? (isFirstInChain ? 'rounded-[10px] rounded-br-[3px]' : 'rounded-[10px] rounded-r-[3px]')
                                   : (isFirstInChain ? 'rounded-[10px] rounded-bl-[3px]' : 'rounded-[10px] rounded-l-[3px]'),
                                 'min-w-[70px]'
                               )}
                               style={isMe ? {
-                                background: msg.deleted ? '#CDEEE2' : 'linear-gradient(160deg, #DCFDD3 0%, #C9F9D3 100%)',
-                                boxShadow: '0 1px 3px rgba(0,0,0,0.13)',
+                                background: msg.deleted ? '#1C1C22' : '#C8FF4D',
+                                color: msg.deleted ? '#8B8B9A' : '#0A1A00',
+                                boxShadow: '0 1px 6px rgba(200,255,77,0.15)',
                               } : {
-                                boxShadow: '0 1px 3px rgba(0,0,0,0.11)',
+                                background: '#1C1C22',
+                                color: msg.deleted ? '#52525E' : '#F2F0EB',
+                                boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
                               }}
                               onDoubleClick={() => !msg.deleted && setReplyTo(msg)}
                             >
@@ -1052,7 +1050,7 @@ export default function ChatPage() {
                               {isLastInChain && (
                                 <div className={cn(
                                   'flex items-center justify-end gap-1 mt-0.5',
-                                  isMe ? 'text-[#6C8A85]' : 'text-[#9BA8A3]'
+                                  isMe ? 'text-[#0A1A00]/50' : 'text-[#52525E]'
                                 )}>
                                   <span className="text-[10px] whitespace-nowrap leading-none">
                                     {isOptimistic ? 'Sending…' : formatTime(msg.created_at)}
@@ -1068,10 +1066,10 @@ export default function ChatPage() {
                             <button
                               onClick={() => setContextMenu({ msg })}
                               className={cn(
-                                'text-sm px-2 py-0.5 rounded-full border bg-white shadow-sm -mt-1 active:scale-90 transition-transform',
-                                isMe ? 'mr-1' : 'ml-1',
-                                'border-[#E8EAE6]'
+                                'text-sm px-2 py-0.5 rounded-full border -mt-1 active:scale-90 transition-transform',
+                                isMe ? 'mr-1' : 'ml-1'
                               )}
+                              style={{ background: '#1C1C22', borderColor: '#2E2E3A' }}
                             >
                               {rxnEmojis.join('')}{rxnCount > 1 ? ` ${rxnCount}` : ''}
                             </button>
@@ -1085,7 +1083,8 @@ export default function ChatPage() {
                         )}>
                           <button
                             onClick={() => setContextMenu({ msg })}
-                            className="w-7 h-7 rounded-full bg-white border border-[#E8EAE6] shadow-sm flex items-center justify-center text-[#A1AAA5] hover:text-[#236B63] transition-colors text-xs"
+                            className="w-7 h-7 rounded-full flex items-center justify-center text-[#52525E] hover:text-[#C8FF4D] transition-colors text-xs"
+                            style={{ background: '#1C1C22', border: '1px solid #2E2E3A' }}
                           >
                             ⋯
                           </button>
@@ -1123,7 +1122,8 @@ export default function ChatPage() {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
             onClick={scrollToBottom}
-            className="absolute bottom-28 right-4 w-10 h-10 bg-white rounded-full shadow-lg border border-[#E8EAE6] flex items-center justify-center text-[#236B63] z-20"
+            className="absolute bottom-28 right-4 w-10 h-10 rounded-full shadow-lg flex items-center justify-center z-20"
+            style={{ background: '#1C1C22', border: '1px solid #2E2E3A', color: '#C8FF4D' }}
           >
             <ChevronDown size={20} />
           </motion.button>
@@ -1146,11 +1146,12 @@ export default function ChatPage() {
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 60, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 500, damping: 35 }}
-              className="w-full bg-white rounded-t-3xl shadow-2xl pb-safe"
+              className="w-full rounded-t-3xl shadow-2xl pb-safe"
+              style={{ background: '#141418', border: '1px solid #2E2E3A', borderBottom: 'none' }}
               onClick={e => e.stopPropagation()}
             >
               {/* Quick reactions */}
-              <div className="flex items-center justify-around px-6 py-4 border-b border-[#F0F0F0]">
+              <div className="flex items-center justify-around px-6 py-4 border-b border-[#2E2E3A]">
                 {QUICK_REACTIONS.map(emoji => (
                   <button
                     key={emoji}
@@ -1158,8 +1159,8 @@ export default function ChatPage() {
                     className={cn(
                       'text-2xl w-11 h-11 rounded-full flex items-center justify-center transition-all active:scale-90',
                       myId && allReactions[contextMenu.msg.id]?.[myId] === emoji
-                        ? 'bg-[#E8F0EA] scale-110'
-                        : 'hover:bg-[#F4F1EA]'
+                        ? 'scale-110'
+                        : 'hover:bg-[#252530]'
                     )}
                   >
                     {emoji}
@@ -1168,9 +1169,9 @@ export default function ChatPage() {
               </div>
 
               {/* Quoted message preview */}
-              <div className="px-4 py-3 border-b border-[#F0F0F0]">
-                <p className="text-xs text-[#A1AAA5] mb-1 truncate">{contextMenu.msg.sender.display_name}</p>
-                <p className="text-sm text-[#24332F] line-clamp-2">{contextMenu.msg.body}</p>
+              <div className="px-4 py-3 border-b border-[#2E2E3A]">
+                <p className="text-xs text-[#52525E] mb-1 truncate">{contextMenu.msg.sender.display_name}</p>
+                <p className="text-sm text-[#F2F0EB] line-clamp-2">{contextMenu.msg.body}</p>
               </div>
 
               {/* Actions */}
@@ -1178,28 +1179,28 @@ export default function ChatPage() {
                 {!contextMenu.msg.deleted && (
                   <button
                     onClick={() => replyToMessage(contextMenu.msg)}
-                    className="w-full flex items-center gap-3 px-5 py-3.5 hover:bg-[#F9F7F3] transition-colors"
+                    className="w-full flex items-center gap-3 px-5 py-3.5 hover:bg-[#1C1C22] transition-colors"
                   >
-                    <CornerUpLeft size={18} className="text-[#236B63]" />
-                    <span className="text-sm font-medium text-[#24332F]">Reply</span>
+                    <CornerUpLeft size={18} style={{ color: '#C8FF4D' }} />
+                    <span className="text-sm font-medium text-[#F2F0EB]">Reply</span>
                   </button>
                 )}
                 {!contextMenu.msg.deleted && contextMenu.msg.body && (
                   <button
                     onClick={() => copyMessage(contextMenu.msg.body!)}
-                    className="w-full flex items-center gap-3 px-5 py-3.5 hover:bg-[#F9F7F3] transition-colors"
+                    className="w-full flex items-center gap-3 px-5 py-3.5 hover:bg-[#1C1C22] transition-colors"
                   >
-                    <Copy size={18} className="text-[#236B63]" />
-                    <span className="text-sm font-medium text-[#24332F]">Copy text</span>
+                    <Copy size={18} style={{ color: '#C8FF4D' }} />
+                    <span className="text-sm font-medium text-[#F2F0EB]">Copy text</span>
                   </button>
                 )}
                 {contextMenu.msg.sender.id === user?.id && !contextMenu.msg.deleted && !contextMenu.msg.id.startsWith('opt-') && (
                   <button
                     onClick={() => deleteMutation.mutate(contextMenu.msg.id)}
-                    className="w-full flex items-center gap-3 px-5 py-3.5 hover:bg-red-50 transition-colors"
+                    className="w-full flex items-center gap-3 px-5 py-3.5 hover:bg-[#FF5C7A]/10 transition-colors"
                   >
-                    <Trash2 size={18} className="text-red-500" />
-                    <span className="text-sm font-medium text-red-500">Delete message</span>
+                    <Trash2 size={18} style={{ color: '#FF5C7A' }} />
+                    <span className="text-sm font-medium" style={{ color: '#FF5C7A' }}>Delete message</span>
                   </button>
                 )}
               </div>
@@ -1209,7 +1210,7 @@ export default function ChatPage() {
       </AnimatePresence>
 
       {/* Input bar */}
-      <div className="shrink-0 bg-[#F0EBE3] border-t border-[#DDD5CC] pb-safe">
+      <div className="shrink-0 pb-safe" style={{ background: '#141418', borderTop: '1px solid #2E2E3A' }}>
         {/* Emoji picker */}
         <AnimatePresence>
           {showEmoji && (
@@ -1220,14 +1221,14 @@ export default function ChatPage() {
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.18 }}
-              className="border-b border-[#E8EAE6] overflow-hidden"
+              className="border-b border-[#2E2E3A] overflow-hidden"
             >
               <div className="px-3 py-3 grid gap-0.5 overflow-y-auto" style={{ gridTemplateColumns: 'repeat(10, 1fr)', maxHeight: 220 }}>
                 {EMOJI_LIST.map(emoji => (
                   <button
                     key={emoji}
                     onMouseDown={e => { e.preventDefault(); insertEmoji(emoji) }}
-                    className="text-xl h-9 flex items-center justify-center rounded-lg hover:bg-[#F4F1EA] active:scale-90 transition-all"
+                    className="text-xl h-9 flex items-center justify-center rounded-lg hover:bg-[#252530] active:scale-90 transition-all"
                   >
                     {emoji}
                   </button>
@@ -1245,17 +1246,17 @@ export default function ChatPage() {
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.15 }}
-              className="border-b border-[#E8EAE6] overflow-hidden"
+              className="border-b border-[#2E2E3A] overflow-hidden"
             >
               <div className="flex items-center gap-2 px-4 py-2.5">
-                <div className="w-0.5 h-8 bg-[#236B63] rounded-full shrink-0" />
+                <div className="w-0.5 h-8 rounded-full shrink-0" style={{ background: '#C8FF4D' }} />
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-[#236B63]">{replyTo.sender.display_name}</p>
-                  <p className="text-xs text-[#77817C] truncate">{replyTo.body}</p>
+                  <p className="text-xs font-semibold text-[#C8FF4D]">{replyTo.sender.display_name}</p>
+                  <p className="text-xs text-[#8B8B9A] truncate">{replyTo.body}</p>
                 </div>
                 <button
                   onClick={() => setReplyTo(null)}
-                  className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-[#F4F1EA] text-[#A1AAA5] shrink-0"
+                  className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-[#252530] text-[#52525E] shrink-0"
                 >
                   <X size={14} />
                 </button>
@@ -1275,7 +1276,8 @@ export default function ChatPage() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 6 }}
                 transition={{ duration: 0.15 }}
-                className="flex-1 flex items-center gap-2.5 bg-white rounded-full px-3 py-2 shadow-sm"
+                className="flex-1 flex items-center gap-2.5 rounded-full px-3 py-2"
+                style={{ background: '#1C1C22' }}
               >
                 <button onClick={() => stopRecording(false)} className="shrink-0 text-[#D76D6D] active:scale-90 transition-transform">
                   <X size={18} />
@@ -1306,13 +1308,14 @@ export default function ChatPage() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.1 }}
-                className="flex-1 flex items-end bg-white rounded-full shadow-sm px-3 py-2"
+                className="flex-1 flex items-end rounded-full px-3 py-2"
+                style={{ background: '#1C1C22' }}
               >
                 <button
                   onClick={() => setShowEmoji(s => !s)}
                   className={cn(
                     'w-8 h-7 flex items-center justify-center rounded-full transition-colors shrink-0 mr-0.5',
-                    showEmoji ? 'text-[#236B63]' : 'text-[#A1AAA5]'
+                    showEmoji ? 'text-[#C8FF4D]' : 'text-[#52525E]'
                   )}
                 >
                   <Smile size={20} />
@@ -1320,7 +1323,7 @@ export default function ChatPage() {
                 <button
                   onClick={sendLocation}
                   disabled={locSending}
-                  className="w-8 h-7 flex items-center justify-center rounded-full transition-colors shrink-0 mr-1 text-[#A1AAA5] hover:text-[#236B63] disabled:opacity-50"
+                  className="w-8 h-7 flex items-center justify-center rounded-full transition-colors shrink-0 mr-1 text-[#52525E] hover:text-[#C8FF4D] disabled:opacity-50"
                 >
                   {locSending
                     ? <span className="text-[9px] font-bold tracking-tight animate-pulse">GPS</span>
@@ -1335,7 +1338,7 @@ export default function ChatPage() {
                   onFocus={() => setShowEmoji(false)}
                   placeholder="Message…"
                   rows={1}
-                  className="flex-1 bg-transparent text-sm text-[#24332F] placeholder:text-[#A1AAA5] outline-none ring-0 resize-none leading-relaxed self-center"
+                  className="flex-1 bg-transparent text-sm text-[#F2F0EB] placeholder:text-[#52525E] outline-none ring-0 resize-none leading-relaxed self-center"
                   style={{ minHeight: '20px', maxHeight: '120px', WebkitTapHighlightColor: 'transparent' }}
                 />
               </motion.div>
@@ -1353,7 +1356,7 @@ export default function ChatPage() {
                 transition={{ type: 'spring', stiffness: 500, damping: 28 }}
                 onClick={() => stopRecording(true)}
                 className="w-10 h-10 rounded-full flex items-center justify-center text-white shrink-0 shadow-md active:scale-90 transition-transform"
-                style={{ background: 'linear-gradient(135deg, #D76D6D, #C45555)' }}
+                style={{ background: '#FF5C7A' }}
               >
                 <Send size={16} />
               </motion.button>
@@ -1365,8 +1368,8 @@ export default function ChatPage() {
                 exit={{ scale: 0.7, opacity: 0 }}
                 transition={{ type: 'spring', stiffness: 500, damping: 28 }}
                 onClick={handleSend}
-                className="w-10 h-10 rounded-full flex items-center justify-center text-white shrink-0 shadow-md active:scale-90 transition-transform"
-                style={{ background: 'linear-gradient(135deg, #236B63 0%, #1D5A54 100%)' }}
+                className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-md active:scale-90 transition-transform"
+                style={{ background: '#C8FF4D', color: '#0A1A00' }}
               >
                 <Send size={17} />
               </motion.button>
@@ -1378,8 +1381,8 @@ export default function ChatPage() {
                 exit={{ scale: 0.7, opacity: 0 }}
                 transition={{ type: 'spring', stiffness: 500, damping: 28 }}
                 onPointerDown={startRecording}
-                className="w-10 h-10 rounded-full flex items-center justify-center text-white shrink-0 shadow-md active:scale-90 transition-transform"
-                style={{ background: 'linear-gradient(135deg, #236B63 0%, #1D5A54 100%)' }}
+                className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-md active:scale-90 transition-transform"
+                style={{ background: '#C8FF4D', color: '#0A1A00' }}
               >
                 <Mic size={18} />
               </motion.button>
@@ -1398,14 +1401,14 @@ export default function ChatPage() {
           {!confirmClear ? (
             <button
               onClick={() => setConfirmClear(true)}
-              className="w-full flex items-center gap-3 px-2 py-4 rounded-2xl hover:bg-red-50 active:bg-red-50 transition-colors"
+              className="w-full flex items-center gap-3 px-2 py-4 rounded-2xl hover:bg-[#FF5C7A]/10 active:bg-[#FF5C7A]/10 transition-colors"
             >
-              <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
-                <Trash2 size={18} className="text-red-500" />
+              <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: 'rgba(255,92,122,0.15)' }}>
+                <Trash2 size={18} style={{ color: '#FF5C7A' }} />
               </div>
               <div className="text-left">
-                <p className="text-sm font-semibold text-red-500">Clear Chat</p>
-                <p className="text-xs text-[#A1AAA5] mt-0.5">Delete all messages for everyone</p>
+                <p className="text-sm font-semibold" style={{ color: '#FF5C7A' }}>Clear Chat</p>
+                <p className="text-xs text-[#52525E] mt-0.5">Delete all messages for everyone</p>
               </div>
             </button>
           ) : (

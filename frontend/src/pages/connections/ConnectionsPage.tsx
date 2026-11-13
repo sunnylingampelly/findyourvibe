@@ -72,21 +72,22 @@ export default function ConnectionsPage() {
       <PageHeader title="Connections" />
 
       {/* Tabs */}
-      <div className="flex gap-1 px-4 py-2 border-b border-[#E8EAE6]/60">
+      <div className="flex gap-1 px-4 py-2 border-b border-[#2E2E3A]">
         {tabs.map(t => (
           <button
             key={t}
             onClick={() => setTab(t)}
             className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-semibold font-manrope transition-all ${
               tab === t
-                ? 'bg-[#E8F0EA] text-[#236B63]'
-                : 'text-[#A1AAA5] hover:text-[#77817C]'
+                ? 'text-[#0A1A00]'
+                : 'text-[#52525E]'
             }`}
+            style={tab === t ? { background: '#C8FF4D' } : {}}
           >
             {t}
             {count[t] > 0 && (
               <span className={`text-[10px] font-bold rounded-full px-1.5 py-0.5 leading-none ${
-                tab === t ? 'bg-[#236B63] text-white' : 'bg-[#E8EAE6] text-[#A1AAA5]'
+                tab === t ? 'bg-[#0A1A00] text-[#C8FF4D]' : 'bg-[#252530] text-[#52525E]'
               }`}>
                 {count[t]}
               </span>
@@ -101,20 +102,20 @@ export default function ConnectionsPage() {
             {received.length === 0 ? (
               <EmptyState icon="💌" title="No pending requests" text="When someone wants to connect, they'll appear here." />
             ) : received.map((req, i) => (
-              <motion.div key={req.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="card p-4">
+              <motion.div key={req.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="p-4 rounded-2xl" style={{ background: '#141418', border: '1px solid #2E2E3A' }}>
                 <div className="flex items-center gap-3 mb-3">
                   <Avatar src={req.sender.profile_photo_url} name={req.sender.display_name} size="lg" />
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-manrope font-semibold text-[#24332F]">{req.sender.display_name}</h3>
-                    <p className="text-xs text-[#A1AAA5]">{req.sender.city?.name} · {timeAgo(req.created_at)}</p>
-                    {req.message && <p className="text-sm text-[#77817C] mt-1 line-clamp-2 italic">"{req.message}"</p>}
+                    <h3 className="font-manrope font-semibold text-[#F2F0EB]">{req.sender.display_name}</h3>
+                    <p className="text-xs text-[#52525E]">{req.sender.city?.name} · {timeAgo(req.created_at)}</p>
+                    {req.message && <p className="text-sm text-[#8B8B9A] mt-1 line-clamp-2 italic">"{req.message}"</p>}
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={() => decline.mutate(req.id)} className="flex-1 py-2.5 rounded-2xl border border-[#E8EAE6] text-sm text-[#77817C] font-medium flex items-center justify-center gap-1.5">
+                  <button onClick={() => decline.mutate(req.id)} className="flex-1 py-2.5 rounded-2xl border border-[#2E2E3A] text-sm text-[#8B8B9A] font-medium flex items-center justify-center gap-1.5">
                     <X size={15} /> Decline
                   </button>
-                  <button onClick={() => accept.mutate(req.id)} className="flex-1 py-2.5 rounded-2xl bg-[#236B63] text-white text-sm font-semibold flex items-center justify-center gap-1.5">
+                  <button onClick={() => accept.mutate(req.id)} className="flex-1 py-2.5 rounded-2xl text-sm font-semibold flex items-center justify-center gap-1.5" style={{ background: '#C8FF4D', color: '#0A1A00' }}>
                     <Check size={15} /> Accept
                   </button>
                 </div>
@@ -128,16 +129,16 @@ export default function ConnectionsPage() {
             {sent.length === 0 ? (
               <EmptyState icon="📤" title="No sent requests" text="Connect with companions you discover to get started." />
             ) : sent.map((req, i) => (
-              <motion.div key={req.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="card p-4 flex items-center gap-3">
+              <motion.div key={req.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="p-4 rounded-2xl flex items-center gap-3" style={{ background: '#141418', border: '1px solid #2E2E3A' }}>
                 <Avatar src={req.receiver.profile_photo_url} name={req.receiver.display_name} size="md" />
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-manrope font-semibold text-[#24332F]">{req.receiver.display_name}</h3>
+                  <h3 className="font-manrope font-semibold text-[#F2F0EB]">{req.receiver.display_name}</h3>
                   <div className="flex items-center gap-1 mt-0.5">
-                    <Clock size={11} className="text-[#D9A45B]" />
-                    <span className="text-xs text-[#A1AAA5]">Pending · {timeAgo(req.created_at)}</span>
+                    <Clock size={11} className="text-[#FF9F43]" />
+                    <span className="text-xs text-[#52525E]">Pending · {timeAgo(req.created_at)}</span>
                   </div>
                 </div>
-                <button onClick={() => withdraw.mutate(req.id)} className="text-xs text-[#D76D6D] font-medium px-3 py-1.5 rounded-xl border border-[#D76D6D]/30">Withdraw</button>
+                <button onClick={() => withdraw.mutate(req.id)} className="text-xs text-[#FF5C7A] font-medium px-3 py-1.5 rounded-xl border border-[#FF5C7A]/30">Withdraw</button>
               </motion.div>
             ))}
           </div>
@@ -151,17 +152,18 @@ export default function ConnectionsPage() {
               const other = conn.other_user
               return (
                 <motion.div key={conn.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-                  className="card p-4 flex items-center gap-3"
+                  className="p-4 rounded-2xl flex items-center gap-3" style={{ background: '#141418', border: '1px solid #2E2E3A' }}
                 >
                   <Avatar src={other?.profile_photo_url} name={other?.display_name ?? 'User'} size="md" />
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-manrope font-semibold text-[#24332F]">{other?.display_name}</h3>
-                    <p className="text-xs text-[#4D9274] flex items-center gap-1 mt-0.5"><UserCheck size={11} /> Connected</p>
+                    <h3 className="font-manrope font-semibold text-[#F2F0EB]">{other?.display_name}</h3>
+                    <p className="text-xs text-[#C8FF4D] flex items-center gap-1 mt-0.5"><UserCheck size={11} /> Connected</p>
                   </div>
                   <button
                     onClick={() => openChat(conn)}
                     disabled={openingConv === conn.id}
-                    className="flex items-center gap-1.5 text-xs bg-[#236B63] text-white font-semibold px-3 py-2 rounded-xl disabled:opacity-60 transition-opacity"
+                    className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl disabled:opacity-60 transition-opacity"
+                    style={{ background: '#C8FF4D', color: '#0A1A00' }}
                   >
                     {openingConv === conn.id
                       ? <Loader2 size={12} className="animate-spin" />
@@ -183,8 +185,8 @@ function EmptyState({ icon, title, text }: { icon: string; title: string; text: 
   return (
     <div className="text-center py-16">
       <div className="text-5xl mb-3">{icon}</div>
-      <h3 className="font-manrope font-semibold text-[#24332F] mb-1">{title}</h3>
-      <p className="text-sm text-[#A1AAA5]">{text}</p>
+      <h3 className="font-manrope font-semibold text-[#F2F0EB] mb-1">{title}</h3>
+      <p className="text-sm text-[#52525E]">{text}</p>
     </div>
   )
 }

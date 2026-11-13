@@ -20,10 +20,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const dismiss = (id: string) => setToasts(t => t.filter(x => x.id !== id))
 
   const colors: Record<ToastType, string> = {
-    success: 'bg-[#4D9274] text-white',
-    error: 'bg-[#D76D6D] text-white',
-    warning: 'bg-[#D9A45B] text-white',
-    info: 'bg-[#236B63] text-white',
+    success: 'bg-[#C8FF4D] text-[#0A1A00]',
+    error:   'bg-[#FF5C7A] text-white',
+    warning: 'bg-[#FF9F43] text-[#0A1A00]',
+    info:    'bg-[#1C1C22] text-[#F2F0EB] border border-[#2E2E3A]',
   }
 
   return (

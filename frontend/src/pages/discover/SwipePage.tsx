@@ -81,13 +81,13 @@ function SwipeCard({ profile, onSwipe, isTop, vibeScore }: { profile: PublicProf
       onDragEnd={handleDragEnd}
     >
       {/* Like overlay */}
-      <motion.div className="absolute inset-0 bg-[#236B63]/60 z-10 flex items-center justify-center rounded-3xl" style={{ opacity: likeOpacity }}>
+      <motion.div className="absolute inset-0 z-10 flex items-center justify-center rounded-3xl" style={{ opacity: likeOpacity, background: 'rgba(200,255,77,0.55)' }}>
         <div className="border-4 border-white rounded-2xl px-8 py-3 rotate-[-15deg]">
           <span className="font-manrope font-extrabold text-4xl text-white">VIBE</span>
         </div>
       </motion.div>
       {/* Pass overlay */}
-      <motion.div className="absolute inset-0 bg-[#D98D7A]/60 z-10 flex items-center justify-center rounded-3xl" style={{ opacity: passOpacity }}>
+      <motion.div className="absolute inset-0 z-10 flex items-center justify-center rounded-3xl" style={{ opacity: passOpacity, background: 'rgba(255,92,122,0.55)' }}>
         <div className="border-4 border-white rounded-2xl px-8 py-3 rotate-[15deg]">
           <span className="font-manrope font-extrabold text-4xl text-white">PASS</span>
         </div>
@@ -100,12 +100,12 @@ function SwipeCard({ profile, onSwipe, isTop, vibeScore }: { profile: PublicProf
 function CardContent({ profile, onInfo, vibeScore }: { profile: PublicProfile; onInfo: () => void; vibeScore?: number }) {
   const label = vibeScore != null ? vibeScoreLabel(vibeScore) : null
   return (
-    <div className="w-full h-full relative bg-[#A8C5B5]">
+    <div className="w-full h-full relative bg-[#141418]">
       {profile.profile_photo_url ? (
         <img src={profile.profile_photo_url} alt={profile.display_name} className="w-full h-full object-cover" />
       ) : (
-        <div className="w-full h-full bg-gradient-to-br from-[#A8C5B5] to-[#236B63] flex items-center justify-center">
-          <span className="text-7xl font-manrope font-bold text-white">{getInitials(profile.display_name)}</span>
+        <div className="w-full h-full bg-gradient-to-br from-[#1C1C22] to-[#252530] flex items-center justify-center">
+          <span className="text-7xl font-manrope font-bold" style={{ color: '#C8FF4D' }}>{getInitials(profile.display_name)}</span>
         </div>
       )}
       {/* Strong gradient for legibility */}
@@ -122,7 +122,7 @@ function CardContent({ profile, onInfo, vibeScore }: { profile: PublicProfile; o
       {/* Top-left: verified OR vibe score */}
       <div className="absolute top-4 left-4 flex flex-col gap-1.5">
         {profile.companion_verification_status === 'approved' && (
-          <div className="bg-[#236B63] text-white text-xs font-bold px-3 py-1 rounded-full">
+          <div className="text-white text-xs font-bold px-3 py-1 rounded-full" style={{ background: '#8B7CFF' }}>
             ✓ Verified
           </div>
         )}
@@ -243,7 +243,7 @@ export default function SwipePage() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex flex-col items-center justify-center px-8"
-            style={{ background: 'linear-gradient(160deg, #1A5750 0%, #236B63 60%, #15453F 100%)' }}
+            style={{ background: 'linear-gradient(160deg, #0D0D12 0%, #141418 60%, #1C1C22 100%)' }}
           >
             <motion.div
               initial={{ scale: 0.6, opacity: 0, y: 40 }}
@@ -251,7 +251,7 @@ export default function SwipePage() {
               transition={{ type: 'spring', stiffness: 260, damping: 22, delay: 0.1 }}
               className="w-full max-w-xs text-center"
             >
-              <div className="text-7xl mb-4">💚</div>
+              <div className="text-7xl mb-4">⚡</div>
               <h2 className="font-manrope font-extrabold text-4xl text-white mb-2 leading-tight">It's a Match!</h2>
               <p className="text-white/70 text-sm mb-8">
                 You and <span className="text-white font-semibold">{matchData.displayName}</span> both vibed!
@@ -295,7 +295,8 @@ export default function SwipePage() {
                 <motion.button
                   whileTap={{ scale: 0.96 }}
                   onClick={() => { setMatchData(null); navigate(`/messages/${matchData.conversationId}`) }}
-                  className="w-full py-4 bg-white rounded-2xl font-manrope font-bold text-[#236B63] text-base flex items-center justify-center gap-2 shadow-lg"
+                  className="w-full py-4 rounded-2xl font-manrope font-bold text-base flex items-center justify-center gap-2 shadow-lg"
+                  style={{ background: '#C8FF4D', color: '#0A1A00' }}
                 >
                   <MessageCircle size={18} /> Say Hello!
                 </motion.button>
@@ -314,15 +315,16 @@ export default function SwipePage() {
       <div className="flex flex-col items-center h-dvh pt-safe pb-[80px]">
         <div className="w-full px-4 pt-3 pb-2">
           <div className="flex items-center justify-between mb-2">
-            <h1 className="font-manrope font-bold text-lg text-[#24332F]">Discover</h1>
-            <span className="text-xs text-[#A1AAA5]">{remaining.length} profiles</span>
+            <h1 className="font-manrope font-bold text-lg text-[#F2F0EB]">Discover</h1>
+            <span className="text-xs text-[#52525E]">{remaining.length} profiles</span>
           </div>
           {/* Activity filter pills */}
           {allServices.length > 0 && (
             <div className="flex gap-2 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
               <button
                 onClick={() => { setSelectedService(null); setIndex(0); swipedRef.current.clear() }}
-                className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${!selectedService ? 'bg-[#236B63] text-white border-[#236B63]' : 'bg-white text-[#77817C] border-[#E8EAE6]'}`}
+                className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${!selectedService ? 'border-[#C8FF4D] text-[#0A1A00]' : 'bg-[#1C1C22] text-[#8B8B9A] border-[#2E2E3A]'}`}
+                style={!selectedService ? { background: '#C8FF4D' } : {}}
               >
                 All
               </button>
@@ -330,7 +332,8 @@ export default function SwipePage() {
                 <button
                   key={s.id}
                   onClick={() => { setSelectedService(String(s.id)); setIndex(0); swipedRef.current.clear() }}
-                  className={`shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${selectedService === String(s.id) ? 'bg-[#236B63] text-white border-[#236B63]' : 'bg-white text-[#77817C] border-[#E8EAE6]'}`}
+                  className={`shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${selectedService === String(s.id) ? 'border-[#C8FF4D] text-[#0A1A00]' : 'bg-[#1C1C22] text-[#8B8B9A] border-[#2E2E3A]'}`}
+                  style={selectedService === String(s.id) ? { background: '#C8FF4D' } : {}}
                 >
                   <span>{SERVICE_ICONS[s.slug] ?? '✨'}</span> {s.name}
                 </button>
@@ -343,21 +346,23 @@ export default function SwipePage() {
         <div className="relative flex-1 w-[86%] max-w-sm mx-auto">
           {remaining.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center px-8">
-              <div className="w-20 h-20 bg-gradient-to-br from-[#E8F0EA] to-[#C8DDD2] rounded-3xl flex items-center justify-center mb-5 shadow-sm">
+              <div className="w-20 h-20 rounded-3xl flex items-center justify-center mb-5" style={{ background: 'rgba(200,255,77,0.1)', border: '1px solid rgba(200,255,77,0.2)' }}>
                 <span className="text-3xl">🎉</span>
               </div>
-              <h3 className="font-manrope font-bold text-[#24332F] text-lg mb-2">You've seen everyone!</h3>
-              <p className="text-[#A1AAA5] text-sm leading-relaxed mb-6">Check back tomorrow for new companions near you</p>
+              <h3 className="font-manrope font-bold text-[#F2F0EB] text-lg mb-2">You've seen everyone!</h3>
+              <p className="text-[#8B8B9A] text-sm leading-relaxed mb-6">Check back tomorrow for new companions near you</p>
               <div className="flex flex-col gap-3 w-full max-w-[200px]">
                 <button
                   onClick={() => navigate('/discover')}
-                  className="px-6 py-3 bg-[#236B63] text-white rounded-2xl text-sm font-semibold font-manrope active:scale-95 transition-transform"
+                  className="px-6 py-3 rounded-2xl text-sm font-semibold font-manrope active:scale-95 transition-transform"
+                  style={{ background: '#C8FF4D', color: '#0A1A00' }}
                 >
                   Browse Discover
                 </button>
                 <button
                   onClick={() => { setIndex(0); refetch() }}
-                  className="px-6 py-3 bg-white border border-[#E8EAE6] text-[#77817C] rounded-2xl text-sm font-semibold font-manrope active:scale-95 transition-transform"
+                  className="px-6 py-3 rounded-2xl border text-sm font-semibold font-manrope active:scale-95 transition-transform"
+                  style={{ background: '#1C1C22', borderColor: '#2E2E3A', color: '#8B8B9A' }}
                 >
                   Refresh
                 </button>
@@ -389,25 +394,28 @@ export default function SwipePage() {
               whileTap={{ scale: 0.82 }}
               transition={{ type: 'spring', stiffness: 500, damping: 20 }}
               onClick={() => handleSwipe('left')}
-              className="w-16 h-16 bg-white border-2 border-[#F0EDE8] rounded-full flex items-center justify-center shadow-lg"
+              className="w-16 h-16 rounded-full flex items-center justify-center shadow-lg"
+              style={{ background: '#1C1C22', border: '2px solid #2E2E3A' }}
             >
-              <X size={26} className="text-[#D98D7A]" />
+              <X size={26} style={{ color: '#FF5C7A' }} />
             </motion.button>
             <motion.button
               whileTap={{ scale: 0.82 }}
               transition={{ type: 'spring', stiffness: 500, damping: 20 }}
               onClick={() => { const p = remaining[0]; if (p) discoverApi.saveProfile(p.id).then(() => toast('Saved! 🔖', 'success')) }}
-              className="w-12 h-12 bg-white border border-[#E8EAE6] rounded-full flex items-center justify-center shadow"
+              className="w-12 h-12 rounded-full flex items-center justify-center shadow"
+              style={{ background: '#1C1C22', border: '1px solid #2E2E3A' }}
             >
-              <Bookmark size={18} className="text-[#A1AAA5]" />
+              <Bookmark size={18} style={{ color: '#8B8B9A' }} />
             </motion.button>
             <motion.button
               whileTap={{ scale: 0.82 }}
               transition={{ type: 'spring', stiffness: 500, damping: 20 }}
               onClick={() => handleSwipe('right')}
-              className="w-16 h-16 bg-gradient-to-br from-[#4D9274] to-[#236B63] rounded-full flex items-center justify-center shadow-lg"
+              className="w-16 h-16 rounded-full flex items-center justify-center shadow-lg"
+              style={{ background: '#C8FF4D', boxShadow: '0 4px 24px rgba(200,255,77,0.35)' }}
             >
-              <Heart size={26} className="text-white fill-white" />
+              <Heart size={26} style={{ color: '#0A1A00', fill: '#0A1A00' }} />
             </motion.button>
           </div>
         )}

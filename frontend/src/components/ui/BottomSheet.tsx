@@ -21,17 +21,17 @@ export default function BottomSheet({ open, onClose, title, children, className 
 
   return (
     <div className="fixed inset-0 z-[150]">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/70" onClick={onClose} />
       <div className={cn(
         'absolute bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px]',
-        'bg-white rounded-t-3xl shadow-2xl',
+        'rounded-t-3xl shadow-2xl',
         'animate-[slideUp_0.3s_ease-out]',
         className
-      )}>
+      )} style={{ background: '#141418', borderTop: '1px solid #2E2E3A' }}>
         <div className="flex items-center justify-between p-4 pb-2">
-          <div className="w-10 h-1 bg-[#E8EAE6] rounded-full mx-auto absolute left-1/2 -translate-x-1/2 top-3" />
-          {title && <h3 className="font-manrope font-semibold text-[#24332F] text-base mt-3">{title}</h3>}
-          <button onClick={onClose} className="ml-auto mt-3 text-[#A1AAA5] hover:text-[#24332F]"><X size={20} /></button>
+          <div className="w-10 h-1 bg-[#2E2E3A] rounded-full mx-auto absolute left-1/2 -translate-x-1/2 top-3" />
+          {title && <h3 className="font-manrope font-semibold text-[#F2F0EB] text-base mt-3">{title}</h3>}
+          <button onClick={onClose} className="ml-auto mt-3 text-[#52525E] hover:text-[#F2F0EB]"><X size={20} /></button>
         </div>
         <div className="px-4 pb-8">{children}</div>
       </div>

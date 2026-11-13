@@ -26,17 +26,17 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="w-full min-h-screen bg-[#F4F6F8] flex">
+    <div className="w-full min-h-screen flex" style={{ background: '#07070A' }}>
       {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-[#E8EAE6] flex flex-col shrink-0 shadow-sm">
-        <div className="p-6 border-b border-[#E8EAE6]">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-[#194E49] to-[#4D9274] rounded-xl flex items-center justify-center">
-              <ShieldCheck size={16} className="text-white" />
+      <aside className="w-64 flex flex-col shrink-0" style={{ background: '#0D0D12', borderRight: '1px solid #2E2E3A' }}>
+        <div className="p-6" style={{ borderBottom: '1px solid #2E2E3A' }}>
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: '#C8FF4D' }}>
+              <ShieldCheck size={16} style={{ color: '#0A1A00' }} />
             </div>
             <div>
-              <span className="font-manrope font-bold text-sm text-[#24332F]">Find Your Vibe</span>
-              <p className="text-[10px] text-[#A1AAA5]">Admin Panel</p>
+              <span className="font-manrope font-bold text-sm" style={{ color: '#F2F0EB' }}>Find Your Vibe</span>
+              <p className="text-[10px]" style={{ color: '#52525E' }}>Admin Panel</p>
             </div>
           </div>
         </div>
@@ -48,23 +48,32 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               end={exact}
               className={({ isActive }) => cn(
                 'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors',
-                isActive ? 'bg-[#E8F0EA] text-[#236B63]' : 'text-[#77817C] hover:bg-[#F4F1EA]'
+                isActive
+                  ? 'text-[#C8FF4D]'
+                  : 'text-[#52525E] hover:text-[#F2F0EB]'
               )}
+              style={({ isActive }) => isActive ? { background: 'rgba(200,255,77,0.1)' } : { background: 'transparent' }}
             >
               <Icon size={17} />
               {label}
             </NavLink>
           ))}
         </nav>
-        <div className="p-4 border-t border-[#E8EAE6]">
-          <button onClick={handleLogout} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-[#D76D6D] hover:bg-red-50 w-full transition-colors">
+        <div className="p-4" style={{ borderTop: '1px solid #2E2E3A' }}>
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium w-full transition-colors"
+            style={{ color: '#FF5C7A' }}
+            onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,92,122,0.1)')}
+            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+          >
             <LogOut size={17} /> Sign Out
           </button>
         </div>
       </aside>
 
       {/* Main */}
-      <main className="flex-1 overflow-y-auto">{children}</main>
+      <main className="flex-1 overflow-y-auto" style={{ background: '#0D0D12' }}>{children}</main>
     </div>
   )
 }

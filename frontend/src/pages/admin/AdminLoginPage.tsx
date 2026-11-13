@@ -33,15 +33,15 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAF9F6] flex items-center justify-center p-6">
-      <div className="w-full max-w-sm bg-white rounded-3xl border border-[#E8EAE6] p-8 shadow-xl">
+    <div className="min-h-screen flex items-center justify-center p-6" style={{ background: '#07070A' }}>
+      <div className="w-full max-w-sm rounded-3xl p-8" style={{ background: '#141418', border: '1px solid #2E2E3A' }}>
         <div className="flex justify-center mb-6">
-          <div className="w-16 h-16 bg-gradient-to-br from-[#194E49] to-[#4D9274] rounded-2xl flex items-center justify-center">
-            <Shield size={28} className="text-white" />
+          <div className="w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: '#C8FF4D' }}>
+            <Shield size={28} style={{ color: '#0A1A00' }} />
           </div>
         </div>
-        <h1 className="font-manrope font-extrabold text-2xl text-[#24332F] text-center mb-1">Admin Panel</h1>
-        <p className="text-[#77817C] text-sm text-center mb-6">Find Your Vibe Administration</p>
+        <h1 className="font-manrope font-extrabold text-2xl text-center mb-1" style={{ color: '#F2F0EB' }}>Admin Panel</h1>
+        <p className="text-sm text-center mb-6" style={{ color: '#8B8B9A' }}>Find Your Vibe Administration</p>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <Input label="Email" type="email" placeholder="admin@findyourvibe.com" leftIcon={<Mail size={16} />} error={errors.email?.message} {...register('email')} />

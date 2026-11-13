@@ -223,7 +223,7 @@ export default function EditProfilePage() {
   const profile = user?.profile
 
   return (
-    <div className="app-container min-h-dvh bg-[#FAF9F6]">
+    <div className="app-container min-h-dvh bg-[#0D0D12]">
       <PageHeader title={fromDashboard ? 'Edit Profile & Services' : 'Edit Profile'} back />
 
       <div className="px-4 pb-10">
@@ -239,14 +239,14 @@ export default function EditProfilePage() {
             <div className="absolute inset-0 rounded-full bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
               <Camera size={22} className="text-white" />
             </div>
-            <div className="absolute bottom-0 right-0 w-10 h-10 bg-[#236B63] rounded-full border-2 border-white flex items-center justify-center shadow-md">
-              <Camera size={17} className="text-white" />
+            <div className="absolute bottom-0 right-0 w-10 h-10 rounded-full border-2 flex items-center justify-center shadow-md" style={{ background: '#C8FF4D', borderColor: '#0D0D12' }}>
+              <Camera size={17} style={{ color: '#0A1A00' }} />
             </div>
             <input type="file" accept="image/*,.heic,.heif" onChange={handlePhotoChange} className="hidden" />
           </label>
         </div>
 
-        <p className="text-center text-xs text-[#A1AAA5] -mt-2 mb-6">Tap to change your photo</p>
+        <p className="text-center text-xs text-[#52525E] -mt-2 mb-6">Tap to change your photo</p>
 
         <form onSubmit={handleSubmit(d => save.mutate(d))} className="space-y-5">
           <Input
@@ -284,22 +284,22 @@ export default function EditProfilePage() {
           />
 
           <div>
-            <label className="block text-sm font-semibold text-[#24332F] font-manrope mb-1.5">Introduction</label>
+            <label className="block text-sm font-semibold text-[#8B8B9A] font-manrope mb-1.5">Introduction</label>
             <textarea
               {...register('introduction')}
               placeholder="A brief introduction about yourself…"
               rows={3}
-              className="w-full border-[1.5px] border-[#E8EAE6] rounded-2xl px-4 py-3 text-sm text-[#24332F] placeholder:text-[#A1AAA5] focus:outline-none focus:border-[#236B63] resize-none bg-white"
+              className="w-full border-[1.5px] border-[#2E2E3A] rounded-2xl px-4 py-3 text-sm text-[#F2F0EB] placeholder:text-[#52525E] focus:outline-none focus:border-[#C8FF4D] resize-none bg-[#1C1C22]"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-[#24332F] font-manrope mb-1.5">About Me</label>
+            <label className="block text-sm font-semibold text-[#8B8B9A] font-manrope mb-1.5">About Me</label>
             <textarea
               {...register('bio')}
               placeholder="Tell people more about who you are…"
               rows={4}
-              className="w-full border-[1.5px] border-[#E8EAE6] rounded-2xl px-4 py-3 text-sm text-[#24332F] placeholder:text-[#A1AAA5] focus:outline-none focus:border-[#236B63] resize-none bg-white"
+              className="w-full border-[1.5px] border-[#2E2E3A] rounded-2xl px-4 py-3 text-sm text-[#F2F0EB] placeholder:text-[#52525E] focus:outline-none focus:border-[#C8FF4D] resize-none bg-[#1C1C22]"
             />
           </div>
 
@@ -307,16 +307,16 @@ export default function EditProfilePage() {
           {allServices.length > 0 && (
             <div ref={servicesRef} className="scroll-mt-4">
               <div className="flex items-center justify-between mb-1">
-                <label className="block text-sm font-semibold text-[#24332F] font-manrope">
+                <label className="block text-sm font-semibold text-[#F2F0EB] font-manrope">
                   Services I Offer
                 </label>
                 {selectedServiceIds.size > 0 && (
-                  <span className="text-xs font-bold text-[#236B63] bg-[#E8F0EA] px-2 py-0.5 rounded-full">
+                  <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(200,255,77,0.15)', color: '#C8FF4D' }}>
                     {selectedServiceIds.size} selected
                   </span>
                 )}
               </div>
-              <p className="text-xs text-[#A1AAA5] mb-3 leading-relaxed">
+              <p className="text-xs text-[#52525E] mb-3 leading-relaxed">
                 Tap to select the services you offer. These appear on your public profile and users can book them.
               </p>
               <div className="grid grid-cols-2 gap-2.5">
@@ -328,19 +328,16 @@ export default function EditProfilePage() {
                       key={service.id}
                       type="button"
                       onClick={() => toggleService(String(service.id))}
-                      className={`relative flex flex-col items-center gap-2 px-3 py-4 rounded-2xl border-2 text-center transition-all active:scale-95 ${
-                        selected
-                          ? 'border-[#236B63] bg-[#E8F0EA] shadow-sm'
-                          : 'border-[#E8EAE6] bg-white'
-                      }`}
+                      className="relative flex flex-col items-center gap-2 px-3 py-4 rounded-2xl border-2 text-center transition-all active:scale-95"
+                      style={selected ? { borderColor: '#C8FF4D', background: 'rgba(200,255,77,0.1)' } : { borderColor: '#2E2E3A', background: '#1C1C22' }}
                     >
                       <span className="text-2xl">{icon}</span>
-                      <span className={`text-xs font-semibold leading-tight ${selected ? 'text-[#236B63]' : 'text-[#24332F]'}`}>
+                      <span className="text-xs font-semibold leading-tight" style={{ color: selected ? '#C8FF4D' : '#8B8B9A' }}>
                         {service.name}
                       </span>
                       {selected && (
-                        <div className="absolute top-2 right-2 w-5 h-5 bg-[#236B63] rounded-full flex items-center justify-center shadow-sm">
-                          <Check size={11} className="text-white" strokeWidth={3} />
+                        <div className="absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center shadow-sm" style={{ background: '#C8FF4D' }}>
+                          <Check size={11} style={{ color: '#0A1A00' }} strokeWidth={3} />
                         </div>
                       )}
                     </button>
@@ -348,7 +345,7 @@ export default function EditProfilePage() {
                 })}
               </div>
               {selectedServiceIds.size === 0 && (
-                <p className="text-xs text-[#D9A45B] text-center mt-3 flex items-center justify-center gap-1">
+                <p className="text-xs text-[#FF5C7A] text-center mt-3 flex items-center justify-center gap-1">
                   <span>⚠️</span> Select at least one service to show on your profile
                 </p>
               )}
@@ -358,21 +355,22 @@ export default function EditProfilePage() {
           {/* Profile prompts */}
           <div className="space-y-3">
             <div>
-              <label className="block text-sm font-semibold text-[#24332F] font-manrope mb-0.5">Profile Prompts</label>
-              <p className="text-xs text-[#A1AAA5] mb-3">Add up to 3 Q&A cards to spark conversations on your profile.</p>
+              <label className="block text-sm font-semibold text-[#F2F0EB] font-manrope mb-0.5">Profile Prompts</label>
+              <p className="text-xs text-[#52525E] mb-3">Add up to 3 Q&A cards to spark conversations on your profile.</p>
             </div>
             {prompts.map((p, i) => (
-              <div key={i} className="rounded-2xl border-[1.5px] border-[#E8EAE6] bg-white p-4 space-y-2">
+              <div key={i} className="rounded-2xl p-4 space-y-2" style={{ background: '#141418', border: '1.5px solid #2E2E3A' }}>
                 <div className="relative">
                   <select
                     value={p.q}
                     onChange={e => setPrompts(prev => prev.map((pp, ii) => ii === i ? { ...pp, q: e.target.value } : pp))}
-                    className="w-full border-[1.5px] border-[#E8EAE6] rounded-xl px-3 py-2.5 text-sm text-[#24332F] focus:outline-none focus:border-[#236B63] bg-white appearance-none pr-8"
+                    className="w-full rounded-xl px-3 py-2.5 text-sm focus:outline-none appearance-none pr-8"
+                    style={{ background: '#1C1C22', border: '1.5px solid #2E2E3A', color: p.q ? '#F2F0EB' : '#52525E' }}
                   >
                     <option value="">Choose a prompt…</option>
                     {PROMPT_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                   </select>
-                  <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#A1AAA5] pointer-events-none" />
+                  <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: '#52525E' }} />
                 </div>
                 {p.q && (
                   <textarea
@@ -381,7 +379,8 @@ export default function EditProfilePage() {
                     placeholder="Your answer…"
                     rows={2}
                     maxLength={500}
-                    className="w-full border-[1.5px] border-[#E8EAE6] rounded-xl px-3 py-2.5 text-sm text-[#24332F] placeholder:text-[#A1AAA5] focus:outline-none focus:border-[#236B63] resize-none"
+                    className="w-full rounded-xl px-3 py-2.5 text-sm placeholder:text-[#52525E] focus:outline-none resize-none"
+                    style={{ background: '#1C1C22', border: '1.5px solid #2E2E3A', color: '#F2F0EB' }}
                   />
                 )}
               </div>
@@ -389,31 +388,32 @@ export default function EditProfilePage() {
           </div>
 
           {/* Voice intro */}
-          <div className="rounded-2xl border-[1.5px] border-[#E8EAE6] bg-white p-4 space-y-3">
+          <div className="rounded-2xl p-4 space-y-3" style={{ background: '#141418', border: '1.5px solid #2E2E3A' }}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Mic size={18} className="text-[#236B63]" />
-                <span className="text-sm font-semibold text-[#24332F] font-manrope">Voice Intro</span>
+                <Mic size={18} style={{ color: '#C8FF4D' }} />
+                <span className="text-sm font-semibold text-[#F2F0EB] font-manrope">Voice Intro</span>
               </div>
               {profile?.voice_intro_url && !recordedBlob && (
-                <span className="text-xs font-bold text-[#236B63] bg-[#E8F0EA] px-2.5 py-1 rounded-full flex items-center gap-1">
+                <span className="text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1" style={{ background: 'rgba(200,255,77,0.15)', color: '#C8FF4D' }}>
                   <Check size={11} strokeWidth={3} /> Saved
                 </span>
               )}
             </div>
-            <p className="text-xs text-[#A1AAA5] leading-relaxed">
+            <p className="text-xs text-[#52525E] leading-relaxed">
               Record a 30-second voice intro. It plays on your profile so people can hear your personality before connecting.
             </p>
 
             {/* Existing voice intro playback */}
             {profile?.voice_intro_url && !recordedBlob && (
               <div className="flex items-center gap-3">
-                <span className="text-xs text-[#77817C] flex-1">Current voice intro saved</span>
+                <span className="text-xs text-[#8B8B9A] flex-1">Current voice intro saved</span>
                 <button
                   type="button"
                   onClick={() => deleteVoice.mutate()}
                   disabled={deleteVoice.isPending}
-                  className="text-[#D76D6D] text-xs font-semibold flex items-center gap-1 disabled:opacity-50"
+                  className="text-xs font-semibold flex items-center gap-1 disabled:opacity-50"
+                  style={{ color: '#FF5C7A' }}
                 >
                   <Trash2 size={13} /> Remove
                 </button>
@@ -426,11 +426,12 @@ export default function EditProfilePage() {
                 <button
                   type="button"
                   onClick={togglePlayback}
-                  className="w-9 h-9 rounded-full bg-[#E8F0EA] flex items-center justify-center shrink-0"
+                  className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
+                  style={{ background: 'rgba(200,255,77,0.15)' }}
                 >
-                  {isPlaying ? <Pause size={15} className="text-[#236B63]" /> : <Play size={15} className="text-[#236B63] ml-0.5" />}
+                  {isPlaying ? <Pause size={15} style={{ color: '#C8FF4D' }} /> : <Play size={15} style={{ color: '#C8FF4D' }} className="ml-0.5" />}
                 </button>
-                <span className="text-xs text-[#77817C] flex-1">Recording ready</span>
+                <span className="text-xs text-[#8B8B9A] flex-1">Recording ready</span>
                 <Button
                   type="button"
                   size="sm"
@@ -439,7 +440,7 @@ export default function EditProfilePage() {
                 >
                   Save
                 </Button>
-                <button type="button" onClick={() => { setRecordedBlob(null); playbackRef.current = null }} className="text-[#A1AAA5]">
+                <button type="button" onClick={() => { setRecordedBlob(null); playbackRef.current = null }} style={{ color: '#52525E' }}>
                   <Trash2 size={15} />
                 </button>
               </div>
@@ -450,53 +451,52 @@ export default function EditProfilePage() {
               <button
                 type="button"
                 onClick={isRecording ? stopRecording : startRecording}
-                className={`w-full py-3 rounded-xl flex items-center justify-center gap-2 text-sm font-semibold transition-colors ${
-                  isRecording
-                    ? 'bg-[#D76D6D] text-white animate-pulse'
-                    : 'bg-[#E8F0EA] text-[#236B63] hover:bg-[#D6EBE2]'
-                }`}
+                className="w-full py-3 rounded-xl flex items-center justify-center gap-2 text-sm font-semibold transition-colors"
+                style={isRecording
+                  ? { background: 'rgba(255,92,122,0.2)', color: '#FF5C7A', animation: 'pulse 2s infinite' }
+                  : { background: 'rgba(200,255,77,0.1)', color: '#C8FF4D' }}
               >
                 {isRecording ? <MicOff size={16} /> : <Mic size={16} />}
                 {isRecording ? 'Stop Recording' : (profile?.voice_intro_url ? 'Record New Intro' : 'Start Recording')}
               </button>
             )}
             {isRecording && (
-              <p className="text-xs text-center text-[#A1AAA5]">Recording… (max 30 sec)</p>
+              <p className="text-xs text-center text-[#52525E]">Recording… (max 30 sec)</p>
             )}
           </div>
 
           {/* Identity verification */}
-          <div className="rounded-2xl border-[1.5px] border-[#E8EAE6] bg-white p-4 space-y-3">
+          <div className="rounded-2xl p-4 space-y-3" style={{ background: '#141418', border: '1.5px solid #2E2E3A' }}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <ShieldCheck size={18} className="text-[#236B63]" />
-                <span className="text-sm font-semibold text-[#24332F] font-manrope">Identity Verification</span>
+                <ShieldCheck size={18} style={{ color: '#8B7CFF' }} />
+                <span className="text-sm font-semibold text-[#F2F0EB] font-manrope">Identity Verification</span>
               </div>
               {profile?.identity_verified ? (
-                <span className="flex items-center gap-1 text-xs font-bold text-[#236B63] bg-[#E8F0EA] px-2.5 py-1 rounded-full">
+                <span className="flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full" style={{ background: 'rgba(139,124,255,0.15)', color: '#8B7CFF' }}>
                   <Check size={11} strokeWidth={3} /> Verified
                 </span>
               ) : profile?.selfie_pending ? (
-                <span className="flex items-center gap-1 text-xs font-bold text-[#D9A45B] bg-[#FEF3DB] px-2.5 py-1 rounded-full">
+                <span className="flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full" style={{ background: 'rgba(255,159,67,0.15)', color: '#FF9F43' }}>
                   <Clock size={11} /> Pending Review
                 </span>
               ) : (
-                <span className="text-xs text-[#A1AAA5]">Not verified</span>
+                <span className="text-xs text-[#52525E]">Not verified</span>
               )}
             </div>
 
             {!profile?.identity_verified && (
               <>
-                <p className="text-xs text-[#A1AAA5] leading-relaxed">
+                <p className="text-xs text-[#52525E] leading-relaxed">
                   {profile?.selfie_pending
                     ? 'Your selfie has been submitted. Our team verifies IDs within 24 hours.'
                     : 'Submit a clear selfie photo. Our team verifies IDs within 24 hours. A verified badge appears on your profile.'}
                 </p>
                 {!profile?.selfie_pending && (
                   <div className="space-y-2">
-                    <label className="flex items-center gap-2 cursor-pointer border-[1.5px] border-dashed border-[#E8EAE6] rounded-xl px-4 py-3 hover:border-[#236B63] transition-colors">
-                      <Upload size={16} className="text-[#A1AAA5]" />
-                      <span className="text-sm text-[#A1AAA5]">
+                    <label className="flex items-center gap-2 cursor-pointer rounded-xl px-4 py-3 transition-colors" style={{ border: '1.5px dashed #2E2E3A' }}>
+                      <Upload size={16} style={{ color: '#52525E' }} />
+                      <span className="text-sm text-[#52525E]">
                         {selfieFile ? selfieFile.name : 'Choose selfie photo…'}
                       </span>
                       <input
