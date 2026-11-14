@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   ArrowLeft, Send, Smile, Info, CalendarDays,
   Clock, IndianRupee, Check, CheckCheck, CornerUpLeft, Copy, ChevronDown, X, Trash2, Star,
-  Mic, Play, Pause, MapPin,
+  Mic, Play, Pause, MapPin, Search,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { connectionsApi } from '../../api/connections'
@@ -229,6 +229,11 @@ export default function ChatPage() {
   const [isRecording, setIsRecording] = useState(false)
   const [recordingTime, setRecordingTime] = useState(0)
   const [locSending, setLocSending] = useState(false)
+  const [showSearch, setShowSearch] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [newMsgSender, setNewMsgSender] = useState<string | null>(null)
+  const prevMsgCountRef = useRef(0)
+  const searchInputRef = useRef<HTMLInputElement>(null)
 
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -336,7 +341,15 @@ export default function ChatPage() {
   useEffect(() => {
     if (isNearBottom.current) {
       bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+      setNewMsgSender(null)
+    } else if (messages.length > prevMsgCountRef.current) {
+      // New message arrived while scrolled up — show sender name pill
+      const newest = messages[messages.length - 1]
+      if (newest && newest.sender.id !== user?.id) {
+        setNewMsgSender(newest.sender.display_name)
+      }
     }
+    prevMsgCountRef.current = messages.length
   }, [messages.length])
 
   const handleScroll = useCallback(() => {
@@ -351,6 +364,7 @@ export default function ChatPage() {
     isNearBottom.current = true
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
     setShowScrollBtn(false)
+    setNewMsgSender(null)
   }
 
   // Echo: messages + typing whisper
@@ -700,6 +714,35 @@ export default function ChatPage() {
     })
   }
 
+  // Message search helpers
+  const highlightText = (text: string, query: string) => {
+    if (!query.trim()) return <span>{text}</span>
+    const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi')
+    const parts = text.split(regex)
+    return (
+      <>
+        {parts.map((part, i) =>
+          regex.test(part)
+            ? <mark key={i} style={{ background: 'rgba(200,255,77,0.35)', color: '#0A1A00', borderRadius: 2, padding: '0 1px' }}>{part}</mark>
+            : <span key={i}>{part}</span>
+        )}
+      </>
+    )
+  }
+
+  const filteredGroups = useMemo(() => {
+    if (!searchQuery.trim()) return groups
+    const q = searchQuery.toLowerCase()
+    return groups
+      .map(g => ({
+        ...g,
+        messages: g.messages.filter(m => m.body && m.body.toLowerCase().includes(q) && !m.deleted),
+      }))
+      .filter(g => g.messages.length > 0)
+  }, [groups, searchQuery])
+
+  const searchResultCount = filteredGroups.reduce((n, g) => n + g.messages.length, 0)
+
   return (
     <div className="app-container flex flex-col h-dvh" style={{ background: '#0D0D12' }}>
 
@@ -739,12 +782,60 @@ export default function ChatPage() {
         )}
 
         <button
+          onClick={() => {
+            setShowSearch(s => { if (s) setSearchQuery(''); return !s })
+            setTimeout(() => searchInputRef.current?.focus(), 100)
+          }}
+          className={`w-9 h-9 flex items-center justify-center rounded-xl active:bg-white/10 transition-colors ${showSearch ? 'text-[#C8FF4D]' : 'text-[#8B8B9A]'}`}
+        >
+          <Search size={18} />
+        </button>
+        <button
           onClick={() => { setShowChatOptions(true); setConfirmClear(false) }}
           className="w-9 h-9 flex items-center justify-center rounded-xl active:bg-white/10 transition-colors"
         >
           <Info size={18} className="text-[#8B8B9A]" />
         </button>
       </div>
+
+      {/* Search bar */}
+      <AnimatePresence>
+        {showSearch && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2 }}
+            className="shrink-0 overflow-hidden"
+            style={{ background: '#141418', borderBottom: '1px solid #2E2E3A' }}
+          >
+            <div className="flex items-center gap-2 px-3 py-2.5">
+              <div className="flex-1 flex items-center gap-2 px-3 py-2 rounded-xl" style={{ background: '#1C1C22' }}>
+                <Search size={15} style={{ color: '#52525E', flexShrink: 0 }} />
+                <input
+                  ref={searchInputRef}
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  placeholder="Search messages…"
+                  className="flex-1 bg-transparent text-sm text-[#F2F0EB] placeholder:text-[#52525E] outline-none"
+                />
+                {searchQuery && (
+                  <span className="text-[11px] font-semibold shrink-0" style={{ color: '#C8FF4D' }}>
+                    {searchResultCount} result{searchResultCount !== 1 ? 's' : ''}
+                  </span>
+                )}
+              </div>
+              <button
+                onClick={() => { setSearchQuery(''); setShowSearch(false) }}
+                className="text-xs font-semibold shrink-0"
+                style={{ color: '#8B8B9A' }}
+              >
+                Cancel
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Live booking banner — role-aware */}
       <AnimatePresence>
@@ -953,8 +1044,15 @@ export default function ChatPage() {
             </div>
           </motion.div>
         ) : (
+          {searchQuery && filteredGroups.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+              <p className="text-3xl mb-3">🔍</p>
+              <p className="text-sm font-semibold text-[#F2F0EB]">No results</p>
+              <p className="text-xs text-[#52525E] mt-1">No messages match "{searchQuery}"</p>
+            </div>
+          )}
           <div className="space-y-3">
-            {groups.map(group => (
+            {filteredGroups.map(group => (
               <div key={group.date}>
                 {/* Date divider */}
                 <div className="flex justify-center mb-2.5">
@@ -1046,7 +1144,7 @@ export default function ChatPage() {
                                 ? <AudioMessage url={msg.attachments[0].url} isMe={isMe} />
                                 : msg.body?.startsWith('__LOCATION__:') && !msg.deleted
                                 ? <LocationMessage body={msg.body} isMe={isMe} />
-                                : <span>{msg.deleted ? '🚫 This message was deleted' : msg.body}</span>
+                                : <span>{msg.deleted ? '🚫 This message was deleted' : highlightText(msg.body ?? '', searchQuery)}</span>
                               }
                               {/* Timestamp row — only on last in chain */}
                               {isLastInChain && (
@@ -1116,18 +1214,27 @@ export default function ChatPage() {
         <div ref={bottomRef} className="h-2" />
       </div>
 
-      {/* Scroll to bottom button */}
+      {/* Scroll to bottom / new message pill */}
       <AnimatePresence>
         {showScrollBtn && (
           <motion.button
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
+            key={newMsgSender ?? 'scroll'}
+            initial={{ opacity: 0, y: 12, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 12, scale: 0.9 }}
             onClick={scrollToBottom}
-            className="absolute bottom-28 right-4 w-10 h-10 rounded-full shadow-lg flex items-center justify-center z-20"
-            style={{ background: '#1C1C22', border: '1px solid #2E2E3A', color: '#C8FF4D' }}
+            className="absolute bottom-28 left-1/2 -translate-x-1/2 shadow-lg flex items-center gap-1.5 z-20 active:scale-95 transition-transform"
+            style={newMsgSender
+              ? { background: '#C8FF4D', color: '#0A1A00', borderRadius: 999, padding: '7px 16px 7px 12px', boxShadow: '0 4px 20px rgba(200,255,77,0.3)' }
+              : { background: '#1C1C22', border: '1px solid #2E2E3A', color: '#C8FF4D', borderRadius: 999, padding: '7px 12px' }
+            }
           >
-            <ChevronDown size={20} />
+            <ChevronDown size={16} />
+            {newMsgSender && (
+              <span className="text-xs font-semibold truncate max-w-[140px]">
+                New from {newMsgSender}
+              </span>
+            )}
           </motion.button>
         )}
       </AnimatePresence>
