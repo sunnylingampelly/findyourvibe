@@ -1044,6 +1044,7 @@ export default function ChatPage() {
             </div>
           </motion.div>
         ) : (
+          <>
           {searchQuery && filteredGroups.length === 0 && (
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <p className="text-3xl mb-3">🔍</p>
@@ -1210,6 +1211,7 @@ export default function ChatPage() {
               )}
             </AnimatePresence>
           </div>
+          </>
         )}
         <div ref={bottomRef} className="h-2" />
       </div>
