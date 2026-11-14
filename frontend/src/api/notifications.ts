@@ -2,11 +2,12 @@ import api from './client'
 
 export interface AppNotification {
   id: string
-  type: 'connection_request' | 'connection_accepted' | 'profile_saved' | string
+  type: 'connection_request' | 'connection_accepted' | 'profile_saved' | 'message' | 'booking' | string
   actor: { id: string; name: string; display_name: string; photo_url: string | null } | null
   message: string
   read: boolean
   created_at: string
+  data?: Record<string, string | number | boolean | null | undefined>
 }
 
 export const notificationsApi = {

@@ -88,7 +88,7 @@ export default function ProfilePage() {
     const checks = [
       { weight: 25, pass: !!profile?.profile_photo_url },
       { weight: 20, pass: !!(profile?.bio && profile.bio.trim().length > 10) },
-      { weight: 20, pass: !!(profile?.interests?.length || (profile as unknown as Record<string, unknown>)?.vibe_tags?.length) },
+      { weight: 20, pass: !!((profile as unknown as Record<string, unknown[]>)?.interests?.length || (profile as unknown as Record<string, unknown[]>)?.vibe_tags?.length) },
       { weight: 15, pass: !!(profile?.city || (profile as unknown as Record<string, unknown>)?.location) },
       { weight: 10, pass: !!(profile?.display_name || user?.name) },
       { weight: 10, pass: !!(profile?.date_of_birth || (profile as unknown as Record<string, unknown>)?.age) },
