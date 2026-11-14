@@ -24,6 +24,7 @@ export default function OnboardingPage() {
   const qc = useQueryClient()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [step, setStep] = useState(1)
+  const [direction, setDirection] = useState(1)
   const [form, setForm] = useState({
     display_name: '',
     date_of_birth: '',
@@ -106,7 +107,11 @@ export default function OnboardingPage() {
     }
   }
 
+  const goBack = () => { setDirection(-1); setStep(s => s - 1) }
+  const advance = () => { setDirection(1); setStep(s => s + 1) }
+
   const next = async () => {
+    setDirection(1)
     if (step === 1) {
       if (form.date_of_birth && !isDobValid(form.date_of_birth)) {
         toast('You must be at least 18 years old to join.', 'error')
@@ -116,22 +121,23 @@ export default function OnboardingPage() {
     if (step === 2) {
       // Location step — mandatory
       if (!form.location.trim()) { toast('Please select your city or area', 'error'); return }
-      setStep(s => s + 1)
+      advance()
       return
     }
     if (step === 3) {
       // Photo step — just advance (photos already uploaded via API)
       if (photos.length < 2) { toast('Please upload at least 2 photos', 'error'); return }
-      setStep(s => s + 1)
+      advance()
       return
     }
     if (step < TOTAL_STEPS) {
       try {
         await save.mutateAsync(form)
-        setStep(s => s + 1)
+        advance()
       } catch (err: unknown) {
         const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
         toast(msg || 'Could not save. Please try again.', 'error')
+        setDirection(0)
       }
     } else {
       complete.mutate()
@@ -166,21 +172,29 @@ export default function OnboardingPage() {
     <div className="app-container min-h-dvh bg-[#0D0D12] flex flex-col">
       {/* Progress */}
       <div className="px-6 pt-safe pt-6 pb-4">
-        <div className="mb-3">
-          <div className="h-1.5 bg-[#2E2E3A] rounded-full overflow-hidden">
-            <motion.div
-              className="h-full rounded-full"
-              style={{ background: '#C8FF4D' }}
-              initial={false}
-              animate={{ width: `${(step / TOTAL_STEPS) * 100}%` }}
-              transition={{ duration: 0.35, ease: 'easeOut' }}
-            />
-          </div>
+        {/* Step dots */}
+        <div className="flex items-center justify-center gap-1.5 mb-4">
+          {Array.from({ length: TOTAL_STEPS }, (_, i) => {
+            const s = i + 1
+            const done = s < step
+            const active = s === step
+            return (
+              <motion.div
+                key={s}
+                animate={{
+                  width: active ? 24 : 6,
+                  background: done || active ? '#C8FF4D' : '#2E2E3A',
+                }}
+                transition={{ duration: 0.3, ease: 'easeOut' }}
+                className="h-1.5 rounded-full"
+              />
+            )
+          })}
         </div>
         <div className="flex items-center justify-between">
           <span className="text-xs text-[#52525E] font-medium">Step {step} of {TOTAL_STEPS}</span>
           {step > 1 && (
-            <button onClick={() => setStep(s => s - 1)} className="text-xs text-[#8B8B9A] flex items-center gap-1">
+            <button onClick={goBack} className="text-xs text-[#8B8B9A] flex items-center gap-1 active:text-[#F2F0EB] transition-colors">
               <ArrowLeft size={12} /> Back
             </button>
           )}
@@ -188,13 +202,19 @@ export default function OnboardingPage() {
       </div>
 
       {/* Steps */}
-      <AnimatePresence mode="wait">
+      <AnimatePresence mode="wait" custom={direction}>
         <motion.div
           key={step}
-          initial={{ opacity: 0, x: 30 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -30 }}
-          transition={{ duration: 0.2 }}
+          custom={direction}
+          variants={{
+            enter: (d: number) => ({ x: d >= 0 ? 60 : -60, opacity: 0 }),
+            center: { x: 0, opacity: 1 },
+            exit: (d: number) => ({ x: d >= 0 ? -60 : 60, opacity: 0 }),
+          }}
+          initial="enter"
+          animate="center"
+          exit="exit"
+          transition={{ type: 'spring', stiffness: 380, damping: 32 }}
           className="flex-1 px-6 pb-6 overflow-y-auto"
         >
           {/* Step 1: Basic Info */}
@@ -245,63 +265,101 @@ export default function OnboardingPage() {
 
           {/* Step 3: Photos */}
           {step === 3 && (
-            <div className="space-y-4">
+            <div className="space-y-5">
               <div>
                 <h2 className="font-manrope font-bold text-2xl text-[#F2F0EB] mb-1">Your Photos</h2>
-                <p className="text-[#8B8B9A] text-sm">Upload 2–5 photos. The first becomes your main photo.</p>
+                <p className="text-[#8B8B9A] text-sm">Upload 2–5 photos. The first becomes your main profile photo.</p>
               </div>
 
-              {/* Photo grid */}
-              <div className="grid grid-cols-3 gap-2">
-                {photos.map((photo, i) => (
-                  <div key={photo.id} className="relative aspect-square rounded-2xl overflow-hidden bg-[#1C1C22]">
-                    <img src={photo.url} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
-                    {/* Primary badge */}
-                    {photo.is_primary && (
-                      <div className="absolute top-1.5 left-1.5 rounded-full px-2 py-0.5 flex items-center gap-1" style={{ background: '#C8FF4D' }}>
-                        <Star size={9} style={{ color: '#0A1A00', fill: '#0A1A00' }} />
-                        <span className="text-[9px] font-semibold" style={{ color: '#0A1A00' }}>Main</span>
+              {/* Large circular primary photo picker */}
+              <div className="flex flex-col items-center gap-3">
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadingPhoto}
+                  className="relative w-32 h-32 rounded-full overflow-hidden border-2 border-dashed transition-all active:scale-95"
+                  style={{ borderColor: photos.length > 0 ? '#C8FF4D' : 'rgba(200,255,77,0.4)', background: '#1C1C22' }}
+                >
+                  {photos.length > 0 ? (
+                    <>
+                      <img
+                        src={photos.find(p => p.is_primary)?.url ?? photos[0].url}
+                        alt="Main"
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                        <Camera size={24} className="text-white" />
                       </div>
-                    )}
-                    {/* Actions */}
-                    <div className="absolute bottom-1.5 right-1.5 flex gap-1">
-                      {!photo.is_primary && (
-                        <button onClick={() => handleSetPrimary(photo.id)} className="w-6 h-6 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center">
-                          <Star size={11} className="text-white" />
-                        </button>
-                      )}
-                      <button onClick={() => handlePhotoDelete(photo.id)} className="w-6 h-6 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center">
-                        <Trash2 size={11} className="text-white" />
-                      </button>
+                    </>
+                  ) : uploadingPhoto ? (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <div className="w-8 h-8 border-2 rounded-full animate-spin" style={{ borderColor: '#C8FF4D', borderTopColor: 'transparent' }} />
                     </div>
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center gap-2">
+                      <Camera size={28} style={{ color: '#C8FF4D' }} />
+                      <span className="text-[10px] font-semibold text-[#8B8B9A]">Add Photo</span>
+                    </div>
+                  )}
+                </button>
+                {photos.length > 0 && (
+                  <div className="flex items-center gap-1.5 text-xs font-medium" style={{ color: '#C8FF4D' }}>
+                    <Star size={12} fill="#C8FF4D" />
+                    Main photo
                   </div>
-                ))}
-
-                {/* Add photo slot */}
-                {photos.length < 5 && (
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploadingPhoto}
-                    className="aspect-square rounded-2xl border-2 border-dashed flex flex-col items-center justify-center gap-1.5 transition-colors"
-                    style={{ borderColor: 'rgba(200,255,77,0.3)', background: 'rgba(200,255,77,0.05)' }}
-                  >
-                    {uploadingPhoto ? (
-                      <div className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: '#C8FF4D', borderTopColor: 'transparent' }} />
-                    ) : (
-                      <>
-                        <Camera size={20} style={{ color: '#C8FF4D' }} />
-                        <span className="text-[10px] text-[#8B8B9A] font-medium">Add photo</span>
-                      </>
-                    )}
-                  </button>
                 )}
               </div>
 
+              {/* Additional photos grid (shown after at least 1 photo) */}
+              {photos.length > 0 && (
+                <div>
+                  <p className="text-xs text-[#52525E] mb-2 font-medium">All photos</p>
+                  <div className="grid grid-cols-4 gap-2">
+                    {photos.map((photo, i) => (
+                      <div key={photo.id} className="relative aspect-square rounded-xl overflow-hidden bg-[#1C1C22]">
+                        <img src={photo.url} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
+                        {photo.is_primary && (
+                          <div className="absolute top-1 left-1 w-4 h-4 rounded-full flex items-center justify-center" style={{ background: '#C8FF4D' }}>
+                            <Star size={8} style={{ color: '#0A1A00', fill: '#0A1A00' }} />
+                          </div>
+                        )}
+                        <div className="absolute bottom-1 right-1 flex gap-0.5">
+                          {!photo.is_primary && (
+                            <button onClick={() => handleSetPrimary(photo.id)} className="w-5 h-5 bg-black/60 backdrop-blur-sm rounded-full flex items-center justify-center">
+                              <Star size={9} className="text-white" />
+                            </button>
+                          )}
+                          <button onClick={() => handlePhotoDelete(photo.id)} className="w-5 h-5 bg-black/60 backdrop-blur-sm rounded-full flex items-center justify-center">
+                            <Trash2 size={9} className="text-white" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                    {photos.length < 5 && (
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={uploadingPhoto}
+                        className="aspect-square rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-colors"
+                        style={{ borderColor: 'rgba(200,255,77,0.3)', background: 'rgba(200,255,77,0.04)' }}
+                      >
+                        {uploadingPhoto ? (
+                          <div className="w-4 h-4 border-2 rounded-full animate-spin" style={{ borderColor: '#C8FF4D', borderTopColor: 'transparent' }} />
+                        ) : (
+                          <Camera size={16} style={{ color: '#C8FF4D' }} />
+                        )}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
               <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoAdd} />
 
-              <p className="text-xs text-[#52525E]">
-                {photos.length}/5 photos · {Math.max(0, 2 - photos.length) > 0 ? `${2 - photos.length} more required` : 'Minimum met ✓'}
-              </p>
+              <div className="flex items-center justify-between text-xs text-[#52525E]">
+                <span>{photos.length}/5 photos</span>
+                <span style={{ color: photos.length >= 2 ? '#C8FF4D' : '#52525E' }}>
+                  {photos.length >= 2 ? '✓ Minimum met' : `${2 - photos.length} more required`}
+                </span>
+              </div>
               <p className="text-xs text-[#52525E]">Tap ★ on any photo to set it as your main photo.</p>
             </div>
           )}
