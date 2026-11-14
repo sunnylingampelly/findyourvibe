@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { motion, useMotionValue, useTransform, useAnimation, AnimatePresence, type PanInfo } from 'framer-motion'
-import { X, Heart, Info, Bookmark, MapPin, Star, MessageCircle } from 'lucide-react'
+import { X, Heart, Info, Bookmark, MapPin, Star, MessageCircle, Undo2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { discoverApi } from '../../api/discover'
 import { useAuthStore } from '../../stores/authStore'
@@ -44,22 +44,28 @@ interface MatchData {
 function SwipeCard({ profile, onSwipe, isTop, vibeScore }: { profile: PublicProfile; onSwipe: (dir: 'left' | 'right') => void; isTop: boolean; vibeScore?: number }) {
   const navigate = useNavigate()
   const x = useMotionValue(0)
-  const rotate = useTransform(x, [-200, 200], [-25, 25])
-  const likeOpacity = useTransform(x, [20, 100], [0, 1])
-  const passOpacity = useTransform(x, [-100, -20], [1, 0])
+  const rotate = useTransform(x, [-220, 220], [-28, 28])
+  const likeOpacity = useTransform(x, [15, 90], [0, 1])
+  const passOpacity = useTransform(x, [-90, -15], [1, 0])
   const controls = useAnimation()
 
   const handleDragEnd = async (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     const offset = info.offset.x
     const velocity = info.velocity.x
     if (offset > 100 || velocity > 500) {
-      await controls.start({ x: 500, opacity: 0, transition: { duration: 0.3 } })
+      await controls.start({
+        x: 600, opacity: 0, rotate: 20,
+        transition: { type: 'spring', stiffness: 260, damping: 22 },
+      })
       onSwipe('right')
     } else if (offset < -100 || velocity < -500) {
-      await controls.start({ x: -500, opacity: 0, transition: { duration: 0.3 } })
+      await controls.start({
+        x: -600, opacity: 0, rotate: -20,
+        transition: { type: 'spring', stiffness: 260, damping: 22 },
+      })
       onSwipe('left')
     } else {
-      controls.start({ x: 0, transition: { type: 'spring', stiffness: 300, damping: 30 } })
+      controls.start({ x: 0, transition: { type: 'spring', stiffness: 320, damping: 30 } })
     }
   }
 
@@ -80,18 +86,44 @@ function SwipeCard({ profile, onSwipe, isTop, vibeScore }: { profile: PublicProf
       dragConstraints={{ left: 0, right: 0 }}
       onDragEnd={handleDragEnd}
     >
-      {/* Like overlay */}
-      <motion.div className="absolute inset-0 z-10 flex items-center justify-center rounded-3xl" style={{ opacity: likeOpacity, background: 'rgba(200,255,77,0.55)' }}>
-        <div className="border-4 border-white rounded-2xl px-8 py-3 rotate-[-15deg]">
-          <span className="font-manrope font-extrabold text-4xl text-white">VIBE</span>
+      {/* VIBE stamp — top-left, fades in when dragging right */}
+      <motion.div
+        className="absolute top-7 left-5 z-10 pointer-events-none"
+        style={{ opacity: likeOpacity }}
+      >
+        <div
+          className="rounded-2xl px-4 py-2"
+          style={{
+            border: '3.5px solid #C8FF4D',
+            background: 'rgba(200,255,77,0.12)',
+            transform: 'rotate(-18deg)',
+          }}
+        >
+          <span className="font-manrope font-extrabold text-2xl" style={{ color: '#C8FF4D', letterSpacing: 2 }}>
+            VIBE ✓
+          </span>
         </div>
       </motion.div>
-      {/* Pass overlay */}
-      <motion.div className="absolute inset-0 z-10 flex items-center justify-center rounded-3xl" style={{ opacity: passOpacity, background: 'rgba(255,92,122,0.55)' }}>
-        <div className="border-4 border-white rounded-2xl px-8 py-3 rotate-[15deg]">
-          <span className="font-manrope font-extrabold text-4xl text-white">PASS</span>
+
+      {/* PASS stamp — top-right, fades in when dragging left */}
+      <motion.div
+        className="absolute top-7 right-5 z-10 pointer-events-none"
+        style={{ opacity: passOpacity }}
+      >
+        <div
+          className="rounded-2xl px-4 py-2"
+          style={{
+            border: '3.5px solid #FF5C7A',
+            background: 'rgba(255,92,122,0.12)',
+            transform: 'rotate(18deg)',
+          }}
+        >
+          <span className="font-manrope font-extrabold text-2xl" style={{ color: '#FF5C7A', letterSpacing: 2 }}>
+            PASS ✗
+          </span>
         </div>
       </motion.div>
+
       <CardContent profile={profile} onInfo={() => navigate(`/profiles/${profile.id}`)} vibeScore={vibeScore} />
     </motion.div>
   )
@@ -99,6 +131,9 @@ function SwipeCard({ profile, onSwipe, isTop, vibeScore }: { profile: PublicProf
 
 function CardContent({ profile, onInfo, vibeScore }: { profile: PublicProfile; onInfo: () => void; vibeScore?: number }) {
   const label = vibeScore != null ? vibeScoreLabel(vibeScore) : null
+  const distanceKm = (profile as PublicProfile & { distance_km?: number; distance?: number }).distance_km
+    ?? (profile as PublicProfile & { distance_km?: number; distance?: number }).distance
+
   return (
     <div className="w-full h-full relative bg-[#141418]">
       {profile.profile_photo_url ? (
@@ -108,8 +143,8 @@ function CardContent({ profile, onInfo, vibeScore }: { profile: PublicProfile; o
           <span className="text-7xl font-manrope font-bold" style={{ color: '#C8FF4D' }}>{getInitials(profile.display_name)}</span>
         </div>
       )}
-      {/* Strong gradient for legibility */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
+      {/* Gradient for legibility */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-transparent" />
 
       {/* Info button top-right */}
       <button
@@ -119,7 +154,18 @@ function CardContent({ profile, onInfo, vibeScore }: { profile: PublicProfile; o
         <Info size={18} />
       </button>
 
-      {/* Top-left: verified OR vibe score */}
+      {/* Distance badge — below info button when available */}
+      {distanceKm != null && (
+        <div
+          className="absolute top-16 right-4 flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold backdrop-blur-md"
+          style={{ background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.15)', color: '#F2F0EB' }}
+        >
+          <MapPin size={11} style={{ color: '#C8FF4D' }} />
+          {Math.round(distanceKm)} km
+        </div>
+      )}
+
+      {/* Top-left: verified + vibe score */}
       <div className="absolute top-4 left-4 flex flex-col gap-1.5">
         {profile.companion_verification_status === 'approved' && (
           <div className="text-white text-xs font-bold px-3 py-1 rounded-full" style={{ background: '#8B7CFF' }}>
@@ -155,6 +201,23 @@ function CardContent({ profile, onInfo, vibeScore }: { profile: PublicProfile; o
         {profile.bio && (
           <p className="text-white/75 text-sm mb-3 line-clamp-2 leading-relaxed">{profile.bio}</p>
         )}
+
+        {/* Vibe activity tags (services) — lime pills */}
+        {profile.services && profile.services.length > 0 && (
+          <div className="flex gap-2 flex-wrap mb-2">
+            {profile.services.slice(0, 3).map(s => (
+              <span
+                key={s.id}
+                className="text-xs px-2.5 py-1 rounded-full font-semibold"
+                style={{ background: 'rgba(200,255,77,0.18)', color: '#C8FF4D', border: '1px solid rgba(200,255,77,0.3)' }}
+              >
+                {SERVICE_ICONS[s.slug] ?? '✨'} {s.name}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* Interests — white pills */}
         {profile.interests && profile.interests.length > 0 && (
           <div className="flex gap-2 flex-wrap">
             {profile.interests.slice(0, 3).map(i => (
@@ -176,6 +239,7 @@ export default function SwipePage() {
   const [index, setIndex] = useState(0)
   const [matchData, setMatchData] = useState<MatchData | null>(null)
   const [selectedService, setSelectedService] = useState<string | null>(null)
+  const [undoStack, setUndoStack] = useState<PublicProfile[]>([])
   const swipedRef = useRef(new Set<string>())
 
   const myInterestIds = (user?.interests ?? []).map(i => String(i.id))
@@ -202,6 +266,10 @@ export default function SwipePage() {
     if (!profile || swipedRef.current.has(profile.id)) return
     swipedRef.current.add(profile.id)
 
+    if (direction === 'left') {
+      setUndoStack(prev => [profile, ...prev].slice(0, 3))
+    }
+
     setIndex(i => i + 1)
     if (index >= profiles.length - 3) refetch()
 
@@ -221,6 +289,15 @@ export default function SwipePage() {
         }
       }
     } catch { /* ignore */ }
+  }
+
+  const handleUndo = () => {
+    if (undoStack.length === 0) return
+    const [restored, ...rest] = undoStack
+    swipedRef.current.delete(restored.id)
+    setUndoStack(rest)
+    setIndex(i => Math.max(0, i - 1))
+    toast('Last skip undone ↩', 'success')
   }
 
   if (isLoading) {
@@ -316,13 +393,31 @@ export default function SwipePage() {
         <div className="w-full px-4 pt-3 pb-2">
           <div className="flex items-center justify-between mb-2">
             <h1 className="font-manrope font-bold text-lg text-[#F2F0EB]">Discover</h1>
-            <span className="text-xs text-[#52525E]">{remaining.length} profiles</span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-[#52525E]">{remaining.length} profiles</span>
+              <AnimatePresence>
+                {undoStack.length > 0 && (
+                  <motion.button
+                    initial={{ scale: 0.7, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0.7, opacity: 0 }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 28 }}
+                    onClick={handleUndo}
+                    className="w-8 h-8 rounded-full flex items-center justify-center active:scale-90 transition-transform"
+                    style={{ background: 'rgba(139,124,255,0.15)', border: '1px solid rgba(139,124,255,0.3)' }}
+                    title="Undo last skip"
+                  >
+                    <Undo2 size={15} style={{ color: '#8B7CFF' }} />
+                  </motion.button>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
           {/* Activity filter pills */}
           {allServices.length > 0 && (
             <div className="flex gap-2 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
               <button
-                onClick={() => { setSelectedService(null); setIndex(0); swipedRef.current.clear() }}
+                onClick={() => { setSelectedService(null); setIndex(0); swipedRef.current.clear(); setUndoStack([]) }}
                 className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${!selectedService ? 'border-[#C8FF4D] text-[#0A1A00]' : 'bg-[#1C1C22] text-[#8B8B9A] border-[#2E2E3A]'}`}
                 style={!selectedService ? { background: '#C8FF4D' } : {}}
               >
@@ -331,7 +426,7 @@ export default function SwipePage() {
               {allServices.map(s => (
                 <button
                   key={s.id}
-                  onClick={() => { setSelectedService(String(s.id)); setIndex(0); swipedRef.current.clear() }}
+                  onClick={() => { setSelectedService(String(s.id)); setIndex(0); swipedRef.current.clear(); setUndoStack([]) }}
                   className={`shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${selectedService === String(s.id) ? 'border-[#C8FF4D] text-[#0A1A00]' : 'bg-[#1C1C22] text-[#8B8B9A] border-[#2E2E3A]'}`}
                   style={selectedService === String(s.id) ? { background: '#C8FF4D' } : {}}
                 >
@@ -360,7 +455,7 @@ export default function SwipePage() {
                   Browse Discover
                 </button>
                 <button
-                  onClick={() => { setIndex(0); refetch() }}
+                  onClick={() => { setIndex(0); setUndoStack([]); swipedRef.current.clear(); refetch() }}
                   className="px-6 py-3 rounded-2xl border text-sm font-semibold font-manrope active:scale-95 transition-transform"
                   style={{ background: '#1C1C22', borderColor: '#2E2E3A', color: '#8B8B9A' }}
                 >
@@ -369,7 +464,6 @@ export default function SwipePage() {
               </div>
             </div>
           ) : (
-            /* Render back-to-front: last in DOM = visually on top */
             [...remaining.slice(0, 3)].reverse().map((profile, i, arr) => (
               <SwipeCard
                 key={profile.id}
