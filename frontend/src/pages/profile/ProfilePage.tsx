@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
@@ -83,6 +83,19 @@ export default function ProfilePage() {
 
   const joinedYear = user?.onboarding_completed_at ? new Date(user.onboarding_completed_at).getFullYear() : null
 
+  const completionPct = useMemo(() => {
+    if (!profile && !user) return 0
+    const checks = [
+      { weight: 25, pass: !!profile?.profile_photo_url },
+      { weight: 20, pass: !!(profile?.bio && profile.bio.trim().length > 10) },
+      { weight: 20, pass: !!(profile?.interests?.length || (profile as unknown as Record<string, unknown>)?.vibe_tags?.length) },
+      { weight: 15, pass: !!(profile?.city || (profile as unknown as Record<string, unknown>)?.location) },
+      { weight: 10, pass: !!(profile?.display_name || user?.name) },
+      { weight: 10, pass: !!(profile?.date_of_birth || (profile as unknown as Record<string, unknown>)?.age) },
+    ]
+    return checks.reduce((sum, c) => sum + (c.pass ? c.weight : 0), 0)
+  }, [profile, user])
+
   return (
     <AppShell>
       <div className="screen-scroll overflow-y-auto h-dvh">
@@ -129,6 +142,36 @@ export default function ProfilePage() {
             <div className="flex gap-2 mt-3 flex-wrap">
               {profile?.companion_verification_status === 'approved' && <Badge variant="verified">Verified Companion</Badge>}
               {profile?.companion_verification_status === 'submitted' && <Badge variant="warning">Application Pending</Badge>}
+            </div>
+
+            {/* Profile completion bar */}
+            <div className="mt-4 rounded-2xl px-4 py-3" style={{ background: '#141418', border: '1px solid #2E2E3A' }}>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-semibold text-[#8B8B9A]">
+                  {completionPct === 100 ? 'Profile complete ✓' : `Profile ${completionPct}% complete`}
+                </span>
+                {completionPct < 100 && (
+                  <button
+                    onClick={() => navigate('/profile/edit')}
+                    className="text-[11px] font-bold"
+                    style={{ color: '#C8FF4D' }}
+                  >
+                    Complete profile →
+                  </button>
+                )}
+                {completionPct === 100 && (
+                  <span className="text-[11px] font-bold" style={{ color: '#C8FF4D' }}>✓</span>
+                )}
+              </div>
+              <div className="h-1.5 rounded-full overflow-hidden" style={{ background: '#252530' }}>
+                <motion.div
+                  className="h-full rounded-full"
+                  style={{ background: completionPct === 100 ? '#C8FF4D' : 'linear-gradient(90deg, #C8FF4D 0%, #A8E62D 100%)' }}
+                  initial={{ width: 0 }}
+                  animate={{ width: `${completionPct}%` }}
+                  transition={{ duration: 0.8, ease: 'easeOut', delay: 0.2 }}
+                />
+              </div>
             </div>
 
             {/* Stats grid */}

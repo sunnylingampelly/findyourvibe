@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Calendar, Clock, MapPin, CheckCircle, XCircle, MessageCircle, ChevronRight, Shield, Star, AlertTriangle } from 'lucide-react'
@@ -32,6 +32,33 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }
 
 const inputStyle = { background: '#1C1C22', border: '1px solid #2E2E3A', color: '#F2F0EB' }
 
+function getCountdownLabel(dateStr: string, timeStr?: string | null): { label: string; color: string; bg: string } | null {
+  const bookingDate = new Date(dateStr)
+  const now = new Date()
+  const todayStr = now.toDateString()
+  const tomorrowDate = new Date(now); tomorrowDate.setDate(now.getDate() + 1)
+
+  if (timeStr) {
+    const [h, m] = timeStr.split(':').map(Number)
+    bookingDate.setHours(h ?? 0, m ?? 0, 0, 0)
+  } else {
+    bookingDate.setHours(23, 59, 0, 0)
+  }
+
+  const diffMs = bookingDate.getTime() - now.getTime()
+  if (diffMs < 0) return null // past
+
+  const diffH = diffMs / (1000 * 60 * 60)
+  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24))
+
+  if (diffH <= 3) return { label: '⏰ Starting soon!', color: '#FF9F43', bg: 'rgba(255,159,67,0.15)' }
+  if (diffH <= 24) return { label: '⏰ Starting soon!', color: '#FF9F43', bg: 'rgba(255,159,67,0.15)' }
+  if (bookingDate.toDateString() === todayStr) return { label: 'Today! 🎉', color: '#C8FF4D', bg: 'rgba(200,255,77,0.12)' }
+  if (bookingDate.toDateString() === tomorrowDate.toDateString()) return { label: 'Tomorrow! 🌟', color: '#C8FF4D', bg: 'rgba(200,255,77,0.12)' }
+  if (diffDays <= 7) return { label: `In ${diffDays} days`, color: '#C8FF4D', bg: 'rgba(200,255,77,0.08)' }
+  return { label: `In ${diffDays} days`, color: '#8B8B9A', bg: 'rgba(139,139,154,0.08)' }
+}
+
 export default function BookingsPage() {
   const { user } = useAuthStore()
   const navigate = useNavigate()
@@ -60,6 +87,32 @@ export default function BookingsPage() {
   })
 
   const bookings: Booking[] = data?.data?.data ?? []
+
+  const groupedBookings = useMemo(() => {
+    const now = new Date()
+    const upcoming: Booking[] = []
+    const thisWeek: Booking[] = []
+    const past: Booking[] = []
+
+    bookings.forEach(b => {
+      const bDate = new Date(b.proposed_date)
+      const diffDays = Math.ceil((bDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+      const isPast = b.status === 'completed' || b.status === 'cancelled' || b.status === 'declined' || bDate < now
+      if (isPast) {
+        past.push(b)
+      } else if (diffDays <= 7) {
+        thisWeek.push(b)
+      } else {
+        upcoming.push(b)
+      }
+    })
+
+    const sections: Array<{ title: string; items: Booking[] }> = []
+    if (thisWeek.length) sections.push({ title: 'This Week', items: thisWeek })
+    if (upcoming.length) sections.push({ title: 'Upcoming', items: upcoming })
+    if (past.length) sections.push({ title: 'Past', items: past })
+    return sections
+  }, [bookings])
 
   const updateBooking = useMutation({
     mutationFn: ({ status }: { status: 'accepted' | 'declined' | 'cancelled' | 'completed' }) =>
@@ -167,12 +220,25 @@ export default function BookingsPage() {
             )}
           </motion.div>
         ) : (
-          <div className="space-y-3 px-4 pb-10">
+          <div className="px-4 pb-10 space-y-6">
             <AnimatePresence>
-              {bookings.map((booking, i) => {
+              {groupedBookings.map(({ title, items }) => (
+                <div key={title}>
+                  {/* Section header */}
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-[11px] font-bold uppercase tracking-widest" style={{ color: '#52525E' }}>{title}</span>
+                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ background: '#1C1C22', color: '#8B8B9A' }}>{items.length}</span>
+                    <div className="flex-1 h-px" style={{ background: '#2E2E3A' }} />
+                  </div>
+
+                  <div className="space-y-3">
+                    {items.map((booking, i) => {
                 const other = tab === 'sent' ? booking.companion : booking.requester
                 const st = STATUS_CONFIG[booking.status] ?? STATUS_CONFIG.pending
                 const icon = SERVICE_ICONS[booking.service?.slug ?? ''] ?? '✨'
+                const countdown = (booking.status === 'pending' || booking.status === 'accepted')
+                  ? getCountdownLabel(booking.proposed_date, booking.proposed_time)
+                  : null
 
                 return (
                   <motion.div
@@ -216,6 +282,12 @@ export default function BookingsPage() {
                         {booking.agreed_rate && (
                           <span className="text-xs font-bold" style={{ color: '#C8FF4D' }}>
                             ₹{Number(booking.agreed_rate).toLocaleString('en-IN')}
+                          </span>
+                        )}
+                        {countdown && (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                            style={{ color: countdown.color, background: countdown.bg }}>
+                            {countdown.label}
                           </span>
                         )}
                       </div>
@@ -318,6 +390,9 @@ export default function BookingsPage() {
                   </motion.div>
                 )
               })}
+                  </div>
+                </div>
+              ))}
             </AnimatePresence>
           </div>
         )}
